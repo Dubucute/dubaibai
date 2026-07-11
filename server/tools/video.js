@@ -1,35 +1,35 @@
 // ===== Tool: Video Generation =====
-const CONFIG = require('../config');
-const { register } = require('./index');
+const CONFIG = require("../config");
+const { register } = require("./index");
 
 register({
-  name: 'generate_video',
-  description: 'Generate video from text descriptions or image inputs.',
+  name: "generate_video",
+  description: "Generate video from text descriptions or image inputs.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
-      prompt: { type: 'string', description: 'Description of the video to generate.' },
+      prompt: { type: "string", description: "Description of the video to generate." },
       model: {
-        type: 'string',
-        description: 'Video generation model.',
-        default: 'stabilityai/stable-video-diffusion',
+        type: "string",
+        description: "Video generation model.",
+        default: "stabilityai/stable-video-diffusion",
       },
-      frames: { type: 'number', description: 'Number of frames.', default: 14 },
-      fps: { type: 'number', description: 'Frames per second.', default: 8 },
+      frames: { type: "number", description: "Number of frames.", default: 14 },
+      fps: { type: "number", description: "Frames per second.", default: 8 },
     },
-    required: ['prompt'],
+    required: ["prompt"],
   },
 
   async execute(args) {
-    const { prompt, model = 'stabilityai/stable-video-diffusion', frames = 14, fps = 8 } = args;
+    const { prompt, model = "stabilityai/stable-video-diffusion", frames = 14, fps = 8 } = args;
     const apiKey = CONFIG.apiKey;
 
     const url = `https://ai.api.nvidia.com/v1/genai/${model}`;
     const body = { prompt, seed: 0, steps: 30, frames, fps };
 
     const resp = await fetch(url, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
 

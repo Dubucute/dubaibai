@@ -4,13 +4,13 @@
 
 window.AgentAPI = {
   /**
-  * Send a request to the unified agent orchestrator.
-  * @param {string} message - User message
-  * @param {Array} history - Previous messages
-  * @param {object} context - Additional context (images, docs, etc.)
-  * @param {object} opts - Options (model, onUpdate, onDone, onError)
-  * @returns {AbortController} - To cancel the request
-  */
+   * Send a request to the unified agent orchestrator.
+   * @param {string} message - User message
+   * @param {Array} history - Previous messages
+   * @param {object} context - Additional context (images, docs, etc.)
+   * @param {object} opts - Options (model, onUpdate, onDone, onError)
+   * @returns {AbortController} - To cancel the request
+   */
   send(message, history = [], context = {}, opts = {}) {
     const controller = new AbortController();
     const model = opts.model || state.get("agentModel") || undefined;
@@ -57,17 +57,11 @@ window.AgentAPI = {
           }
 
           if (resp.status === 401 || resp.status === 403) {
-            opts.onError?.(
-              "Authentication failed. Please check your API key in Settings.",
-            );
+            opts.onError?.("Authentication failed. Please check your API key in Settings.");
           } else if (resp.status === 429) {
-            opts.onError?.(
-              "Rate limit exceeded. Please wait a moment and try again.",
-            );
+            opts.onError?.("Rate limit exceeded. Please wait a moment and try again.");
           } else if (resp.status >= 500) {
-            opts.onError?.(
-              `Server error (${resp.status}). The server may be experiencing issues.`,
-            );
+            opts.onError?.(`Server error (${resp.status}). The server may be experiencing issues.`);
           } else {
             opts.onError?.(`Request failed (${resp.status}): ${errMsg}`);
           }
@@ -130,10 +124,7 @@ window.AgentAPI = {
           // Timeout or manual abort - error already handled above
           return;
         }
-        if (
-          e.message?.includes("Failed to fetch") ||
-          e.message?.includes("NetworkError")
-        ) {
+        if (e.message?.includes("Failed to fetch") || e.message?.includes("NetworkError")) {
           opts.onError?.(
             "Unable to connect to server. Make sure the server is running on port 3033.",
           );
@@ -146,8 +137,8 @@ window.AgentAPI = {
   },
 
   /**
-  * Execute a single tool directly (bypass agent)
-  */
+   * Execute a single tool directly (bypass agent)
+   */
   async executeTool(name, args) {
     const apiKey = state.get("apiKey") || "";
     const resp = await fetch(`/api/tools/${name}/execute`, {
@@ -167,8 +158,8 @@ window.AgentAPI = {
   },
 
   /**
-  * Simple chat completion (non-agent, with auto-fallback)
-  */
+   * Simple chat completion (non-agent, with auto-fallback)
+   */
   async chat(model, messages, opts = {}) {
     const apiKey = state.get("apiKey") || "";
     const resp = await fetch("/api/chat/completions", {
@@ -198,8 +189,8 @@ window.AgentAPI = {
   },
 
   /**
-  * Detect intent of a message (without sending to agent)
-  */
+   * Detect intent of a message (without sending to agent)
+   */
   async detectIntent(message, context = {}) {
     const resp = await fetch("/api/detect", {
       method: "POST",

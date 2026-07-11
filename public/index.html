@@ -2,10 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Dubu AI — Unified Agent</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
@@ -49,20 +46,8 @@
           <div class="sb-user">
             <div class="sb-avatar">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <circle
-                  cx="9"
-                  cy="9"
-                  r="8"
-                  stroke="currentColor"
-                  stroke-width="1.3"
-                />
-                <circle
-                  cx="9"
-                  cy="7"
-                  r="2.5"
-                  stroke="currentColor"
-                  stroke-width="1.3"
-                />
+                <circle cx="9" cy="9" r="8" stroke="currentColor" stroke-width="1.3" />
+                <circle cx="9" cy="7" r="2.5" stroke="currentColor" stroke-width="1.3" />
                 <path
                   d="M4 15c0-2.8 2.2-5 5-5s5 2.2 5 5"
                   stroke="currentColor"
@@ -92,13 +77,7 @@
                 stroke="currentColor"
                 stroke-width="1.3"
               />
-              <circle
-                cx="6.5"
-                cy="7.5"
-                r="1.5"
-                fill="currentColor"
-                opacity="0.5"
-              />
+              <circle cx="6.5" cy="7.5" r="1.5" fill="currentColor" opacity="0.5" />
               <path
                 d="M2 11l4-4 3 3 2-2 3 3"
                 stroke="currentColor"
@@ -107,26 +86,11 @@
                 stroke-linejoin="round"
               />
             </svg>
-            <span
-              class="gallery-sidebar-badge"
-              id="galleryBadge"
-              style="display: none"
-              >0</span
-            >
+            <span class="gallery-sidebar-badge" id="galleryBadge" style="display: none">0</span>
           </button>
-          <button
-            class="sb-settings-btn"
-            onclick="switchPanel('settings')"
-            title="Settings"
-          >
+          <button class="sb-settings-btn" onclick="switchPanel('settings')" title="Settings">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle
-                cx="8"
-                cy="8"
-                r="2"
-                stroke="currentColor"
-                stroke-width="1.3"
-              />
+              <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3" />
               <path
                 d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06"
                 stroke="currentColor"
@@ -152,9 +116,7 @@
             >
               <span></span><span></span><span></span>
             </button>
-            <span class="topbar-model-label" id="topbarModelLabel"
-              >Dubu AI</span
-            >
+            <span class="topbar-model-label" id="topbarModelLabel">Dubu AI</span>
           </div>
           <div class="topbar-center">
             <span class="topbar-status" id="topbarStatus">
@@ -163,19 +125,9 @@
             </span>
           </div>
           <div class="topbar-right">
-            <button
-              class="tb-btn"
-              onclick="window.toggleTheme()"
-              title="Toggle theme (Cmd+T)"
-            >
+            <button class="tb-btn" onclick="window.toggleTheme()" title="Toggle theme (Cmd+T)">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle
-                  cx="8"
-                  cy="8"
-                  r="3.5"
-                  stroke="currentColor"
-                  stroke-width="1.3"
-                />
+                <circle cx="8" cy="8" r="3.5" stroke="currentColor" stroke-width="1.3" />
                 <path
                   d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06"
                   stroke="currentColor"
@@ -194,36 +146,20 @@
             <div class="msg msg-agent">
               <div class="msg-avatar">
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                  <rect
-                    width="28"
-                    height="28"
-                    rx="8"
-                    fill="currentColor"
-                    opacity="0.15"
-                  />
-                  <path
-                    d="M14 6L8 10v8l6 4 6-4v-8l-6-4z"
-                    fill="currentColor"
-                    opacity="0.4"
-                  />
+                  <rect width="28" height="28" rx="8" fill="currentColor" opacity="0.15" />
+                  <path d="M14 6L8 10v8l6 4 6-4v-8l-6-4z" fill="currentColor" opacity="0.4" />
                   <circle cx="14" cy="14" r="3.5" fill="currentColor" />
                 </svg>
               </div>
               <div class="msg-body">
                 <div class="msg-name">Dubu AI</div>
                 <div class="msg-content">
-                  <p
-                    style="
-                      font-size: 15px;
-                      font-weight: 600;
-                      margin-bottom: 8px;
-                    "
-                  >
+                  <p style="font-size: 15px; font-weight: 600; margin-bottom: 8px">
                     Welcome to Dubu AI
                   </p>
                   <p style="color: var(--text-secondary); margin-bottom: 12px">
-                    I use the full NVIDIA NIM model catalog with automatic model
-                    selection and fallback. Just tell me what you need.
+                    I use the full NVIDIA NIM model catalog with automatic model selection and
+                    fallback. Just tell me what you need.
                   </p>
                   <div class="capabilities">
                     <div class="cap">Chat & Q&A</div>
@@ -246,12 +182,44 @@
           <!-- Model preset quick-select bar -->
           <div class="preset-bar" id="presetBar">
             <span class="preset-label">Models:</span>
-            <button class="preset-btn" data-model="" onclick="selectModelPreset(this)">⚡ Auto</button>
-            <button class="preset-btn" data-model="deepseek-ai/deepseek-v4-flash" onclick="selectModelPreset(this)">🚀 DeepSeek Flash</button>
-            <button class="preset-btn" data-model="nvidia/llama-3.3-nemotron-super-49b-v1.5" onclick="selectModelPreset(this)">🧠 Nemotron 49B</button>
-            <button class="preset-btn" data-model="deepseek-ai/deepseek-v4-pro" onclick="selectModelPreset(this)">⭐ DeepSeek Pro</button>
-            <button class="preset-btn" data-model="microsoft/phi-4-mini-instruct" onclick="selectModelPreset(this)">⚡ Phi-4 Mini</button>
-            <button class="preset-btn preset-btn-more" onclick="openModelPicker()" title="View all models">📋 More</button>
+            <button class="preset-btn" data-model="" onclick="selectModelPreset(this)">
+              ⚡ Auto
+            </button>
+            <button
+              class="preset-btn"
+              data-model="deepseek-ai/deepseek-v4-flash"
+              onclick="selectModelPreset(this)"
+            >
+              🚀 DeepSeek Flash
+            </button>
+            <button
+              class="preset-btn"
+              data-model="nvidia/llama-3.3-nemotron-super-49b-v1.5"
+              onclick="selectModelPreset(this)"
+            >
+              🧠 Nemotron 49B
+            </button>
+            <button
+              class="preset-btn"
+              data-model="deepseek-ai/deepseek-v4-pro"
+              onclick="selectModelPreset(this)"
+            >
+              ⭐ DeepSeek Pro
+            </button>
+            <button
+              class="preset-btn"
+              data-model="microsoft/phi-4-mini-instruct"
+              onclick="selectModelPreset(this)"
+            >
+              ⚡ Phi-4 Mini
+            </button>
+            <button
+              class="preset-btn preset-btn-more"
+              onclick="openModelPicker()"
+              title="View all models"
+            >
+              📋 More
+            </button>
             <!-- Model tooltip -->
             <div class="preset-tooltip" id="presetTooltip">
               <div class="pt-header">
@@ -305,13 +273,7 @@
                 title="Web search"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <circle
-                    cx="7"
-                    cy="7"
-                    r="5"
-                    stroke="currentColor"
-                    stroke-width="1.3"
-                  />
+                  <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3" />
                   <path
                     d="M11 11l3.5 3.5"
                     stroke="currentColor"
@@ -336,9 +298,16 @@
               </button>
               <button
                 class="input-send-btn"
-                id="agentSendBtn"
-                onclick="sendToAgent()"
+                id="agentStopBtn"
+                onclick="stopGeneration()"
+                style="display: none"
+                title="Stop generation"
               >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <rect x="3" y="3" width="10" height="10" rx="2" fill="currentColor" />
+                </svg>
+              </button>
+              <button class="input-send-btn" id="agentSendBtn" onclick="sendToAgent()">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path
                     d="M2 8l12-6-4 12-2-6-6-2z"
@@ -368,11 +337,7 @@
       ></div>
 
       <!-- ===== SETTINGS PANEL (slide-in) ===== -->
-      <div
-        class="settings-overlay"
-        id="settingsOverlay"
-        onclick="closeSettings()"
-      ></div>
+      <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
       <div class="settings-panel" id="settingsPanel">
         <div class="settings-header">
           <h3>Settings</h3>
@@ -391,11 +356,7 @@
           <div class="settings-section">
             <div class="settings-section-title">Theme</div>
             <div class="theme-picker" id="themePicker">
-              <div
-                class="theme-option active"
-                data-theme="dark"
-                onclick="selectTheme('dark')"
-              >
+              <div class="theme-option active" data-theme="dark" onclick="selectTheme('dark')">
                 <div class="theme-option-check">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                     <path
@@ -410,11 +371,7 @@
                 <div class="theme-option-swatch swatch-dark"></div>
                 <span class="theme-option-name">Dark</span>
               </div>
-              <div
-                class="theme-option"
-                data-theme="light"
-                onclick="selectTheme('light')"
-              >
+              <div class="theme-option" data-theme="light" onclick="selectTheme('light')">
                 <div class="theme-option-check">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                     <path
@@ -429,11 +386,7 @@
                 <div class="theme-option-swatch swatch-light"></div>
                 <span class="theme-option-name">Light</span>
               </div>
-              <div
-                class="theme-option"
-                data-theme="midnight"
-                onclick="selectTheme('midnight')"
-              >
+              <div class="theme-option" data-theme="midnight" onclick="selectTheme('midnight')">
                 <div class="theme-option-check">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                     <path
@@ -448,11 +401,7 @@
                 <div class="theme-option-swatch swatch-midnight"></div>
                 <span class="theme-option-name">Midnight</span>
               </div>
-              <div
-                class="theme-option"
-                data-theme="slate"
-                onclick="selectTheme('slate')"
-              >
+              <div class="theme-option" data-theme="slate" onclick="selectTheme('slate')">
                 <div class="theme-option-check">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                     <path
@@ -467,11 +416,7 @@
                 <div class="theme-option-swatch swatch-slate"></div>
                 <span class="theme-option-name">Slate</span>
               </div>
-              <div
-                class="theme-option"
-                data-theme="emerald"
-                onclick="selectTheme('emerald')"
-              >
+              <div class="theme-option" data-theme="emerald" onclick="selectTheme('emerald')">
                 <div class="theme-option-check">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                     <path
@@ -486,11 +431,7 @@
                 <div class="theme-option-swatch swatch-emerald"></div>
                 <span class="theme-option-name">Emerald</span>
               </div>
-              <div
-                class="theme-option"
-                data-theme="ruby"
-                onclick="selectTheme('ruby')"
-              >
+              <div class="theme-option" data-theme="ruby" onclick="selectTheme('ruby')">
                 <div class="theme-option-check">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                     <path
@@ -511,24 +452,6 @@
           <div class="settings-section">
             <div class="settings-section-title">API Connection</div>
             <div class="form-group">
-              <label for="setApiKey">NVIDIA API Key</label>
-              <input
-                type="password"
-                id="setApiKey"
-                class="form-input"
-                placeholder="Enter your API key"
-              />
-            </div>
-            <div class="form-group">
-              <label for="setApiBase">API Base URL</label>
-              <input
-                type="text"
-                id="setApiBase"
-                class="form-input"
-                value="https://integrate.api.nvidia.com"
-              />
-            </div>
-            <div class="form-group">
               <label id="statusLabel">Connection Status</label>
               <div class="api-status">
                 <span class="status-dot-lg" id="statusIndicator"></span>
@@ -536,12 +459,8 @@
               </div>
             </div>
             <div style="display: flex; gap: 8px; margin-top: 8px">
-              <button class="btn-primary btn-sm" onclick="saveSettings()">
-                Save
-              </button>
-              <button class="btn-secondary btn-sm" onclick="testApi()">
-                Test Connection
-              </button>
+              <button class="btn-primary btn-sm" onclick="saveSettings()">Save Settings</button>
+              <button class="btn-secondary btn-sm" onclick="testApi()">Test Connection</button>
             </div>
           </div>
 
@@ -550,14 +469,7 @@
             <div class="form-group">
               <label>Temperature</label>
               <div class="form-range">
-                <input
-                  type="range"
-                  id="setTempRange"
-                  min="0"
-                  max="2"
-                  step="0.1"
-                  value="0.7"
-                />
+                <input type="range" id="setTempRange" min="0" max="2" step="0.1" value="0.7" />
                 <input
                   type="number"
                   id="setTemp"
@@ -614,20 +526,12 @@
     />
 
     <!-- ===== IMAGE GALLERY PANEL (slide-in) ===== -->
-    <div
-      class="settings-overlay"
-      id="galleryOverlay"
-      onclick="toggleGallery()"
-    ></div>
+    <div class="settings-overlay" id="galleryOverlay" onclick="toggleGallery()"></div>
     <div class="gallery-panel" id="galleryPanel">
       <div class="gallery-panel-header">
         <h3>Image Gallery</h3>
         <div class="gallery-header-actions">
-          <button
-            class="btn-secondary btn-sm"
-            onclick="clearGallery()"
-            title="Clear all images"
-          >
+          <button class="btn-secondary btn-sm" onclick="clearGallery()" title="Clear all images">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path
                 d="M2 3h8M4 3V2a1 1 0 011-1h2a1 1 0 011 1v1M3 3v7a1 1 0 001 1h4a1 1 0 001-1V3"
@@ -669,8 +573,28 @@
         </button>
         <img class="lightbox-img" src="" alt="Generated image" />
         <div class="lightbox-actions">
-          <button class="lightbox-dl" data-url="" data-prompt="" onclick="downloadImage(this.getAttribute('data-url'), this.getAttribute('data-prompt'))" title="Download image">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 10v1.5a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <button
+            class="lightbox-dl"
+            data-url=""
+            data-prompt=""
+            onclick="downloadImage(this.getAttribute('data-url'), this.getAttribute('data-prompt'))"
+            title="Download image"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M7 2v7M4 6l3 3 3-3"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M2 10v1.5a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V10"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
             Download
           </button>
         </div>
@@ -692,12 +616,28 @@
         <div class="picker-header">
           <h3>Select a Model</h3>
           <button class="settings-close" onclick="closeModelPicker()">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M4 4l8 8M12 4l-8 8"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
           </button>
         </div>
         <div class="picker-search">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M10 10l3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-          <input type="text" id="modelPickerSearch" class="picker-search-input" placeholder="Search models..." oninput="filterModelPicker(this.value)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3" />
+            <path d="M10 10l3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+          </svg>
+          <input
+            type="text"
+            id="modelPickerSearch"
+            class="picker-search-input"
+            placeholder="Search models..."
+            oninput="filterModelPicker(this.value)"
+          />
         </div>
         <div class="picker-list" id="modelPickerList">
           <!-- Populated by JS -->

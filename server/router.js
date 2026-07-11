@@ -2,13 +2,13 @@
 // Analyzes user messages to detect the task type and route to the best model.
 // Uses keyword analysis, pattern matching, and context awareness.
 
-const { TASK_ROUTES } = require('./models');
+const { TASK_ROUTES } = require("./models");
 
 // ── Intent Detection Patterns ──
 
 const INTENT_PATTERNS = [
   {
-    task: 'code',
+    task: "code",
     weight: 10,
     patterns: [
       /\b(code|script|function|algorithm|program|debug|implement)\b/i,
@@ -21,7 +21,7 @@ const INTENT_PATTERNS = [
     ],
   },
   {
-    task: 'reasoning',
+    task: "reasoning",
     weight: 8,
     patterns: [
       /\b(reason|logic|puzzle|riddle|brain.teaser|think step|chain.of.thought)\b/i,
@@ -34,7 +34,7 @@ const INTENT_PATTERNS = [
     ],
   },
   {
-    task: 'fast',
+    task: "fast",
     weight: 5,
     patterns: [
       /^.{1,30}$/, // Very short messages
@@ -46,7 +46,7 @@ const INTENT_PATTERNS = [
     ],
   },
   {
-    task: 'vision',
+    task: "vision",
     weight: 9,
     patterns: [
       /\b(analyze|describe|examine|look.at)\s.*(image|picture|photo|screenshot|chart|graph|diagram)\b/i,
@@ -56,7 +56,7 @@ const INTENT_PATTERNS = [
     ],
   },
   {
-    task: 'image',
+    task: "image",
     weight: 9,
     patterns: [
       /\b(generate|create|make|render|produce)\s.*(image|picture|art|illustration|photo|drawing|visual)\b/i,
@@ -66,7 +66,7 @@ const INTENT_PATTERNS = [
     ],
   },
   {
-    task: 'translate',
+    task: "translate",
     weight: 8,
     patterns: [
       /\b(translate|translation|interpret)\s/i,
@@ -75,7 +75,7 @@ const INTENT_PATTERNS = [
     ],
   },
   {
-    task: 'safety',
+    task: "safety",
     weight: 8,
     patterns: [
       /\b(safety|harmful|toxic|offensive|dangerous|inappropriate)\s.*(check|analyze|test|scan|evaluate)\b/i,
@@ -84,7 +84,7 @@ const INTENT_PATTERNS = [
     ],
   },
   {
-    task: 'embedding',
+    task: "embedding",
     weight: 6,
     patterns: [
       /\b(embed|embedding|vectorize|vector\s+representation)\b/i,
@@ -119,7 +119,8 @@ function detectIntent(message, context = {}) {
 
   // If user has attached an image AND is asking about it, boost vision score
   if (hasImage(context)) {
-    const visionKeywords = /\b(who|what|where|when|why|how|describe|analyze|explain|tell|see|look|this)\b/i;
+    const visionKeywords =
+      /\b(who|what|where|when|why|how|describe|analyze|explain|tell|see|look|this)\b/i;
     if (visionKeywords.test(message)) {
       scores.vision = (scores.vision || 0) + 15;
     }
@@ -130,7 +131,8 @@ function detectIntent(message, context = {}) {
   }
 
   // Check if user wants image generation (look for art/visual keywords)
-  const imgGenKeywords = /\b(image|picture|art|illustration|drawing|photo|landscape|portrait|scene|view)\s+(of|with|in|at)\b/i;
+  const imgGenKeywords =
+    /\b(image|picture|art|illustration|drawing|photo|landscape|portrait|scene|view)\s+(of|with|in|at)\b/i;
   if (imgGenKeywords.test(message) && !scores.code) {
     scores.image = (scores.image || 0) + 3;
   }
@@ -138,20 +140,22 @@ function detectIntent(message, context = {}) {
   // If no intent detected, default to chat
   if (Object.keys(scores).length === 0) {
     return {
-      task: 'chat',
+      task: "chat",
       confidence: 0.3,
       route: TASK_ROUTES.chat,
-      reasoning: 'No specific intent detected, using general chat',
+      reasoning: "No specific intent detected, using general chat",
     };
   }
 
   // Find the best match
-  const sorted = Object.entries(scores)
-    .sort(([, a], [, b]) => b - a);
+  const sorted = Object.entries(scores).sort(([, a], [, b]) => b - a);
 
   const bestTask = sorted[0][0];
   const bestScore = sorted[0][1];
-  const maxPossibleScore = INTENT_PATTERNS.reduce((max, p) => Math.max(max, p.weight * p.patterns.length), 30);
+  const maxPossibleScore = INTENT_PATTERNS.reduce(
+    (max, p) => Math.max(max, p.weight * p.patterns.length),
+    30,
+  );
   const confidence = Math.min(bestScore / maxPossibleScore, 1);
 
   return {
@@ -168,32 +172,32 @@ function detectIntent(message, context = {}) {
  */
 function getIntentEmoji(task) {
   const emojis = {
-    chat: '💬',
-    code: '💻',
-    reasoning: '🧠',
-    fast: '⚡',
-    vision: '👁️',
-    image: '🎨',
-    translate: '🌐',
-    safety: '🛡️',
-    embedding: '📊',
+    chat: "💬",
+    code: "💻",
+    reasoning: "🧠",
+    fast: "⚡",
+    vision: "👁️",
+    image: "🎨",
+    translate: "🌐",
+    safety: "🛡️",
+    embedding: "📊",
   };
-  return emojis[task] || '🤖';
+  return emojis[task] || "🤖";
 }
 
 function getIntentLabel(task) {
   const labels = {
-    chat: 'General Chat',
-    code: 'Code & Programming',
-    reasoning: 'Deep Reasoning',
-    fast: 'Quick Response',
-    vision: 'Image Analysis',
-    image: 'Image Generation',
-    translate: 'Translation',
-    safety: 'Safety Check',
-    embedding: 'Embeddings',
+    chat: "General Chat",
+    code: "Code & Programming",
+    reasoning: "Deep Reasoning",
+    fast: "Quick Response",
+    vision: "Image Analysis",
+    image: "Image Generation",
+    translate: "Translation",
+    safety: "Safety Check",
+    embedding: "Embeddings",
   };
-  return labels[task] || 'General';
+  return labels[task] || "General";
 }
 
 module.exports = {

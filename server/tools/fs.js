@@ -1,11 +1,11 @@
 // ===== Tool: Filesystem Operations =====
 // Create folders and write files safely with path traversal protection.
-const fs = require('fs');
-const path = require('path');
-const { register } = require('./index');
+const fs = require("fs");
+const path = require("path");
+const { register } = require("./index");
 
 // Allowed base directory for file creation (project root or user-specified)
-const BASE_DIR = path.resolve(__dirname, '..', '..'); // dubu-ai root
+const BASE_DIR = path.resolve(__dirname, "..", ".."); // dubu-ai root
 // Allow writing outside by default - the user is controlling their own machine
 const WRITE_ROOT = process.env.DUBU_WRITE_ROOT || BASE_DIR;
 
@@ -15,7 +15,7 @@ const WRITE_ROOT = process.env.DUBU_WRITE_ROOT || BASE_DIR;
  */
 function resolveSafePath(filePath) {
   // Normalize the path
-  const normalized = path.normalize(filePath).replace(/^\.\.(\/|\\)?/, '');
+  const normalized = path.normalize(filePath).replace(/^\.\.(\/|\\)?/, "");
   const resolved = path.resolve(WRITE_ROOT, normalized);
 
   // Ensure the resolved path is within the writable root
@@ -27,33 +27,34 @@ function resolveSafePath(filePath) {
 }
 
 register({
-  name: 'create_file',
-  description: 'Create a file with content. Automatically creates parent directories if they do not exist. Use this when the user asks to save code to a file.',
+  name: "create_file",
+  description:
+    "Create a file with content. Automatically creates parent directories if they do not exist. Use this when the user asks to save code to a file.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       filepath: {
-        type: 'string',
+        type: "string",
         description: 'Relative path to the file (e.g., "src/app.js" or "my-project/index.html").',
       },
       content: {
-        type: 'string',
-        description: 'The file content to write.',
+        type: "string",
+        description: "The file content to write.",
       },
       overwrite: {
-        type: 'boolean',
-        description: 'Whether to overwrite if the file exists.',
+        type: "boolean",
+        description: "Whether to overwrite if the file exists.",
         default: false,
       },
     },
-    required: ['filepath', 'content'],
+    required: ["filepath", "content"],
   },
 
   async execute(args) {
     const { filepath, content, overwrite = false } = args;
 
-    if (!filepath || typeof filepath !== 'string') {
-      throw new Error('File path is required.');
+    if (!filepath || typeof filepath !== "string") {
+      throw new Error("File path is required.");
     }
 
     const safePath = resolveSafePath(filepath);
@@ -78,37 +79,38 @@ register({
     }
 
     // Write the file
-    fs.writeFileSync(safePath, content, 'utf-8');
+    fs.writeFileSync(safePath, content, "utf-8");
 
     return {
       success: true,
       path: safePath,
       relativePath: filepath,
-      size: Buffer.byteLength(content, 'utf-8'),
-      action: fs.existsSync(safePath) && overwrite ? 'overwritten' : 'created',
+      size: Buffer.byteLength(content, "utf-8"),
+      action: fs.existsSync(safePath) && overwrite ? "overwritten" : "created",
     };
   },
 });
 
 register({
-  name: 'create_folder',
-  description: 'Create a folder (and all parent folders if needed). Use this when the user asks to set up a project structure.',
+  name: "create_folder",
+  description:
+    "Create a folder (and all parent folders if needed). Use this when the user asks to set up a project structure.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       folderpath: {
-        type: 'string',
+        type: "string",
         description: 'Relative path to the folder (e.g., "my-project/src/components").',
       },
     },
-    required: ['folderpath'],
+    required: ["folderpath"],
   },
 
   async execute(args) {
     const { folderpath } = args;
 
-    if (!folderpath || typeof folderpath !== 'string') {
-      throw new Error('Folder path is required.');
+    if (!folderpath || typeof folderpath !== "string") {
+      throw new Error("Folder path is required.");
     }
 
     const safePath = resolveSafePath(folderpath);
@@ -121,7 +123,7 @@ register({
         success: true,
         path: safePath,
         relativePath: folderpath,
-        action: 'exists',
+        action: "exists",
         message: `Folder already exists: "${folderpath}"`,
       };
     }
@@ -132,35 +134,36 @@ register({
       success: true,
       path: safePath,
       relativePath: folderpath,
-      action: 'created',
+      action: "created",
     };
   },
 });
 
 register({
-  name: 'read_file',
-  description: 'Read the contents of a file. Use this when the user wants to view, analyze, or edit an existing file.',
+  name: "read_file",
+  description:
+    "Read the contents of a file. Use this when the user wants to view, analyze, or edit an existing file.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       filepath: {
-        type: 'string',
+        type: "string",
         description: 'Relative path to the file (e.g., "src/app.js" or "README.md").',
       },
       maxSize: {
-        type: 'number',
-        description: 'Maximum file size in bytes to read (default 1MB).',
+        type: "number",
+        description: "Maximum file size in bytes to read (default 1MB).",
         default: 1048576,
       },
     },
-    required: ['filepath'],
+    required: ["filepath"],
   },
 
   async execute(args) {
     const { filepath, maxSize = 1048576 } = args;
 
-    if (!filepath || typeof filepath !== 'string') {
-      throw new Error('File path is required.');
+    if (!filepath || typeof filepath !== "string") {
+      throw new Error("File path is required.");
     }
 
     const safePath = resolveSafePath(filepath);
@@ -189,49 +192,74 @@ register({
     // Try to detect encoding - read as UTF-8 by default
     let content;
     try {
-      content = fs.readFileSync(safePath, 'utf-8');
+      content = fs.readFileSync(safePath, "utf-8");
     } catch (e) {
-      content = fs.readFileSync(safePath, 'latin1');
+      content = fs.readFileSync(safePath, "latin1");
     }
 
     const ext = path.extname(filepath).toLowerCase();
-    const binaryExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.ico', '.webp', '.mp3', '.mp4', '.avi', '.mov', '.zip', '.gz', '.tar', '.exe', '.dll', '.so', '.dylib', '.pdf', '.ttf', '.otf', '.woff', '.woff2'];
+    const binaryExtensions = [
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".gif",
+      ".bmp",
+      ".ico",
+      ".webp",
+      ".mp3",
+      ".mp4",
+      ".avi",
+      ".mov",
+      ".zip",
+      ".gz",
+      ".tar",
+      ".exe",
+      ".dll",
+      ".so",
+      ".dylib",
+      ".pdf",
+      ".ttf",
+      ".otf",
+      ".woff",
+      ".woff2",
+    ];
     const isBinary = binaryExtensions.includes(ext);
 
     return {
       success: true,
       path: safePath,
       relativePath: filepath,
-      content: isBinary ? '[Binary file - cannot display]' : content,
+      content: isBinary ? "[Binary file - cannot display]" : content,
       size: stat.size,
       isBinary,
       extension: ext,
-      lines: isBinary ? 0 : content.split('\n').length,
+      lines: isBinary ? 0 : content.split("\n").length,
     };
   },
 });
 
 register({
-  name: 'list_files',
-  description: 'List files and folders in a directory. Use this to see the current project structure.',
+  name: "list_files",
+  description:
+    "List files and folders in a directory. Use this to see the current project structure.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       dirpath: {
-        type: 'string',
-        description: 'Relative path to the directory to list (defaults to root).',
-        default: '.',
+        type: "string",
+        description: "Relative path to the directory to list (defaults to root).",
+        default: ".",
       },
       maxDepth: {
-        type: 'number',
-        description: 'Maximum depth to traverse (default 2).',
+        type: "number",
+        description: "Maximum depth to traverse (default 2).",
         default: 2,
       },
     },
   },
 
   async execute(args) {
-    const { dirpath = '.', maxDepth = 2 } = args;
+    const { dirpath = ".", maxDepth = 2 } = args;
 
     const safePath = resolveSafePath(dirpath);
     if (!safePath) {
@@ -239,7 +267,7 @@ register({
     }
 
     if (!fs.existsSync(safePath)) {
-      return { success: true, path: dirpath, entries: [], note: 'Directory does not exist yet.' };
+      return { success: true, path: dirpath, entries: [], note: "Directory does not exist yet." };
     }
 
     const stat = fs.statSync(safePath);
@@ -260,15 +288,15 @@ register({
             const isDir = itemStat.isDirectory();
             entries.push({
               name: item,
-              path: relativePath.replace(/\\/g, '/'),
-              type: isDir ? 'directory' : 'file',
+              path: relativePath.replace(/\\/g, "/"),
+              type: isDir ? "directory" : "file",
               size: isDir ? null : itemStat.size,
             });
             if (isDir) {
               entries.push(...readDir(fullPath, depth + 1));
             }
           } catch (e) {
-            entries.push({ name: item, path: relativePath, type: 'unknown', error: e.message });
+            entries.push({ name: item, path: relativePath, type: "unknown", error: e.message });
           }
         }
       } catch (e) {

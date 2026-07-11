@@ -1,10 +1,10 @@
 // ===== In-Memory Store with Persistence =====
-const fs = require('fs');
-const path = require('path');
-const CONFIG = require('./config');
-const { v4: uuidv4 } = require('uuid');
+const fs = require("fs");
+const path = require("path");
+const CONFIG = require("./config");
+const { v4: uuidv4 } = require("uuid");
 
-const DATA_FILE = path.join(CONFIG.dataDir, 'store.json');
+const DATA_FILE = path.join(CONFIG.dataDir, "store.json");
 
 class Store {
   constructor() {
@@ -15,7 +15,7 @@ class Store {
   }
 
   // ── Conversations ──
-  createConversation(title = 'New Chat', model = CONFIG.defaultModel) {
+  createConversation(title = "New Chat", model = CONFIG.defaultModel) {
     const id = uuidv4();
     const convo = { id, title, model, messages: [], created: Date.now(), updated: Date.now() };
     this.conversations.set(id, convo);
@@ -31,9 +31,13 @@ class Store {
     return Array.from(this.conversations.values())
       .sort((a, b) => b.updated - a.updated)
       .map(({ id, title, model, created, updated, messages }) => ({
-        id, title, model, created, updated,
+        id,
+        title,
+        model,
+        created,
+        updated,
         msgCount: messages.length,
-        preview: messages.length > 0 ? messages[messages.length - 1].content.slice(0, 80) : '',
+        preview: messages.length > 0 ? messages[messages.length - 1].content.slice(0, 80) : "",
       }));
   }
 
@@ -42,8 +46,8 @@ class Store {
     if (!convo) return null;
     convo.messages.push({ ...message, timestamp: Date.now() });
     convo.updated = Date.now();
-    if (convo.messages.length === 1 && message.role === 'user') {
-      convo.title = message.content.slice(0, 50) + (message.content.length > 50 ? '...' : '');
+    if (convo.messages.length === 1 && message.role === "user") {
+      convo.title = message.content.slice(0, 50) + (message.content.length > 50 ? "..." : "");
     }
     this._save();
     return convo;
@@ -69,7 +73,7 @@ class Store {
     const fork = {
       ...convo,
       id: uuidv4(),
-      title: convo.title + ' (fork)',
+      title: convo.title + " (fork)",
       created: Date.now(),
       updated: Date.now(),
       messages: [...convo.messages],
@@ -80,7 +84,7 @@ class Store {
   }
 
   // ── Documents (for RAG) ──
-  addDocument(name, content, type = 'text') {
+  addDocument(name, content, type = "text") {
     const id = uuidv4();
     const doc = { id, name, content, type, created: Date.now() };
     this.documents.set(id, doc);
@@ -93,8 +97,13 @@ class Store {
   }
 
   listDocuments() {
-    return Array.from(this.documents.values())
-      .map(({ id, name, type, created, content }) => ({ id, name, type, created, size: content.length }));
+    return Array.from(this.documents.values()).map(({ id, name, type, created, content }) => ({
+      id,
+      name,
+      type,
+      created,
+      size: content.length,
+    }));
   }
 
   deleteDocument(id) {
@@ -106,7 +115,7 @@ class Store {
     const q = query.toLowerCase();
     const results = [];
     for (const doc of this.documents.values()) {
-      const lines = doc.content.split('\n');
+      const lines = doc.content.split("\n");
       let score = 0;
       const matches = [];
       lines.forEach((line, i) => {
@@ -115,7 +124,8 @@ class Store {
           matches.push({ line: i + 1, text: line.trim().slice(0, 200) });
         }
       });
-      if (score > 0) results.push({ id: doc.id, name: doc.name, score, matches: matches.slice(0, 5) });
+      if (score > 0)
+        results.push({ id: doc.id, name: doc.name, score, matches: matches.slice(0, 5) });
     }
     return results.sort((a, b) => b.score - a.score);
   }
@@ -130,18 +140,22 @@ class Store {
         documents: Array.from(this.documents.entries()),
       };
       fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-    } catch (e) { /* silent */ }
+    } catch (e) {
+      /* silent */
+    }
   }
 
   _load() {
     try {
       if (fs.existsSync(DATA_FILE)) {
-        const raw = fs.readFileSync(DATA_FILE, 'utf-8');
+        const raw = fs.readFileSync(DATA_FILE, "utf-8");
         const data = JSON.parse(raw);
         if (data.conversations) this.conversations = new Map(data.conversations);
         if (data.documents) this.documents = new Map(data.documents);
       }
-    } catch (e) { /* start fresh */ }
+    } catch (e) {
+      /* start fresh */
+    }
   }
 }
 

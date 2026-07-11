@@ -49,18 +49,26 @@ const MODEL_INFO = {
 // ── Model icon & group helpers ──
 function getModelIcon(modelId, info) {
   const name = (info.name || modelId).toLowerCase();
-  if (info.capabilities?.includes('vision') || name.includes('vision') || name.includes('vl')) return "👁️";
-  if (info.capabilities?.includes('code') || name.includes('code') || name.includes('coder')) return "💻";
-  if (info.capabilities?.includes('embedding')) return "📐";
-  if (info.capabilities?.includes('safety') || info.capabilities?.includes('content_safety')) return "🛡️";
-  if (info.capabilities?.includes('text_to_image') || info.capabilities?.includes('image_generation')) return "🎨";
-  if (info.capabilities?.includes('video')) return "🎬";
-  if (info.capabilities?.includes('finance')) return "📊";
-  if (info.capabilities?.includes('medical')) return "🏥";
-  if (info.capabilities?.includes('writing') || info.capabilities?.includes('creative')) return "✍️";
-  if (info.capabilities?.includes('multilingual')) return "🌐";
-  if (info.capabilities?.includes('rag')) return "🔍";
-  if (info.capabilities?.includes('fast') || info.speed === 'very_fast') return "⚡";
+  if (info.capabilities?.includes("vision") || name.includes("vision") || name.includes("vl"))
+    return "👁️";
+  if (info.capabilities?.includes("code") || name.includes("code") || name.includes("coder"))
+    return "💻";
+  if (info.capabilities?.includes("embedding")) return "📐";
+  if (info.capabilities?.includes("safety") || info.capabilities?.includes("content_safety"))
+    return "🛡️";
+  if (
+    info.capabilities?.includes("text_to_image") ||
+    info.capabilities?.includes("image_generation")
+  )
+    return "🎨";
+  if (info.capabilities?.includes("video")) return "🎬";
+  if (info.capabilities?.includes("finance")) return "📊";
+  if (info.capabilities?.includes("medical")) return "🏥";
+  if (info.capabilities?.includes("writing") || info.capabilities?.includes("creative"))
+    return "✍️";
+  if (info.capabilities?.includes("multilingual")) return "🌐";
+  if (info.capabilities?.includes("rag")) return "🔍";
+  if (info.capabilities?.includes("fast") || info.speed === "very_fast") return "⚡";
   if ((info.quality || 0) >= 9) return "🏆";
   if ((info.quality || 0) >= 7) return "⭐";
   return "🤖";
@@ -69,15 +77,21 @@ function getModelIcon(modelId, info) {
 function getModelGroup(info) {
   if (!info || !info.capabilities) return "Other";
   const caps = info.capabilities;
-  if (caps.includes('vision') || caps.includes('image_understanding') || caps.includes('video')) return "Vision";
-  if (caps.includes('text_to_image') || caps.includes('image_generation')) return "Image Gen";
-  if (caps.includes('embedding') || caps.includes('retrieval')) return "Embeddings";
-  if (caps.includes('content_safety') || caps.includes('jailbreak_detect') || caps.includes('topic_control')) return "Safety";
-  if (caps.includes('code') && !caps.includes('chat')) return "Code";
-  if (caps.includes('finance')) return "Finance";
-  if (caps.includes('medical')) return "Medical";
-  if (caps.includes('writing') || caps.includes('creative')) return "Creative";
-  return ((info.quality || 0) >= 7) ? "Smart" : "Fast";
+  if (caps.includes("vision") || caps.includes("image_understanding") || caps.includes("video"))
+    return "Vision";
+  if (caps.includes("text_to_image") || caps.includes("image_generation")) return "Image Gen";
+  if (caps.includes("embedding") || caps.includes("retrieval")) return "Embeddings";
+  if (
+    caps.includes("content_safety") ||
+    caps.includes("jailbreak_detect") ||
+    caps.includes("topic_control")
+  )
+    return "Safety";
+  if (caps.includes("code") && !caps.includes("chat")) return "Code";
+  if (caps.includes("finance")) return "Finance";
+  if (caps.includes("medical")) return "Medical";
+  if (caps.includes("writing") || caps.includes("creative")) return "Creative";
+  return (info.quality || 0) >= 7 ? "Smart" : "Fast";
 }
 
 // ── Toast Notifications ──
@@ -145,11 +159,7 @@ window.selectTheme = function (name) {
   document
     .querySelectorAll(".theme-option")
     .forEach((el) => el.classList.toggle("active", el.dataset.theme === name));
-  showToast(
-    `Theme: ${name.charAt(0).toUpperCase() + name.slice(1)}`,
-    "success",
-    2000,
-  );
+  showToast(`Theme: ${name.charAt(0).toUpperCase() + name.slice(1)}`, "success", 2000);
 };
 
 window.toggleTheme = function () {
@@ -170,35 +180,21 @@ function syncThemePicker() {
   const current = state.get("theme") || "dark";
   document
     .querySelectorAll(".theme-option")
-    .forEach((el) =>
-      el.classList.toggle("active", el.dataset.theme === current),
-    );
+    .forEach((el) => el.classList.toggle("active", el.dataset.theme === current));
 }
 
 // ── Web Search Toggle ──
 window.toggleWebSearch = function () {
   webSearchEnabled = !webSearchEnabled;
-  document
-    .getElementById("webSearchBtn")
-    .classList.toggle("active", webSearchEnabled);
-  showToast(
-    webSearchEnabled ? "Web Search ON" : "Web Search OFF",
-    "info",
-    1500,
-  );
+  document.getElementById("webSearchBtn").classList.toggle("active", webSearchEnabled);
+  showToast(webSearchEnabled ? "Web Search ON" : "Web Search OFF", "info", 1500);
 };
 
 // ── Deep Think Toggle ──
 window.toggleDeepThink = function () {
   deepThinkEnabled = !deepThinkEnabled;
-  document
-    .getElementById("deepThinkBtn")
-    .classList.toggle("active", deepThinkEnabled);
-  showToast(
-    deepThinkEnabled ? "Deep Reasoning ON" : "Deep Reasoning OFF",
-    "info",
-    1500,
-  );
+  document.getElementById("deepThinkBtn").classList.toggle("active", deepThinkEnabled);
+  showToast(deepThinkEnabled ? "Deep Reasoning ON" : "Deep Reasoning OFF", "info", 1500);
 };
 
 // ── File Upload ──
@@ -259,12 +255,9 @@ function renderAttachments() {
   bar.style.display = "block";
   list.innerHTML = attachedFiles
     .map((f, i) => {
-      const sizeStr =
-        f.size < 1024 ? f.size + " B" : (f.size / 1024).toFixed(1) + " KB";
+      const sizeStr = f.size < 1024 ? f.size + " B" : (f.size / 1024).toFixed(1) + " KB";
       const imgHtml =
-        f.type === "image"
-          ? `<img src="${f.data}" class="attach-chip-img" alt="">`
-          : "";
+        f.type === "image" ? `<img src="${f.data}" class="attach-chip-img" alt="">` : "";
       const iconHtml = !imgHtml
         ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 2h4l3 3v6.5a.5.5 0 01-.5.5h-6A.5.5 0 014 11.5V2z" stroke="currentColor" stroke-width="1.2"/><path d="M8 2v3h3" stroke="currentColor" stroke-width="1.2"/></svg>`
         : "";
@@ -311,6 +304,13 @@ window.sendToAgent = async function () {
   const btn = document.getElementById("agentSendBtn");
   btn.disabled = true;
 
+  // Show stop button in place of send button
+  const stopBtn = document.getElementById("agentStopBtn");
+  if (stopBtn) {
+    btn.style.display = "none";
+    stopBtn.style.display = "flex";
+  }
+
   // Check for /imagine command
   let isImagineCommand = false;
   let imaginePrompt = msg;
@@ -318,50 +318,49 @@ window.sendToAgent = async function () {
   if (/^\/imagine\s+/i.test(msg)) {
     isImagineCommand = true;
     let rest = msg.replace(/^\/imagine\s+/i, "").trim();
-    
+
     // Parse flags: --model <name> --width <num> --height <num> --steps <num>
     const modelAliases = {
-      "flux": "black-forest-labs/flux.1-dev",
-      "dev": "black-forest-labs/flux.1-dev",
-      "schnell": "black-forest-labs/flux.1-schnell",
-      "fast": "black-forest-labs/flux.1-schnell",
-      "klein": "black-forest-labs/flux.2-klein-4b",
-      "sd3": "stabilityai/stable-diffusion-3-medium",
-      "medium": "stabilityai/stable-diffusion-3-medium",
-      "sdxl": "stabilityai/stable-diffusion-xl",
-      "xl": "stabilityai/stable-diffusion-xl",
-      "gemma": "google/diffusiongemma-26b-a4b-it",
-      "diffusiongemma": "google/diffusiongemma-26b-a4b-it",
+      flux: "black-forest-labs/flux.1-dev",
+      dev: "black-forest-labs/flux.1-dev",
+      schnell: "black-forest-labs/flux.1-schnell",
+      fast: "black-forest-labs/flux.1-schnell",
+      klein: "black-forest-labs/flux.2-klein-4b",
+      sd3: "stabilityai/stable-diffusion-3-medium",
+      medium: "stabilityai/stable-diffusion-3-medium",
+      sdxl: "stabilityai/stable-diffusion-xl",
+      xl: "stabilityai/stable-diffusion-xl",
+      gemma: "google/diffusiongemma-26b-a4b-it",
+      diffusiongemma: "google/diffusiongemma-26b-a4b-it",
     };
-    
+
     // --model or -m flag
     const modelMatch = rest.match(/--model\s+([a-z0-9_.-]+)|-m\s+([a-z0-9_.-]+)/i);
     const modelKey = (modelMatch?.[1] || modelMatch?.[2] || "").toLowerCase();
     imagineModel = modelAliases[modelKey] || null;
     // Remove parsed flags from the rest string
     rest = rest.replace(/--model\s+[a-z0-9_.-]+|-m\s+[a-z0-9_.-]+/gi, "").trim();
-    
-    
+
     // --width and --height flags
     const widthMatch = rest.match(/--width\s+(\d+)/i);
     if (widthMatch) {
       context.imagineWidth = parseInt(widthMatch[1]);
       rest = rest.replace(/--width\s+\d+/i, "").trim();
     }
-    
+
     const heightMatch = rest.match(/--height\s+(\d+)/i);
     if (heightMatch) {
       context.imagineHeight = parseInt(heightMatch[1]);
       rest = rest.replace(/--height\s+\d+/i, "").trim();
     }
-    
+
     // --steps flag
     const stepsMatch = rest.match(/--steps\s+(\d+)/i);
     if (stepsMatch) {
       context.imagineSteps = parseInt(stepsMatch[1]);
       rest = rest.replace(/--steps\s+\d+/i, "").trim();
     }
-    
+
     imaginePrompt = rest;
     if (!imaginePrompt) {
       showToast(
@@ -370,17 +369,18 @@ window.sendToAgent = async function () {
         6000,
       );
       btn.disabled = false;
+      // Restore send/stop buttons
+      if (stopBtn) {
+        stopBtn.style.display = "none";
+        btn.style.display = "flex";
+      }
       return;
     }
   }
 
   // Add user message
   const userMessage = isImagineCommand ? imaginePrompt : msg;
-  addMessage(
-    "user",
-    isImagineCommand ? `/imagine ${imaginePrompt}` : msg,
-    "You",
-  );
+  addMessage("user", isImagineCommand ? `/imagine ${imaginePrompt}` : msg, "You");
   agentHistory.push({ role: "user", content: userMessage });
 
   // Save user message to server conversation
@@ -452,11 +452,9 @@ window.sendToAgent = async function () {
           case "model_info":
             modelName = data.modelName || data.model?.split("/").pop();
             fallbackUsed = data.fallbackUsed || false;
-            document
-              .getElementById("topbarStatus")
-              .querySelector(".ts-text").textContent = modelName || "Ready";
-            document.getElementById("tsDot").className =
-              "ts-dot" + (modelName ? " connected" : "");
+            document.getElementById("topbarStatus").querySelector(".ts-text").textContent =
+              modelName || "Ready";
+            document.getElementById("tsDot").className = "ts-dot" + (modelName ? " connected" : "");
             const badgeHtml = `<span class="routing-badge ${fallbackUsed ? "fallback" : ""}">${fallbackUsed ? "⚡ Fallback: " : ""}${modelName || "Model selected"}</span>`;
             bubble.innerHTML = `${badgeHtml}<div class="thinking-indicator"><div class="thinking-dots"><span></span><span></span><span></span></div><span class="thinking-text">Generating...</span></div>`;
             // Reset streaming state for new generation
@@ -504,7 +502,10 @@ window.sendToAgent = async function () {
               imgMsg.innerHTML = `<div class="msg-avatar"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="8" fill="currentColor" opacity="0.15"/><path d="M14 6L8 10v8l6 4 6-4v-8l-6-4z" fill="currentColor" opacity="0.4"/><circle cx="14" cy="14" r="3.5" fill="currentColor"/></svg></div><div class="msg-body"><div class="msg-name">${escHtml(modelName || "Image")}</div><div class="msg-content"><img src="${imageUrl}" class="msg-image" alt="Generated image" onclick="openGalleryImage(${imgIdx})" loading="lazy"></div></div>`;
               container.appendChild(imgMsg);
 
-              agentHistory.push({ role: "assistant", content: `[Generated image: ${data.prompt || imaginePrompt || msg}]` });
+              agentHistory.push({
+                role: "assistant",
+                content: `[Generated image: ${data.prompt || imaginePrompt || msg}]`,
+              });
 
               if (currentConversationId) {
                 AgentAPI.conversationAddMessage(currentConversationId, {
@@ -555,6 +556,7 @@ window.sendToAgent = async function () {
               }, 50);
               // Save to history
               agentHistory.push({ role: "assistant", content: streamText });
+              scrollToBottom();
 
               if (currentConversationId) {
                 AgentAPI.conversationAddMessage(currentConversationId, {
@@ -616,9 +618,8 @@ window.sendToAgent = async function () {
             }
 
             document.getElementById("tsDot").className = "ts-dot connected";
-            document
-              .getElementById("topbarStatus")
-              .querySelector(".ts-text").textContent = modelName || "Ready";
+            document.getElementById("topbarStatus").querySelector(".ts-text").textContent =
+              modelName || "Ready";
             break;
 
           case "error":
@@ -632,6 +633,12 @@ window.sendToAgent = async function () {
       onDone: () => {
         currentAgentRequest = null;
         btn.disabled = false;
+        // Hide stop button, show send button
+        const stopBtn = document.getElementById("agentStopBtn");
+        if (stopBtn) {
+          stopBtn.style.display = "none";
+          btn.style.display = "flex";
+        }
       },
       onError: (err) => {
         if (thinkingDiv.parentNode) thinkingDiv.remove();
@@ -646,6 +653,12 @@ window.sendToAgent = async function () {
         showToast(userMsg, "error", 5000);
         currentAgentRequest = null;
         btn.disabled = false;
+        // Hide stop button, show send button
+        const stopBtn = document.getElementById("agentStopBtn");
+        if (stopBtn) {
+          stopBtn.style.display = "none";
+          btn.style.display = "flex";
+        }
       },
     });
   };
@@ -653,11 +666,86 @@ window.sendToAgent = async function () {
   doSend();
 };
 
+// ── Stop generation ──
+window.stopGeneration = function () {
+  if (!currentAgentRequest) return;
+
+  // Abort the request
+  currentAgentRequest.abort();
+  currentAgentRequest = null;
+
+  // Re-enable send button, swap stop → send
+  const sendBtn = document.getElementById("agentSendBtn");
+  const stopBtn = document.getElementById("agentStopBtn");
+  if (sendBtn) {
+    sendBtn.disabled = false;
+    sendBtn.style.display = "flex";
+  }
+  if (stopBtn) stopBtn.style.display = "none";
+
+  // Find the thinking/streaming message
+  const container = document.getElementById("agentMessages");
+  const lastAgent = container?.querySelector(".msg-agent:last-child");
+  if (!lastAgent) return;
+
+  const bubble = lastAgent.querySelector(".msg-body");
+  if (!bubble) return;
+
+  const streamContent = lastAgent.dataset?.streamContent;
+  const wasStreaming = lastAgent.dataset?.streaming === "true";
+
+  if (wasStreaming && streamContent && streamContent.trim()) {
+    // ── Partial stream — finalize what we have ──
+    // Remove the cursor
+    const cursor = bubble.querySelector(".streaming-cursor");
+    if (cursor) cursor.remove();
+
+    // Format the partial content as HTML
+    const formattedHtml = formatMessageHtml(streamContent);
+    const contentEl = bubble.querySelector(".msg-content");
+    if (contentEl) {
+      contentEl.innerHTML = formattedHtml;
+      contentEl.classList.remove("streaming");
+    }
+
+    // Add action buttons
+    if (!bubble.querySelector(".msg-actions")) {
+      const actionsHtml = `<div class="msg-actions"><button class="msg-action-btn" onclick="copyMsgText(this)" title="Copy"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="3.5" y="2.5" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 4.5v5a1 1 0 001 1h3" stroke="currentColor" stroke-width="1.2"/></svg></button><span class="stopped-badge">Stopped</span></div>`;
+      bubble.insertAdjacentHTML("beforeend", actionsHtml);
+    }
+
+    // Highlight code blocks
+    setTimeout(() => {
+      if (typeof Prism !== "undefined") Prism.highlightAllUnder(bubble);
+    }, 50);
+
+    // Save partial to history
+    agentHistory.push({ role: "assistant", content: streamContent });
+    scrollToBottom();
+  } else {
+    // ── No content yet — just remove the thinking indicator ──
+    lastAgent.remove();
+  }
+
+  document.getElementById("tsDot").className = "ts-dot connected";
+  document.getElementById("topbarStatus").querySelector(".ts-text").textContent = "Ready";
+  showToast("Generation stopped", "info", 2000);
+};
+
 // ── Clear chat ──
 window.clearAgent = function () {
   if (currentAgentRequest) {
     currentAgentRequest.abort();
     currentAgentRequest = null;
+
+    // Restore send/stop buttons in case we were mid-stream
+    const sendBtn = document.getElementById("agentSendBtn");
+    const stopBtn = document.getElementById("agentStopBtn");
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.style.display = "flex";
+    }
+    if (stopBtn) stopBtn.style.display = "none";
   }
 
   // Create new conversation on server
@@ -676,9 +764,7 @@ window.clearAgent = function () {
   renderAttachments();
   document.getElementById("agentSendBtn").disabled = false;
   document.getElementById("tsDot").className = "ts-dot";
-  document
-    .getElementById("topbarStatus")
-    .querySelector(".ts-text").textContent = "Ready";
+  document.getElementById("topbarStatus").querySelector(".ts-text").textContent = "Ready";
 
   // Scroll to top
   document.getElementById("chatMessages").scrollTop = 0;
@@ -698,7 +784,7 @@ function addMessage(role, content, authorOverride, options = {}) {
   let author = role === "user" ? "You" : authorOverride || "Dubu AI";
 
   const formattedHtml = formatMessageHtml(content);
-  
+
   // Build action buttons — regenerate only for assistant, edit for user
   let actionsHtml;
   if (role === "user") {
@@ -715,12 +801,7 @@ function addMessage(role, content, authorOverride, options = {}) {
     container.appendChild(div);
 
     const contentEl = div.querySelector(".msg-content");
-    typewriterEffect(
-      contentEl,
-      formattedHtml,
-      content,
-      options.typewriterSpeed || 20,
-    );
+    typewriterEffect(contentEl, formattedHtml, content, options.typewriterSpeed || 20);
   } else {
     // Normal mode
     div.innerHTML = `${avatarHtml}<div class="msg-body"><div class="msg-name">${author}</div><div class="msg-content">${formattedHtml}</div>${actionsHtml}</div>`;
@@ -805,20 +886,20 @@ function editUserMessage(msgDiv, originalContent) {
   const contentEl = bodyEl?.querySelector(".msg-content");
   const actionsEl = bodyEl?.querySelector(".msg-actions");
   if (!bodyEl || !contentEl) return;
-  
+
   // Hide current content and actions
   contentEl.style.display = "none";
   if (actionsEl) actionsEl.style.display = "none";
-  
+
   // Don't add if already editing
   if (bodyEl.querySelector(".edit-textarea")) return;
-  
+
   // Create edit UI
   const editDiv = document.createElement("div");
   editDiv.className = "edit-container";
   editDiv.innerHTML = `<textarea class="edit-textarea" rows="3">${escHtml(originalContent)}</textarea><div class="edit-actions"><button class="edit-save-btn" onclick="saveEditedMessage(this)">Save</button><button class="edit-cancel-btn" onclick="cancelEditMessage(this)">Cancel</button></div>`;
   bodyEl.appendChild(editDiv);
-  
+
   // Focus and auto-resize
   const textarea = editDiv.querySelector("textarea");
   textarea.focus();
@@ -844,22 +925,24 @@ window.saveEditedMessage = function (btn) {
   const bodyEl = editDiv?.closest(".msg-body");
   const msgDiv = bodyEl?.closest(".msg");
   if (!editDiv || !bodyEl || !msgDiv) return;
-  
+
   const textarea = editDiv.querySelector(".edit-textarea");
   const newContent = textarea?.value.trim();
   if (!newContent) return;
-  
+
   // Count user messages in the DOM up to this one to find its index in history
   let userMsgCount = 0;
   let currentEl = msgDiv.previousElementSibling;
   while (currentEl) {
-    if (currentEl.classList.contains("msg") &&
-        currentEl.querySelector(".msg-name")?.textContent === "You") {
+    if (
+      currentEl.classList.contains("msg") &&
+      currentEl.querySelector(".msg-name")?.textContent === "You"
+    ) {
       userMsgCount++;
     }
     currentEl = currentEl.previousElementSibling;
   }
-  
+
   // Find the corresponding user message in agentHistory
   let userHistoryIdx = -1;
   let count = 0;
@@ -873,13 +956,13 @@ window.saveEditedMessage = function (btn) {
     }
   }
   if (userHistoryIdx === -1) return;
-  
+
   // Abort current request
   if (currentAgentRequest) {
     currentAgentRequest.abort();
     currentAgentRequest = null;
   }
-  
+
   // Remove this user message + all subsequent messages from DOM
   let current = msgDiv;
   while (current) {
@@ -887,13 +970,13 @@ window.saveEditedMessage = function (btn) {
     current = current.nextElementSibling;
     toRemove.remove();
   }
-  
+
   // Truncate history to BEFORE this message (sendToAgent will add it fresh)
   agentHistory = agentHistory.slice(0, userHistoryIdx);
-  
+
   // Clean up edit UI
   editDiv.remove();
-  
+
   // Re-send
   const input = document.getElementById("agentInput");
   input.value = newContent;
@@ -905,7 +988,7 @@ window.cancelEditMessage = function (btn) {
   const editDiv = btn.closest(".edit-container");
   const bodyEl = editDiv?.closest(".msg-body");
   if (!editDiv || !bodyEl) return;
-  
+
   const contentEl = bodyEl.querySelector(".msg-content");
   const actionsEl = bodyEl.querySelector(".msg-actions");
   if (contentEl) contentEl.style.display = "";
@@ -942,8 +1025,7 @@ function typewriterEffect(contentEl, formattedHtml, rawText, speed = 20) {
       let delay = speed;
       if (char === " " || char === "\n") delay = speed * 0.5;
       else if (char === "." || char === "!" || char === "?") delay = speed * 3;
-      else if (char === "," || char === ";" || char === ":")
-        delay = speed * 1.5;
+      else if (char === "," || char === ";" || char === ":") delay = speed * 1.5;
 
       setTimeout(typeNext, delay);
     } else {
@@ -982,8 +1064,7 @@ function detectFileFromCodeBlock(code, lang) {
     const m = firstLine.match(p);
     if (m && m[1]) return m[1];
   }
-  if (lang && /^[\w-.]+\.[a-z]+$/i.test(lang) && !lang.includes(" "))
-    return lang;
+  if (lang && /^[\w-.]+\.[a-z]+$/i.test(lang) && !lang.includes(" ")) return lang;
   return null;
 }
 
@@ -997,9 +1078,7 @@ function buildFileCreateHtml(fileName) {
 
 // ── Handle file creation from code block ──
 window.createFileFromCode = async function (btn, fileName) {
-  const codeBlock = btn
-    .closest(".code-block-wrap")
-    ?.querySelector(".code-block code");
+  const codeBlock = btn.closest(".code-block-wrap")?.querySelector(".code-block code");
   if (!codeBlock) {
     showToast("Could not locate the code content.", "error");
     return;
@@ -1121,12 +1200,27 @@ window.copyCodeBlock = function (btn) {
   });
 };
 
-function scrollToBottom(el) {
-  if (typeof el === "string") el = document.getElementById(el);
-  if (!el) el = document.getElementById("chatMessages");
-  if (!el) return;
+function scrollToBottom(el, force) {
+  // Resolve the scrollable container (chatMessages), regardless of what's passed
+  let target;
+  if (typeof el === "string") {
+    target = document.getElementById(el);
+  } else if (el && el.classList?.contains("chat-messages")) {
+    target = el;
+  } else {
+    target = document.getElementById("chatMessages");
+  }
+  if (!target) return;
+
+  // Smart scroll: only scroll if user hasn't scrolled up (or forced)
+  if (!force) {
+    const threshold = 100;
+    const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < threshold;
+    if (!isNearBottom) return;
+  }
+
   requestAnimationFrame(() => {
-    el.scrollTop = el.scrollHeight;
+    target.scrollTop = target.scrollHeight;
   });
 }
 
@@ -1389,12 +1483,11 @@ window.selectConversation = async function (id) {
     container.innerHTML = "";
 
     for (const msg of agentHistory) {
-      addMessage(
-        msg.role,
-        msg.content,
-        msg.role === "user" ? "You" : "Dubu AI",
-      );
+      addMessage(msg.role, msg.content, msg.role === "user" ? "You" : "Dubu AI");
     }
+
+    // Scroll to bottom after restoring all messages
+    scrollToBottom(null, true);
 
     // Update sidebar
     loadConversationList();
@@ -1494,13 +1587,7 @@ window.selectModelPreset = function (btn) {
   state.set("agentModel", modelId);
   // Update active state on all presets
   syncPresets();
-  showToast(
-    modelId
-      ? `Model: ${btn.textContent.trim()}`
-      : "Auto-Select mode",
-    "info",
-    1500,
-  );
+  showToast(modelId ? `Model: ${btn.textContent.trim()}` : "Auto-Select mode", "info", 1500);
 };
 
 // ── Model Picker (Dynamic) ──
@@ -1521,20 +1608,46 @@ async function loadModelsFromServer() {
       capabilities: info.capabilities || [],
     }));
     // Sort: quality descending, then by name
-    loadedModels.sort((a, b) => (b.quality - a.quality) || a.name.localeCompare(b.name));
+    loadedModels.sort((a, b) => b.quality - a.quality || a.name.localeCompare(b.name));
     // Add Auto-Select as the first entry (virtual model, not from server)
-    loadedModels.unshift({ id: "", name: "Auto-Select", icon: "⚡", desc: "Automatically selects the best model for your task", group: "", quality: 99 });
+    loadedModels.unshift({
+      id: "",
+      name: "Auto-Select",
+      icon: "⚡",
+      desc: "Automatically selects the best model for your task",
+      group: "",
+      quality: 99,
+    });
   } catch (e) {
     console.warn("Failed to load models from server:", e.message);
     // Fallback: use a basic set
     loadedModels = [
-      { id: "", name: "Auto-Select", icon: "⚡", desc: "Automatically selects the best model", group: "", quality: 99 },
+      {
+        id: "",
+        name: "Auto-Select",
+        icon: "⚡",
+        desc: "Automatically selects the best model",
+        group: "",
+        quality: 99,
+      },
     ];
   }
 }
 
 // Group order for display
-const MODEL_GROUP_ORDER = ["Smart", "Vision", "Code", "Image Gen", "Creative", "Fast", "Finance", "Medical", "Embeddings", "Safety", "Other"];
+const MODEL_GROUP_ORDER = [
+  "Smart",
+  "Vision",
+  "Code",
+  "Image Gen",
+  "Creative",
+  "Fast",
+  "Finance",
+  "Medical",
+  "Embeddings",
+  "Safety",
+  "Other",
+];
 
 window.openModelPicker = function () {
   document.getElementById("modelPickerModal").style.display = "flex";
@@ -1566,16 +1679,27 @@ function renderModelPicker(filter = "") {
   const current = state.get("agentModel") || "";
   const q = filter.toLowerCase().trim();
 
-  const models = loadedModels.length > 0 ? loadedModels : [
-    { id: "", name: "Auto-Select", icon: "⚡", desc: "Auto-select best model", group: "", quality: 99 },
-  ];
+  const models =
+    loadedModels.length > 0
+      ? loadedModels
+      : [
+          {
+            id: "",
+            name: "Auto-Select",
+            icon: "⚡",
+            desc: "Auto-select best model",
+            group: "",
+            quality: 99,
+          },
+        ];
 
   const filtered = q
-    ? models.filter((m) =>
-        m.name.toLowerCase().includes(q) ||
-        m.id.toLowerCase().includes(q) ||
-        m.desc.toLowerCase().includes(q) ||
-        m.group.toLowerCase().includes(q)
+    ? models.filter(
+        (m) =>
+          m.name.toLowerCase().includes(q) ||
+          m.id.toLowerCase().includes(q) ||
+          m.desc.toLowerCase().includes(q) ||
+          m.group.toLowerCase().includes(q),
       )
     : models;
 
@@ -1697,37 +1821,21 @@ function setupPresetTooltips() {
 
 // ── Settings ──
 window.loadSettings = function () {
-  document.getElementById("setApiKey").value = state.get("apiKey") || "";
-  document.getElementById("setApiBase").value =
-    state.get("apiBase") || "https://integrate.api.nvidia.com";
   const temp = state.get("temperature");
   document.getElementById("setTemp").value = temp;
   const range = document.getElementById("setTempRange");
   if (range) range.value = temp;
-  document.getElementById("setAutoFallback").checked =
-    state.get("autoFallback") !== false;
-  document.getElementById("setAutoSelect").checked =
-    state.get("autoModelSelect") !== false;
-  document.getElementById("setWebSearch").checked =
-    state.get("webSearch") || false;
-  document.getElementById("setDeepThink").checked =
-    state.get("deepThink") || false;
+  document.getElementById("setAutoFallback").checked = state.get("autoFallback") !== false;
+  document.getElementById("setAutoSelect").checked = state.get("autoModelSelect") !== false;
+  document.getElementById("setWebSearch").checked = state.get("webSearch") || false;
+  document.getElementById("setDeepThink").checked = state.get("deepThink") || false;
   syncThemePicker();
 };
 
 window.saveSettings = function () {
-  const apiKey = document.getElementById("setApiKey").value.trim();
-  state.set("apiKey", apiKey);
-  state.set("apiBase", document.getElementById("setApiBase").value.trim());
-  state.set(
-    "temperature",
-    parseFloat(document.getElementById("setTemp").value) || 0.7,
-  );
+  state.set("temperature", parseFloat(document.getElementById("setTemp").value) || 0.7);
   state.set("autoFallback", document.getElementById("setAutoFallback").checked);
-  state.set(
-    "autoModelSelect",
-    document.getElementById("setAutoSelect").checked,
-  );
+  state.set("autoModelSelect", document.getElementById("setAutoSelect").checked);
   state.set("webSearch", document.getElementById("setWebSearch").checked);
   state.set("deepThink", document.getElementById("setDeepThink").checked);
   showToast("Settings saved", "success", 2000);
@@ -1847,9 +1955,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((data) => {
         document.getElementById("tsDot").className = "ts-dot connected";
-        document
-          .getElementById("topbarStatus")
-          .querySelector(".ts-text").textContent =
+        document.getElementById("topbarStatus").querySelector(".ts-text").textContent =
           `${data.modelsAvailable} models`;
       })
       .catch(() => {});

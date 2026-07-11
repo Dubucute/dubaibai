@@ -6,540 +6,540 @@
 const MODELS = {
   // ── Large Language Models ──
   chat: {
-    category: 'LLM',
+    category: "LLM",
     models: {
       // ═══ SMARText (Quality 9-10) ═══
-      'nvidia/llama-3.1-nemotron-ultra-253b-v1': {
-        name: 'Nemotron Ultra 253B',
-        capabilities: ['chat', 'reasoning', 'code', 'writing', 'analysis'],
-        speed: 'medium',
+      "nvidia/llama-3.1-nemotron-ultra-253b-v1": {
+        name: "Nemotron Ultra 253B",
+        capabilities: ["chat", "reasoning", "code", "writing", "analysis"],
+        speed: "medium",
         quality: 10,
         context: 131072,
       },
-      'nvidia/nemotron-3-ultra-550b-a55b': {
-        name: 'Nemotron 3 Ultra 550B',
-        capabilities: ['chat', 'reasoning', 'code', 'writing', 'analysis'],
-        speed: 'medium',
+      "nvidia/nemotron-3-ultra-550b-a55b": {
+        name: "Nemotron 3 Ultra 550B",
+        capabilities: ["chat", "reasoning", "code", "writing", "analysis"],
+        speed: "medium",
         quality: 10,
         context: 131072,
       },
-      'nvidia/nemotron-3-super-120b-a12b': {
-        name: 'Nemotron 3 Super 120B',
-        capabilities: ['chat', 'reasoning', 'code', 'writing', 'analysis'],
-        speed: 'fast',
+      "nvidia/nemotron-3-super-120b-a12b": {
+        name: "Nemotron 3 Super 120B",
+        capabilities: ["chat", "reasoning", "code", "writing", "analysis"],
+        speed: "fast",
         quality: 10,
         context: 131072,
       },
-      'qwen/qwen3.5-397b-a17b': {
-        name: 'Qwen 3.5 397B',
-        capabilities: ['chat', 'reasoning', 'code', 'multilingual'],
-        speed: 'medium',
+      "qwen/qwen3.5-397b-a17b": {
+        name: "Qwen 3.5 397B",
+        capabilities: ["chat", "reasoning", "code", "multilingual"],
+        speed: "medium",
         quality: 10,
         context: 131072,
       },
-      'mistralai/mistral-large-3-675b-instruct-2512': {
-        name: 'Mistral Large 3 675B',
-        capabilities: ['chat', 'reasoning', 'code', 'multilingual'],
-        speed: 'medium',
+      "mistralai/mistral-large-3-675b-instruct-2512": {
+        name: "Mistral Large 3 675B",
+        capabilities: ["chat", "reasoning", "code", "multilingual"],
+        speed: "medium",
         quality: 10,
         context: 131072,
       },
-      'qwen/qwen3.5-122b-a10b': {
-        name: 'Qwen 3.5 122B',
-        capabilities: ['chat', 'code', 'reasoning', 'multilingual'],
-        speed: 'fast',
+      "qwen/qwen3.5-122b-a10b": {
+        name: "Qwen 3.5 122B",
+        capabilities: ["chat", "code", "reasoning", "multilingual"],
+        speed: "fast",
         quality: 9,
         context: 131072,
       },
-      'nvidia/llama-3.3-nemotron-super-49b-v1.5': {
-        name: 'Nemotron Super 49B v1.5',
-        capabilities: ['chat', 'reasoning', 'code', 'writing', 'analysis'],
-        speed: 'very_fast',
+      "nvidia/llama-3.3-nemotron-super-49b-v1.5": {
+        name: "Nemotron Super 49B v1.5",
+        capabilities: ["chat", "reasoning", "code", "writing", "analysis"],
+        speed: "very_fast",
         quality: 9,
         context: 131072,
       },
-      'nvidia/llama-3.3-nemotron-super-49b-v1': {
-        name: 'Nemotron Super 49B',
-        capabilities: ['chat', 'reasoning', 'code', 'writing', 'analysis'],
-        speed: 'very_fast',
+      "nvidia/llama-3.3-nemotron-super-49b-v1": {
+        name: "Nemotron Super 49B",
+        capabilities: ["chat", "reasoning", "code", "writing", "analysis"],
+        speed: "very_fast",
         quality: 9,
         context: 131072,
       },
-      'nvidia/llama-3.1-nemotron-70b-instruct': {
-        name: 'Nemotron 70B',
-        capabilities: ['chat', 'reasoning', 'code'],
-        speed: 'fast',
+      "nvidia/llama-3.1-nemotron-70b-instruct": {
+        name: "Nemotron 70B",
+        capabilities: ["chat", "reasoning", "code"],
+        speed: "fast",
         quality: 9,
         context: 131072,
       },
-      'deepseek-ai/deepseek-v4-pro': {
-        name: 'DeepSeek V4 Pro',
-        capabilities: ['chat', 'code', 'reasoning'],
-        speed: 'fast',
+      "deepseek-ai/deepseek-v4-pro": {
+        name: "DeepSeek V4 Pro",
+        capabilities: ["chat", "code", "reasoning"],
+        speed: "fast",
         quality: 9,
         context: 65536,
       },
-      'meta/llama-4-maverick-17b-128e-instruct': {
-        name: 'Llama 4 Maverick 17B',
-        capabilities: ['chat', 'vision', 'reasoning', 'code'],
-        speed: 'fast',
+      "meta/llama-4-maverick-17b-128e-instruct": {
+        name: "Llama 4 Maverick 17B",
+        capabilities: ["chat", "vision", "reasoning", "code"],
+        speed: "fast",
         quality: 9,
         context: 131072,
       },
-      'mistralai/mistral-large-2-instruct': {
-        name: 'Mistral Large 2',
-        capabilities: ['chat', 'reasoning', 'code', 'multilingual'],
-        speed: 'medium',
+      "mistralai/mistral-large-2-instruct": {
+        name: "Mistral Large 2",
+        capabilities: ["chat", "reasoning", "code", "multilingual"],
+        speed: "medium",
         quality: 9,
         context: 131072,
       },
-      'minimaxai/minimax-m3': {
-        name: 'MiniMax M3',
-        capabilities: ['chat', 'reasoning', 'code'],
-        speed: 'fast',
+      "minimaxai/minimax-m3": {
+        name: "MiniMax M3",
+        capabilities: ["chat", "reasoning", "code"],
+        speed: "fast",
         quality: 9,
         context: 131072,
       },
-      'moonshotai/kimi-k2.6': {
-        name: 'Kimi K2.6',
-        capabilities: ['chat', 'reasoning', 'code', 'analysis'],
-        speed: 'fast',
+      "moonshotai/kimi-k2.6": {
+        name: "Kimi K2.6",
+        capabilities: ["chat", "reasoning", "code", "analysis"],
+        speed: "fast",
         quality: 9,
         context: 131072,
       },
-      'qwen/qwq-32b': {
-        name: 'QWQ 32B (Reasoning)',
-        capabilities: ['reasoning', 'math', 'logic', 'chat'],
-        speed: 'slow',
+      "qwen/qwq-32b": {
+        name: "QWQ 32B (Reasoning)",
+        capabilities: ["reasoning", "math", "logic", "chat"],
+        speed: "slow",
         quality: 10,
         context: 131072,
       },
-      'google/gemma-4-31b-it': {
-        name: 'Gemma 4 31B',
-        capabilities: ['chat', 'reasoning', 'code'],
-        speed: 'fast',
+      "google/gemma-4-31b-it": {
+        name: "Gemma 4 31B",
+        capabilities: ["chat", "reasoning", "code"],
+        speed: "fast",
         quality: 9,
         context: 65536,
       },
 
       // ═══ SMART (Quality 7-8) ═══
-      'meta/llama-3.3-70b-instruct': {
-        name: 'Llama 3.3 70B',
-        capabilities: ['chat', 'reasoning', 'code'],
-        speed: 'fast',
+      "meta/llama-3.3-70b-instruct": {
+        name: "Llama 3.3 70B",
+        capabilities: ["chat", "reasoning", "code"],
+        speed: "fast",
         quality: 8,
         context: 131072,
       },
-      'deepseek-ai/deepseek-v4-flash': {
-        name: 'DeepSeek V4 Flash',
-        capabilities: ['chat', 'code', 'reasoning'],
-        speed: 'very_fast',
+      "deepseek-ai/deepseek-v4-flash": {
+        name: "DeepSeek V4 Flash",
+        capabilities: ["chat", "code", "reasoning"],
+        speed: "very_fast",
         quality: 8,
         context: 65536,
       },
-      'moonshotai/kimi-k2-instruct': {
-        name: 'Kimi K2',
-        capabilities: ['chat', 'reasoning', 'code'],
-        speed: 'fast',
+      "moonshotai/kimi-k2-instruct": {
+        name: "Kimi K2",
+        capabilities: ["chat", "reasoning", "code"],
+        speed: "fast",
         quality: 8,
         context: 65536,
       },
-      'mistralai/mistral-small-4-119b-2603': {
-        name: 'Mistral Small 4 119B',
-        capabilities: ['chat', 'code', 'reasoning'],
-        speed: 'fast',
+      "mistralai/mistral-small-4-119b-2603": {
+        name: "Mistral Small 4 119B",
+        capabilities: ["chat", "code", "reasoning"],
+        speed: "fast",
         quality: 8,
         context: 131072,
       },
-      'nvidia/llama-3.1-nemotron-51b-instruct': {
-        name: 'Nemotron 51B',
-        capabilities: ['chat', 'code', 'reasoning'],
-        speed: 'fast',
+      "nvidia/llama-3.1-nemotron-51b-instruct": {
+        name: "Nemotron 51B",
+        capabilities: ["chat", "code", "reasoning"],
+        speed: "fast",
         quality: 8,
         context: 131072,
       },
-      'qwen/qwen3-next-80b-a3b-instruct': {
-        name: 'Qwen 3 80B MoE',
-        capabilities: ['chat', 'code', 'multilingual'],
-        speed: 'fast',
+      "qwen/qwen3-next-80b-a3b-instruct": {
+        name: "Qwen 3 80B MoE",
+        capabilities: ["chat", "code", "multilingual"],
+        speed: "fast",
         quality: 8,
         context: 131072,
       },
-      'stepfun-ai/step-3.7-flash': {
-        name: 'Step 3.7 Flash',
-        capabilities: ['chat', 'code', 'reasoning'],
-        speed: 'very_fast',
+      "stepfun-ai/step-3.7-flash": {
+        name: "Step 3.7 Flash",
+        capabilities: ["chat", "code", "reasoning"],
+        speed: "very_fast",
         quality: 8,
         context: 65536,
       },
-      'stepfun-ai/step-3.5-flash': {
-        name: 'Step 3.5 Flash',
-        capabilities: ['chat', 'code', 'reasoning'],
-        speed: 'very_fast',
+      "stepfun-ai/step-3.5-flash": {
+        name: "Step 3.5 Flash",
+        capabilities: ["chat", "code", "reasoning"],
+        speed: "very_fast",
         quality: 8,
         context: 65536,
       },
-      'meta/llama-3.1-70b-instruct': {
-        name: 'Llama 3.1 70B',
-        capabilities: ['chat', 'reasoning', 'code'],
-        speed: 'fast',
+      "meta/llama-3.1-70b-instruct": {
+        name: "Llama 3.1 70B",
+        capabilities: ["chat", "reasoning", "code"],
+        speed: "fast",
         quality: 7,
         context: 131072,
       },
-      'mistralai/mistral-nemotron': {
-        name: 'Mistral Nemotron',
-        capabilities: ['chat', 'code'],
-        speed: 'fast',
+      "mistralai/mistral-nemotron": {
+        name: "Mistral Nemotron",
+        capabilities: ["chat", "code"],
+        speed: "fast",
         quality: 7,
         context: 65536,
       },
-      'mistralai/mixtral-8x22b-v0.1': {
-        name: 'Mixtral 8x22B',
-        capabilities: ['chat', 'reasoning', 'multilingual'],
-        speed: 'medium',
+      "mistralai/mixtral-8x22b-v0.1": {
+        name: "Mixtral 8x22B",
+        capabilities: ["chat", "reasoning", "multilingual"],
+        speed: "medium",
         quality: 7,
         context: 65536,
       },
-      'mistralai/mistral-large': {
-        name: 'Mistral Large',
-        capabilities: ['chat', 'reasoning', 'multilingual'],
-        speed: 'medium',
+      "mistralai/mistral-large": {
+        name: "Mistral Large",
+        capabilities: ["chat", "reasoning", "multilingual"],
+        speed: "medium",
         quality: 9,
         context: 32768,
       },
-      'mistralai/mistral-medium-3.5-128b': {
-        name: 'Mistral Medium 3.5 128B',
-        capabilities: ['chat', 'reasoning', 'code', 'multilingual'],
-        speed: 'fast',
+      "mistralai/mistral-medium-3.5-128b": {
+        name: "Mistral Medium 3.5 128B",
+        capabilities: ["chat", "reasoning", "code", "multilingual"],
+        speed: "fast",
         quality: 8,
         context: 131072,
       },
-      'google/gemma-3-12b-it': {
-        name: 'Gemma 3 12B',
-        capabilities: ['chat', 'code', 'reasoning'],
-        speed: 'very_fast',
+      "google/gemma-3-12b-it": {
+        name: "Gemma 3 12B",
+        capabilities: ["chat", "code", "reasoning"],
+        speed: "very_fast",
         quality: 7,
         context: 32768,
       },
-      'snowflake/arctic-embed-l': {
-        name: 'Arctic Embed L',
-        capabilities: ['embedding', 'retrieval'],
-        speed: 'fast',
+      "snowflake/arctic-embed-l": {
+        name: "Arctic Embed L",
+        capabilities: ["embedding", "retrieval"],
+        speed: "fast",
       },
-      'stockmark/stockmark-2-100b-instruct': {
-        name: 'Stockmark 2 100B',
-        capabilities: ['chat', 'code'],
-        speed: 'fast',
+      "stockmark/stockmark-2-100b-instruct": {
+        name: "Stockmark 2 100B",
+        capabilities: ["chat", "code"],
+        speed: "fast",
         quality: 7,
         context: 65536,
       },
-      'z-ai/glm-5.2': {
-        name: 'GLM 5.2',
-        capabilities: ['chat', 'reasoning'],
-        speed: 'fast',
+      "z-ai/glm-5.2": {
+        name: "GLM 5.2",
+        capabilities: ["chat", "reasoning"],
+        speed: "fast",
         quality: 7,
         context: 65536,
       },
-      'ibm/granite-34b-code-instruct': {
-        name: 'Granite 34B Code',
-        capabilities: ['code', 'chat'],
-        speed: 'fast',
+      "ibm/granite-34b-code-instruct": {
+        name: "Granite 34B Code",
+        capabilities: ["code", "chat"],
+        speed: "fast",
         quality: 7,
         context: 65536,
       },
 
       // ═══ FAST & LIGHTWEIGHT (Quality 5-6) ═══
-      'microsoft/phi-4-mini-instruct': {
-        name: 'Phi-4 Mini',
-        capabilities: ['chat', 'code', 'fast'],
-        speed: 'very_fast',
+      "microsoft/phi-4-mini-instruct": {
+        name: "Phi-4 Mini",
+        capabilities: ["chat", "code", "fast"],
+        speed: "very_fast",
         quality: 6,
         context: 16384,
       },
-      'google/gemma-3-4b-it': {
-        name: 'Gemma 3 4B',
-        capabilities: ['chat', 'fast'],
-        speed: 'very_fast',
+      "google/gemma-3-4b-it": {
+        name: "Gemma 3 4B",
+        capabilities: ["chat", "fast"],
+        speed: "very_fast",
         quality: 6,
         context: 32768,
       },
-      'mistralai/ministral-14b-instruct-2512': {
-        name: 'Ministral 14B',
-        capabilities: ['chat', 'code', 'fast'],
-        speed: 'very_fast',
+      "mistralai/ministral-14b-instruct-2512": {
+        name: "Ministral 14B",
+        capabilities: ["chat", "code", "fast"],
+        speed: "very_fast",
         quality: 6,
         context: 65536,
       },
-      'meta/llama-3.1-8b-instruct': {
-        name: 'Llama 3.1 8B',
-        capabilities: ['chat', 'fast'],
-        speed: 'very_fast',
+      "meta/llama-3.1-8b-instruct": {
+        name: "Llama 3.1 8B",
+        capabilities: ["chat", "fast"],
+        speed: "very_fast",
         quality: 6,
         context: 131072,
       },
-      'meta/llama-3.2-3b-instruct': {
-        name: 'Llama 3.2 3B',
-        capabilities: ['chat', 'fast'],
-        speed: 'very_fast',
+      "meta/llama-3.2-3b-instruct": {
+        name: "Llama 3.2 3B",
+        capabilities: ["chat", "fast"],
+        speed: "very_fast",
         quality: 5,
         context: 131072,
       },
-      'meta/llama-3.2-1b-instruct': {
-        name: 'Llama 3.2 1B',
-        capabilities: ['chat', 'fast'],
-        speed: 'very_fast',
+      "meta/llama-3.2-1b-instruct": {
+        name: "Llama 3.2 1B",
+        capabilities: ["chat", "fast"],
+        speed: "very_fast",
         quality: 4,
         context: 131072,
       },
-      'google/gemma-2-2b-it': {
-        name: 'Gemma 2 2B',
-        capabilities: ['chat', 'fast'],
-        speed: 'very_fast',
+      "google/gemma-2-2b-it": {
+        name: "Gemma 2 2B",
+        capabilities: ["chat", "fast"],
+        speed: "very_fast",
         quality: 5,
         context: 8192,
       },
-      'nvidia/nvidia-nemotron-nano-9b-v2': {
-        name: 'Nemotron Nano 9B v2',
-        capabilities: ['chat', 'fast'],
-        speed: 'very_fast',
+      "nvidia/nvidia-nemotron-nano-9b-v2": {
+        name: "Nemotron Nano 9B v2",
+        capabilities: ["chat", "fast"],
+        speed: "very_fast",
         quality: 5,
         context: 65536,
       },
-      'nvidia/llama-3.1-nemotron-nano-8b-v1': {
-        name: 'Nemotron Nano 8B',
-        capabilities: ['chat', 'fast'],
-        speed: 'very_fast',
+      "nvidia/llama-3.1-nemotron-nano-8b-v1": {
+        name: "Nemotron Nano 8B",
+        capabilities: ["chat", "fast"],
+        speed: "very_fast",
         quality: 5,
         context: 65536,
       },
-      'nvidia/nemotron-nano-3-30b-a3b': {
-        name: 'Nemotron Nano 3 30B',
-        capabilities: ['chat', 'reasoning', 'fast'],
-        speed: 'very_fast',
+      "nvidia/nemotron-nano-3-30b-a3b": {
+        name: "Nemotron Nano 3 30B",
+        capabilities: ["chat", "reasoning", "fast"],
+        speed: "very_fast",
         quality: 6,
         context: 65536,
       },
-      'nvidia/nemotron-3-nano-30b-a3b': {
-        name: 'Nemotron 3 Nano 30B',
-        capabilities: ['chat', 'fast'],
-        speed: 'very_fast',
+      "nvidia/nemotron-3-nano-30b-a3b": {
+        name: "Nemotron 3 Nano 30B",
+        capabilities: ["chat", "fast"],
+        speed: "very_fast",
         quality: 6,
         context: 65536,
       },
-      'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning': {
-        name: 'Nemotron 3 Nano Omni 30B',
-        capabilities: ['chat', 'reasoning', 'fast'],
-        speed: 'very_fast',
+      "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": {
+        name: "Nemotron 3 Nano Omni 30B",
+        capabilities: ["chat", "reasoning", "fast"],
+        speed: "very_fast",
         quality: 6,
         context: 65536,
       },
-      'nvidia/mistral-nemo-minitron-8b-8k-instruct': {
-        name: 'Mistral Nemo Minitron 8B',
-        capabilities: ['chat', 'fast'],
-        speed: 'very_fast',
+      "nvidia/mistral-nemo-minitron-8b-8k-instruct": {
+        name: "Mistral Nemo Minitron 8B",
+        capabilities: ["chat", "fast"],
+        speed: "very_fast",
         quality: 5,
         context: 8192,
       },
-      'meta/llama3-chatqa-1.5-70b': {
-        name: 'Llama3 ChatQA 1.5 70B',
-        capabilities: ['chat', 'rag'],
-        speed: 'fast',
+      "meta/llama3-chatqa-1.5-70b": {
+        name: "Llama3 ChatQA 1.5 70B",
+        capabilities: ["chat", "rag"],
+        speed: "fast",
         quality: 7,
         context: 32768,
       },
-      'meta/codellama-70b': {
-        name: 'CodeLlama 70B',
-        capabilities: ['code'],
-        speed: 'medium',
+      "meta/codellama-70b": {
+        name: "CodeLlama 70B",
+        capabilities: ["code"],
+        speed: "medium",
         quality: 7,
         context: 16384,
       },
-      'ibm/granite-3.0-8b-instruct': {
-        name: 'Granite 3.0 8B',
-        capabilities: ['chat', 'code'],
-        speed: 'fast',
+      "ibm/granite-3.0-8b-instruct": {
+        name: "Granite 3.0 8B",
+        capabilities: ["chat", "code"],
+        speed: "fast",
         quality: 5,
         context: 8192,
       },
-      'ibm/granite-3.0-3b-a800m-instruct': {
-        name: 'Granite 3.0 3B',
-        capabilities: ['chat', 'fast'],
-        speed: 'very_fast',
+      "ibm/granite-3.0-3b-a800m-instruct": {
+        name: "Granite 3.0 3B",
+        capabilities: ["chat", "fast"],
+        speed: "very_fast",
         quality: 4,
         context: 8192,
       },
-      'ibm/granite-8b-code-instruct': {
-        name: 'Granite 8B Code',
-        capabilities: ['code'],
-        speed: 'fast',
+      "ibm/granite-8b-code-instruct": {
+        name: "Granite 8B Code",
+        capabilities: ["code"],
+        speed: "fast",
         quality: 5,
         context: 8192,
       },
-      'mistralai/mistral-7b-instruct-v0.3': {
-        name: 'Mistral 7B v0.3',
-        capabilities: ['chat', 'fast'],
-        speed: 'very_fast',
+      "mistralai/mistral-7b-instruct-v0.3": {
+        name: "Mistral 7B v0.3",
+        capabilities: ["chat", "fast"],
+        speed: "very_fast",
         quality: 5,
         context: 32768,
       },
-      'mistralai/mixtral-8x7b-instruct-v0.1': {
-        name: 'Mixtral 8x7B',
-        capabilities: ['chat', 'multilingual'],
-        speed: 'fast',
+      "mistralai/mixtral-8x7b-instruct-v0.1": {
+        name: "Mixtral 8x7B",
+        capabilities: ["chat", "multilingual"],
+        speed: "fast",
         quality: 5,
         context: 32768,
       },
-      'mistralai/codestral-22b-instruct-v0.1': {
-        name: 'Codestral 22B',
-        capabilities: ['code'],
-        speed: 'fast',
+      "mistralai/codestral-22b-instruct-v0.1": {
+        name: "Codestral 22B",
+        capabilities: ["code"],
+        speed: "fast",
         quality: 7,
         context: 65536,
       },
-      'google/codegemma-1.1-7b': {
-        name: 'CodeGemma 1.1 7B',
-        capabilities: ['code'],
-        speed: 'fast',
+      "google/codegemma-1.1-7b": {
+        name: "CodeGemma 1.1 7B",
+        capabilities: ["code"],
+        speed: "fast",
         quality: 5,
         context: 8192,
       },
-      'google/codegemma-7b': {
-        name: 'CodeGemma 7B',
-        capabilities: ['code'],
-        speed: 'fast',
+      "google/codegemma-7b": {
+        name: "CodeGemma 7B",
+        capabilities: ["code"],
+        speed: "fast",
         quality: 5,
         context: 8192,
       },
-      'bigcode/starcoder2-15b': {
-        name: 'StarCoder2 15B',
-        capabilities: ['code'],
-        speed: 'fast',
+      "bigcode/starcoder2-15b": {
+        name: "StarCoder2 15B",
+        capabilities: ["code"],
+        speed: "fast",
         quality: 5,
         context: 16384,
       },
-      'deepseek-ai/deepseek-coder-6.7b-instruct': {
-        name: 'DeepSeek Coder 6.7B',
-        capabilities: ['code'],
-        speed: 'very_fast',
+      "deepseek-ai/deepseek-coder-6.7b-instruct": {
+        name: "DeepSeek Coder 6.7B",
+        capabilities: ["code"],
+        speed: "very_fast",
         quality: 5,
         context: 16384,
       },
-      'microsoft/phi-3.5-moe-instruct': {
-        name: 'Phi-3.5 MoE',
-        capabilities: ['chat', 'fast'],
-        speed: 'very_fast',
+      "microsoft/phi-3.5-moe-instruct": {
+        name: "Phi-3.5 MoE",
+        capabilities: ["chat", "fast"],
+        speed: "very_fast",
         quality: 5,
         context: 8192,
       },
-      'aisingapore/sea-lion-7b-instruct': {
-        name: 'Sea-Lion 7B',
-        capabilities: ['chat', 'multilingual'],
-        speed: 'fast',
+      "aisingapore/sea-lion-7b-instruct": {
+        name: "Sea-Lion 7B",
+        capabilities: ["chat", "multilingual"],
+        speed: "fast",
         quality: 5,
         context: 8192,
       },
-      'upstage/solar-10.7b-instruct': {
-        name: 'Solar 10.7B',
-        capabilities: ['chat'],
-        speed: 'fast',
+      "upstage/solar-10.7b-instruct": {
+        name: "Solar 10.7B",
+        capabilities: ["chat"],
+        speed: "fast",
         quality: 5,
         context: 8192,
       },
-      'zyphra/zamba2-7b-instruct': {
-        name: 'Zamba2 7B',
-        capabilities: ['chat', 'fast'],
-        speed: 'very_fast',
+      "zyphra/zamba2-7b-instruct": {
+        name: "Zamba2 7B",
+        capabilities: ["chat", "fast"],
+        speed: "very_fast",
         quality: 5,
         context: 16384,
       },
-      'sarvamai/sarvam-m': {
-        name: 'Sarvam M',
-        capabilities: ['chat', 'multilingual'],
-        speed: 'fast',
+      "sarvamai/sarvam-m": {
+        name: "Sarvam M",
+        capabilities: ["chat", "multilingual"],
+        speed: "fast",
         quality: 5,
         context: 32768,
       },
-      'bytedance/seed-oss-36b-instruct': {
-        name: 'Seed OSS 36B',
-        capabilities: ['chat', 'code'],
-        speed: 'fast',
+      "bytedance/seed-oss-36b-instruct": {
+        name: "Seed OSS 36B",
+        capabilities: ["chat", "code"],
+        speed: "fast",
         quality: 6,
         context: 32768,
       },
-      'databricks/dbrx-instruct': {
-        name: 'DBRX Instruct',
-        capabilities: ['chat', 'code', 'reasoning'],
-        speed: 'medium',
+      "databricks/dbrx-instruct": {
+        name: "DBRX Instruct",
+        capabilities: ["chat", "code", "reasoning"],
+        speed: "medium",
         quality: 7,
         context: 32768,
       },
-      'ai21labs/jamba-1.5-large-instruct': {
-        name: 'Jamba 1.5 Large',
-        capabilities: ['chat', 'reasoning'],
-        speed: 'fast',
+      "ai21labs/jamba-1.5-large-instruct": {
+        name: "Jamba 1.5 Large",
+        capabilities: ["chat", "reasoning"],
+        speed: "fast",
         quality: 7,
         context: 256000,
       },
-      'writer/palmyra-creative-122b': {
-        name: 'Palmyra Creative 122B',
-        capabilities: ['chat', 'writing', 'creative'],
-        speed: 'medium',
+      "writer/palmyra-creative-122b": {
+        name: "Palmyra Creative 122B",
+        capabilities: ["chat", "writing", "creative"],
+        speed: "medium",
         quality: 8,
         context: 32768,
       },
-      'writer/palmyra-fin-70b-32k': {
-        name: 'Palmyra Fin 70B',
-        capabilities: ['chat', 'finance'],
-        speed: 'medium',
+      "writer/palmyra-fin-70b-32k": {
+        name: "Palmyra Fin 70B",
+        capabilities: ["chat", "finance"],
+        speed: "medium",
         quality: 7,
         context: 32768,
       },
-      'writer/palmyra-med-70b': {
-        name: 'Palmyra Med 70B',
-        capabilities: ['chat', 'medical'],
-        speed: 'medium',
+      "writer/palmyra-med-70b": {
+        name: "Palmyra Med 70B",
+        capabilities: ["chat", "medical"],
+        speed: "medium",
         quality: 7,
         context: 32768,
       },
-      'minimaxai/minimax-m2.7': {
-        name: 'MiniMax M2.7',
-        capabilities: ['chat', 'reasoning'],
-        speed: 'fast',
+      "minimaxai/minimax-m2.7": {
+        name: "MiniMax M2.7",
+        capabilities: ["chat", "reasoning"],
+        speed: "fast",
         quality: 8,
         context: 65536,
       },
-      '01-ai/yi-large': {
-        name: 'Yi Large',
-        capabilities: ['chat', 'reasoning'],
-        speed: 'fast',
+      "01-ai/yi-large": {
+        name: "Yi Large",
+        capabilities: ["chat", "reasoning"],
+        speed: "fast",
         quality: 7,
         context: 32768,
       },
-      'nv-mistralai/mistral-nemo-12b-instruct': {
-        name: 'Mistral Nemo 12B',
-        capabilities: ['chat', 'code', 'multilingual'],
-        speed: 'fast',
+      "nv-mistralai/mistral-nemo-12b-instruct": {
+        name: "Mistral Nemo 12B",
+        capabilities: ["chat", "code", "multilingual"],
+        speed: "fast",
         quality: 6,
         context: 65536,
       },
-      'abacusai/dracarys-llama-3.1-70b-instruct': {
-        name: 'Dracarys Llama 3.1 70B',
-        capabilities: ['chat', 'reasoning'],
-        speed: 'fast',
+      "abacusai/dracarys-llama-3.1-70b-instruct": {
+        name: "Dracarys Llama 3.1 70B",
+        capabilities: ["chat", "reasoning"],
+        speed: "fast",
         quality: 7,
         context: 131072,
       },
-      'openai/gpt-oss-20b': {
-        name: 'GPT-OSS 20B',
-        capabilities: ['chat', 'code'],
-        speed: 'fast',
+      "openai/gpt-oss-20b": {
+        name: "GPT-OSS 20B",
+        capabilities: ["chat", "code"],
+        speed: "fast",
         quality: 6,
         context: 32768,
       },
-      'openai/gpt-oss-120b': {
-        name: 'GPT-OSS 120B',
-        capabilities: ['chat', 'reasoning', 'code'],
-        speed: 'medium',
+      "openai/gpt-oss-120b": {
+        name: "GPT-OSS 120B",
+        capabilities: ["chat", "reasoning", "code"],
+        speed: "medium",
         quality: 7,
         context: 32768,
       },
@@ -548,89 +548,89 @@ const MODELS = {
 
   // ── Vision / Multimodal Models ──
   vision: {
-    category: 'Multimodal',
+    category: "Multimodal",
     models: {
-      'meta/llama-3.2-90b-vision-instruct': {
-        name: 'Llama 3.2 90B Vision',
-        capabilities: ['vision', 'image_understanding', 'chart_reading'],
-        speed: 'medium',
+      "meta/llama-3.2-90b-vision-instruct": {
+        name: "Llama 3.2 90B Vision",
+        capabilities: ["vision", "image_understanding", "chart_reading"],
+        speed: "medium",
         quality: 9,
         context: 131072,
       },
-      'meta/llama-4-maverick-17b-128e-instruct': {
-        name: 'Llama 4 Maverick 17B',
-        capabilities: ['vision', 'image_understanding', 'chat'],
-        speed: 'fast',
+      "meta/llama-4-maverick-17b-128e-instruct": {
+        name: "Llama 4 Maverick 17B",
+        capabilities: ["vision", "image_understanding", "chat"],
+        speed: "fast",
         quality: 9,
         context: 131072,
       },
-      'microsoft/phi-4-multimodal-instruct': {
-        name: 'Phi-4 Multimodal',
-        capabilities: ['vision', 'image_understanding', 'audio'],
-        speed: 'fast',
+      "microsoft/phi-4-multimodal-instruct": {
+        name: "Phi-4 Multimodal",
+        capabilities: ["vision", "image_understanding", "audio"],
+        speed: "fast",
         quality: 8,
         context: 65536,
       },
-      'meta/llama-3.2-11b-vision-instruct': {
-        name: 'Llama 3.2 11B Vision',
-        capabilities: ['vision', 'image_understanding'],
-        speed: 'fast',
+      "meta/llama-3.2-11b-vision-instruct": {
+        name: "Llama 3.2 11B Vision",
+        capabilities: ["vision", "image_understanding"],
+        speed: "fast",
         quality: 7,
         context: 131072,
       },
-      'nvidia/llama-3.1-nemotron-nano-vl-8b-v1': {
-        name: 'Nemotron Nano VL 8B',
-        capabilities: ['vision', 'image_understanding'],
-        speed: 'very_fast',
+      "nvidia/llama-3.1-nemotron-nano-vl-8b-v1": {
+        name: "Nemotron Nano VL 8B",
+        capabilities: ["vision", "image_understanding"],
+        speed: "very_fast",
         quality: 6,
         context: 65536,
       },
-      'microsoft/kosmos-2': {
-        name: 'Kosmos-2',
-        capabilities: ['vision', 'grounding'],
-        speed: 'fast',
+      "microsoft/kosmos-2": {
+        name: "Kosmos-2",
+        capabilities: ["vision", "grounding"],
+        speed: "fast",
         quality: 6,
         context: 2048,
       },
-      'microsoft/phi-3-vision-128k-instruct': {
-        name: 'Phi-3 Vision 128K',
-        capabilities: ['vision', 'image_understanding'],
-        speed: 'fast',
+      "microsoft/phi-3-vision-128k-instruct": {
+        name: "Phi-3 Vision 128K",
+        capabilities: ["vision", "image_understanding"],
+        speed: "fast",
         quality: 6,
         context: 131072,
       },
-      'nvidia/neva-22b': {
-        name: 'NeVA 22B',
-        capabilities: ['vision', 'image_understanding'],
-        speed: 'medium',
+      "nvidia/neva-22b": {
+        name: "NeVA 22B",
+        capabilities: ["vision", "image_understanding"],
+        speed: "medium",
         quality: 6,
         context: 4096,
       },
-      'adept/fuyu-8b': {
-        name: 'Fuyu 8B',
-        capabilities: ['vision', 'image_understanding', 'chart_reading'],
-        speed: 'fast',
+      "adept/fuyu-8b": {
+        name: "Fuyu 8B",
+        capabilities: ["vision", "image_understanding", "chart_reading"],
+        speed: "fast",
         quality: 5,
         context: 2048,
       },
-      'nvidia/llama-3.2-nemoretriever-1b-vlm-embed-v1': {
-        name: 'NemoRetriever VLM 1B',
-        capabilities: ['vision', 'embedding'],
-        speed: 'fast',
+      "nvidia/llama-3.2-nemoretriever-1b-vlm-embed-v1": {
+        name: "NemoRetriever VLM 1B",
+        capabilities: ["vision", "embedding"],
+        speed: "fast",
         quality: 5,
         context: 8192,
       },
-      'nvidia/nemotron-nano-12b-v2-vl': {
-        name: 'Nemotron Nano 12B VL v2',
-        capabilities: ['vision', 'image_understanding'],
-        speed: 'very_fast',
+      "nvidia/nemotron-nano-12b-v2-vl": {
+        name: "Nemotron Nano 12B VL v2",
+        capabilities: ["vision", "image_understanding"],
+        speed: "very_fast",
         quality: 6,
         context: 65536,
       },
-      'nvidia/cosmos-reason2-8b': {
-        name: 'Cosmos Reason2 8B',
-        capabilities: ['vision', 'reasoning', 'video'],
-        speed: 'fast',
+      "nvidia/cosmos-reason2-8b": {
+        name: "Cosmos Reason2 8B",
+        capabilities: ["vision", "reasoning", "video"],
+        speed: "fast",
         quality: 6,
         context: 65536,
       },
@@ -639,42 +639,42 @@ const MODELS = {
 
   // ── Image Generation Models ──
   image: {
-    category: 'Image Generation',
+    category: "Image Generation",
     models: {
-      'black-forest-labs/flux.1-dev': {
-        name: 'Flux.1 Dev',
-        capabilities: ['text_to_image', 'image_generation'],
-        speed: 'medium',
+      "black-forest-labs/flux.1-dev": {
+        name: "Flux.1 Dev",
+        capabilities: ["text_to_image", "image_generation"],
+        speed: "medium",
         quality: 9,
       },
-      'black-forest-labs/flux.1-schnell': {
-        name: 'Flux.1 Schnell',
-        capabilities: ['text_to_image', 'image_generation'],
-        speed: 'fast',
+      "black-forest-labs/flux.1-schnell": {
+        name: "Flux.1 Schnell",
+        capabilities: ["text_to_image", "image_generation"],
+        speed: "fast",
         quality: 8,
       },
-      'black-forest-labs/flux.2-klein-4b': {
-        name: 'Flux.2 Klein 4B',
-        capabilities: ['text_to_image', 'image_generation'],
-        speed: 'very_fast',
+      "black-forest-labs/flux.2-klein-4b": {
+        name: "Flux.2 Klein 4B",
+        capabilities: ["text_to_image", "image_generation"],
+        speed: "very_fast",
         quality: 7,
       },
-      'stabilityai/stable-diffusion-3-medium': {
-        name: 'SD 3 Medium',
-        capabilities: ['text_to_image'],
-        speed: 'medium',
+      "stabilityai/stable-diffusion-3-medium": {
+        name: "SD 3 Medium",
+        capabilities: ["text_to_image"],
+        speed: "medium",
         quality: 8,
       },
-      'stabilityai/stable-diffusion-xl': {
-        name: 'SD XL',
-        capabilities: ['text_to_image'],
-        speed: 'medium',
+      "stabilityai/stable-diffusion-xl": {
+        name: "SD XL",
+        capabilities: ["text_to_image"],
+        speed: "medium",
         quality: 7,
       },
-      'google/diffusiongemma-26b-a4b-it': {
-        name: 'DiffusionGemma 26B',
-        capabilities: ['text_to_image'],
-        speed: 'medium',
+      "google/diffusiongemma-26b-a4b-it": {
+        name: "DiffusionGemma 26B",
+        capabilities: ["text_to_image"],
+        speed: "medium",
         quality: 8,
       },
     },
@@ -682,115 +682,115 @@ const MODELS = {
 
   // ── Embedding Models ──
   embedding: {
-    category: 'Embeddings',
+    category: "Embeddings",
     models: {
-      'nvidia/nv-embedqa-e5-v5': {
-        name: 'NV-EmbedQA E5 v5',
-        capabilities: ['embedding', 'retrieval'],
+      "nvidia/nv-embedqa-e5-v5": {
+        name: "NV-EmbedQA E5 v5",
+        capabilities: ["embedding", "retrieval"],
         dimensions: 1024,
-        speed: 'fast',
+        speed: "fast",
       },
-      'nvidia/nv-embed-v1': {
-        name: 'NV-Embed v1',
-        capabilities: ['embedding', 'retrieval'],
+      "nvidia/nv-embed-v1": {
+        name: "NV-Embed v1",
+        capabilities: ["embedding", "retrieval"],
         dimensions: 1024,
-        speed: 'fast',
+        speed: "fast",
       },
-      'nvidia/llama-nemotron-embed-1b-v2': {
-        name: 'Nemotron Embed 1B v2',
-        capabilities: ['embedding'],
+      "nvidia/llama-nemotron-embed-1b-v2": {
+        name: "Nemotron Embed 1B v2",
+        capabilities: ["embedding"],
         dimensions: 2048,
-        speed: 'very_fast',
+        speed: "very_fast",
       },
-      'nvidia/nv-embedqa-mistral-7b-v2': {
-        name: 'NV-EmbedQA Mistral 7B v2',
-        capabilities: ['embedding', 'retrieval'],
+      "nvidia/nv-embedqa-mistral-7b-v2": {
+        name: "NV-EmbedQA Mistral 7B v2",
+        capabilities: ["embedding", "retrieval"],
         dimensions: 4096,
-        speed: 'fast',
+        speed: "fast",
       },
-      'nvidia/nv-embedcode-7b-v1': {
-        name: 'NV-EmbedCode 7B',
-        capabilities: ['embedding', 'code'],
+      "nvidia/nv-embedcode-7b-v1": {
+        name: "NV-EmbedCode 7B",
+        capabilities: ["embedding", "code"],
         dimensions: 4096,
-        speed: 'fast',
+        speed: "fast",
       },
-      'nvidia/llama-3.2-nv-embedqa-1b-v1': {
-        name: 'NV-EmbedQA 1B v1',
-        capabilities: ['embedding', 'retrieval'],
+      "nvidia/llama-3.2-nv-embedqa-1b-v1": {
+        name: "NV-EmbedQA 1B v1",
+        capabilities: ["embedding", "retrieval"],
         dimensions: 1024,
-        speed: 'very_fast',
+        speed: "very_fast",
       },
-      'nvidia/embed-qa-4': {
-        name: 'Embed QA 4',
-        capabilities: ['embedding', 'retrieval'],
+      "nvidia/embed-qa-4": {
+        name: "Embed QA 4",
+        capabilities: ["embedding", "retrieval"],
         dimensions: 1024,
-        speed: 'fast',
+        speed: "fast",
       },
-      'baai/bge-m3': {
-        name: 'BGE M3',
-        capabilities: ['embedding', 'retrieval', 'multilingual'],
+      "baai/bge-m3": {
+        name: "BGE M3",
+        capabilities: ["embedding", "retrieval", "multilingual"],
         dimensions: 1024,
-        speed: 'fast',
+        speed: "fast",
       },
-      'snowflake/arctic-embed-l': {
-        name: 'Arctic Embed L',
-        capabilities: ['embedding', 'retrieval'],
+      "snowflake/arctic-embed-l": {
+        name: "Arctic Embed L",
+        capabilities: ["embedding", "retrieval"],
         dimensions: 1024,
-        speed: 'fast',
+        speed: "fast",
       },
     },
   },
 
   // ── Safety / Guard Models ──
   safety: {
-    category: 'Safety',
+    category: "Safety",
     models: {
-      'nvidia/llama-3.1-nemoguard-8b-content-safety': {
-        name: 'Nemoguard Content Safety',
-        capabilities: ['content_safety'],
-        speed: 'fast',
+      "nvidia/llama-3.1-nemoguard-8b-content-safety": {
+        name: "Nemoguard Content Safety",
+        capabilities: ["content_safety"],
+        speed: "fast",
       },
-      'nvidia/nemotron-3.5-content-safety': {
-        name: 'Nemotron 3.5 Safety',
-        capabilities: ['content_safety'],
-        speed: 'fast',
+      "nvidia/nemotron-3.5-content-safety": {
+        name: "Nemotron 3.5 Safety",
+        capabilities: ["content_safety"],
+        speed: "fast",
       },
-      'nvidia/llama-3.1-nemotron-safety-guard-8b-v3': {
-        name: 'Nemotron Safety Guard 8B v3',
-        capabilities: ['content_safety'],
-        speed: 'fast',
+      "nvidia/llama-3.1-nemotron-safety-guard-8b-v3": {
+        name: "Nemotron Safety Guard 8B v3",
+        capabilities: ["content_safety"],
+        speed: "fast",
       },
-      'nvidia/nemotron-content-safety-reasoning-4b': {
-        name: 'Content Safety Reasoning 4B',
-        capabilities: ['content_safety', 'reasoning'],
-        speed: 'fast',
+      "nvidia/nemotron-content-safety-reasoning-4b": {
+        name: "Content Safety Reasoning 4B",
+        capabilities: ["content_safety", "reasoning"],
+        speed: "fast",
       },
-      'nvidia/nemoguard-jailbreak-detect': {
-        name: 'Jailbreak Detect',
-        capabilities: ['jailbreak_detect'],
-        speed: 'fast',
+      "nvidia/nemoguard-jailbreak-detect": {
+        name: "Jailbreak Detect",
+        capabilities: ["jailbreak_detect"],
+        speed: "fast",
       },
-      'nvidia/llama-3.1-nemoguard-8b-topic-control': {
-        name: 'Topic Control',
-        capabilities: ['topic_control'],
-        speed: 'fast',
+      "nvidia/llama-3.1-nemoguard-8b-topic-control": {
+        name: "Topic Control",
+        capabilities: ["topic_control"],
+        speed: "fast",
       },
-      'meta/llama-guard-4-12b': {
-        name: 'Llama Guard 4 12B',
-        capabilities: ['content_safety'],
-        speed: 'fast',
+      "meta/llama-guard-4-12b": {
+        name: "Llama Guard 4 12B",
+        capabilities: ["content_safety"],
+        speed: "fast",
       },
     },
   },
 
   // ── Video / Vision-Language Models ──
   video: {
-    category: 'Video',
+    category: "Video",
     models: {
-      'nvidia/cosmos-reason2-8b': {
-        name: 'Cosmos Reason2 8B',
-        capabilities: ['video', 'reasoning', 'vision'],
-        speed: 'fast',
+      "nvidia/cosmos-reason2-8b": {
+        name: "Cosmos Reason2 8B",
+        capabilities: ["video", "reasoning", "vision"],
+        speed: "fast",
         quality: 6,
       },
     },
@@ -803,129 +803,129 @@ const MODELS = {
 const TASK_ROUTES = {
   // General conversation
   chat: {
-    task: 'chat',
-    description: 'General conversation and Q&A',
+    task: "chat",
+    description: "General conversation and Q&A",
     chain: [
-      'nvidia/llama-3.3-nemotron-super-49b-v1.5',
-      'nvidia/llama-3.3-nemotron-super-49b-v1',
-      'nvidia/llama-3.1-nemotron-ultra-253b-v1',
-      'meta/llama-3.3-70b-instruct',
-      'qwen/qwen3.5-122b-a10b',
-      'deepseek-ai/deepseek-v4-flash',
+      "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+      "nvidia/llama-3.3-nemotron-super-49b-v1",
+      "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+      "meta/llama-3.3-70b-instruct",
+      "qwen/qwen3.5-122b-a10b",
+      "deepseek-ai/deepseek-v4-flash",
     ],
-    endpoint: 'chat',
+    endpoint: "chat",
   },
 
   // Code generation & analysis
   code: {
-    task: 'code',
-    description: 'Code generation, debugging, and analysis',
+    task: "code",
+    description: "Code generation, debugging, and analysis",
     chain: [
-      'deepseek-ai/deepseek-v4-flash',
-      'deepseek-ai/deepseek-v4-pro',
-      'nvidia/llama-3.3-nemotron-super-49b-v1.5',
-      'moonshotai/kimi-k2.6',
-      'qwen/qwen3.5-122b-a10b',
-      'mistralai/codestral-22b-instruct-v0.1',
+      "deepseek-ai/deepseek-v4-flash",
+      "deepseek-ai/deepseek-v4-pro",
+      "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+      "moonshotai/kimi-k2.6",
+      "qwen/qwen3.5-122b-a10b",
+      "mistralai/codestral-22b-instruct-v0.1",
     ],
-    endpoint: 'chat',
+    endpoint: "chat",
   },
 
   // Deep reasoning & math
   reasoning: {
-    task: 'reasoning',
-    description: 'Complex reasoning, math, logic puzzles',
+    task: "reasoning",
+    description: "Complex reasoning, math, logic puzzles",
     chain: [
-      'qwen/qwq-32b',
-      'nvidia/llama-3.1-nemotron-ultra-253b-v1',
-      'nvidia/nemotron-3-super-120b-a12b',
-      'nvidia/llama-3.3-nemotron-super-49b-v1.5',
-      'qwen/qwen3.5-122b-a10b',
+      "qwen/qwq-32b",
+      "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+      "nvidia/nemotron-3-super-120b-a12b",
+      "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+      "qwen/qwen3.5-122b-a10b",
     ],
-    endpoint: 'chat',
+    endpoint: "chat",
   },
 
   // Fast, simple responses
   fast: {
-    task: 'fast',
-    description: 'Quick responses for simple queries',
+    task: "fast",
+    description: "Quick responses for simple queries",
     chain: [
-      'microsoft/phi-4-mini-instruct',
-      'deepseek-ai/deepseek-v4-flash',
-      'stepfun-ai/step-3.5-flash',
-      'google/gemma-3-4b-it',
-      'mistralai/ministral-14b-instruct-2512',
-      'mistralai/mistral-nemotron',
+      "microsoft/phi-4-mini-instruct",
+      "deepseek-ai/deepseek-v4-flash",
+      "stepfun-ai/step-3.5-flash",
+      "google/gemma-3-4b-it",
+      "mistralai/ministral-14b-instruct-2512",
+      "mistralai/mistral-nemotron",
     ],
-    endpoint: 'chat',
+    endpoint: "chat",
   },
 
   // Image analysis / vision
   vision: {
-    task: 'vision',
-    description: 'Image analysis and understanding',
+    task: "vision",
+    description: "Image analysis and understanding",
     chain: [
-      'meta/llama-3.2-90b-vision-instruct',
-      'meta/llama-4-maverick-17b-128e-instruct',
-      'microsoft/phi-4-multimodal-instruct',
-      'meta/llama-3.2-11b-vision-instruct',
-      'nvidia/nemotron-nano-12b-v2-vl',
+      "meta/llama-3.2-90b-vision-instruct",
+      "meta/llama-4-maverick-17b-128e-instruct",
+      "microsoft/phi-4-multimodal-instruct",
+      "meta/llama-3.2-11b-vision-instruct",
+      "nvidia/nemotron-nano-12b-v2-vl",
     ],
-    endpoint: 'chat',
+    endpoint: "chat",
   },
 
   // Image generation
   image: {
-    task: 'image',
-    description: 'Image generation from text prompts',
+    task: "image",
+    description: "Image generation from text prompts",
     chain: [
-      'black-forest-labs/flux.1-dev',
-      'black-forest-labs/flux.1-schnell',
-      'black-forest-labs/flux.2-klein-4b',
-      'stabilityai/stable-diffusion-3-medium',
-      'google/diffusiongemma-26b-a4b-it',
+      "black-forest-labs/flux.1-dev",
+      "black-forest-labs/flux.1-schnell",
+      "black-forest-labs/flux.2-klein-4b",
+      "stabilityai/stable-diffusion-3-medium",
+      "google/diffusiongemma-26b-a4b-it",
     ],
-    endpoint: 'image',
+    endpoint: "image",
   },
 
   // Translation
   translate: {
-    task: 'translate',
-    description: 'Text translation between languages',
+    task: "translate",
+    description: "Text translation between languages",
     chain: [
-      'nvidia/llama-3.3-nemotron-super-49b-v1',
-      'qwen/qwen3.5-122b-a10b',
-      'meta/llama-3.3-70b-instruct',
-      'mistralai/mistral-large-3-675b-instruct-2512',
-      'mistralai/mistral-nemotron',
+      "nvidia/llama-3.3-nemotron-super-49b-v1",
+      "qwen/qwen3.5-122b-a10b",
+      "meta/llama-3.3-70b-instruct",
+      "mistralai/mistral-large-3-675b-instruct-2512",
+      "mistralai/mistral-nemotron",
     ],
-    endpoint: 'chat',
+    endpoint: "chat",
   },
 
   // Content safety
   safety: {
-    task: 'safety',
-    description: 'Content safety analysis',
+    task: "safety",
+    description: "Content safety analysis",
     chain: [
-      'nvidia/llama-3.1-nemoguard-8b-content-safety',
-      'nvidia/nemotron-3.5-content-safety',
-      'nvidia/llama-3.1-nemotron-safety-guard-8b-v3',
-      'meta/llama-guard-4-12b',
+      "nvidia/llama-3.1-nemoguard-8b-content-safety",
+      "nvidia/nemotron-3.5-content-safety",
+      "nvidia/llama-3.1-nemotron-safety-guard-8b-v3",
+      "meta/llama-guard-4-12b",
     ],
-    endpoint: 'safety',
+    endpoint: "safety",
   },
 
   // Embeddings
   embedding: {
-    task: 'embedding',
-    description: 'Text embedding and vector generation',
+    task: "embedding",
+    description: "Text embedding and vector generation",
     chain: [
-      'nvidia/nv-embedqa-e5-v5',
-      'nvidia/nv-embedqa-mistral-7b-v2',
-      'baai/bge-m3',
-      'nvidia/nv-embed-v1',
+      "nvidia/nv-embedqa-e5-v5",
+      "nvidia/nv-embedqa-mistral-7b-v2",
+      "baai/bge-m3",
+      "nvidia/nv-embed-v1",
     ],
-    endpoint: 'embedding',
+    endpoint: "embedding",
   },
 };
 

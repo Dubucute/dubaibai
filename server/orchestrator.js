@@ -2,11 +2,10 @@
 // Smart agent that auto-detects what the user wants, routes to the best model,
 // and falls back gracefully if models fail. One agent to rule them all.
 
-const CONFIG = require('./config');
-const NIMClient = require('./nim');
-const { detectIntent, getIntentEmoji, getIntentLabel } = require('./router');
-const { getModelInfo, getTaskRoute } = require('./models');
-
+const CONFIG = require("./config");
+const NIMClient = require("./nim");
+const { detectIntent, getIntentEmoji, getIntentLabel } = require("./router");
+const { getModelInfo, getTaskRoute } = require("./models");
 
 class Orchestrator {
   constructor(options = {}) {
@@ -16,15 +15,18 @@ class Orchestrator {
   }
 
   /**
-  * Process a user request through the unified agent loop.
-  * Auto-detects intent, selects the best model chain, and auto-fallbacks.
-  */
+   * Process a user request through the unified agent loop.
+   * Auto-detects intent, selects the best model chain, and auto-fallbacks.
+   */
   async *process(userMessage, history = [], context = {}) {
     // Clean history: filter out any malformed messages (empty objects, missing role/content)
-    const cleanHistory = (history || []).filter(m =>
-      m && typeof m === 'object' &&
-      typeof m.role === 'string' && m.role.length > 0 &&
-      typeof m.content === 'string'
+    const cleanHistory = (history || []).filter(
+      (m) =>
+        m &&
+        typeof m === "object" &&
+        typeof m.role === "string" &&
+        m.role.length > 0 &&
+        typeof m.content === "string",
     );
 
     // Step 1: Detect the intent / task type
@@ -33,7 +35,7 @@ class Orchestrator {
     const route = intent.route;
 
     yield {
-      type: 'intent',
+      type: "intent",
       task,
       confidence: intent.confidence,
       label: getIntentLabel(task),
@@ -47,35 +49,35 @@ class Orchestrator {
 
     // Step 2: Route to the right handler based on task type
     switch (task) {
-      case 'image':
+      case "image":
         yield* this._handleImageGeneration(userMessage, history, context);
         break;
 
-      case 'vision':
+      case "vision":
         yield* this._handleVisionAnalysis(userMessage, history, context);
         break;
 
-      case 'code':
+      case "code":
         yield* this._handleCodeTask(userMessage, history, context);
         break;
 
-      case 'reasoning':
+      case "reasoning":
         yield* this._handleReasoningTask(userMessage, history, context);
         break;
 
-      case 'fast':
+      case "fast":
         yield* this._handleFastResponse(userMessage, history, context);
         break;
 
-      case 'translate':
+      case "translate":
         yield* this._handleTranslation(userMessage, history, context);
         break;
 
-      case 'safety':
+      case "safety":
         yield* this._handleSafetyCheck(userMessage, context);
         break;
 
-      case 'embedding':
+      case "embedding":
         yield* this._handleEmbedding(userMessage, context);
         break;
 
@@ -86,32 +88,32 @@ class Orchestrator {
   }
 
   // ── General Chat (default) — with token streaming ──
-  async *_handleGeneralChat(message, history, context, task = 'chat') {
+  async *_handleGeneralChat(message, history, context, task = "chat") {
     const systemPrompt = this._buildSystemPrompt(context);
     const messages = [
-      { role: 'system', content: systemPrompt },
+      { role: "system", content: systemPrompt },
       ...(history || []).slice(-15),
-      { role: 'user', content: this._buildUserMessage(message, context) },
+      { role: "user", content: this._buildUserMessage(message, context) },
     ];
 
-    yield { type: 'thinking', content: `💭 Thinking with auto-selected model...` };
+    yield { type: "thinking", content: `💭 Thinking with auto-selected model...` };
 
     try {
-      let fullContent = '';
+      let fullContent = "";
       for await (const update of this.nim.chatStream(messages, {
         task,
         max_tokens: CONFIG.maxTokens,
         temperature: CONFIG.temperature,
       })) {
-        if (update.type === 'model_info') {
-          yield { type: 'model_info', ...update, route: update.route || task };
-          yield { type: 'thinking', content: 'Generating...' };
-        } else if (update.type === 'token') {
+        if (update.type === "model_info") {
+          yield { type: "model_info", ...update, route: update.route || task };
+          yield { type: "thinking", content: "Generating..." };
+        } else if (update.type === "token") {
           fullContent += update.content;
-          yield { type: 'token', content: update.content };
-        } else if (update.type === 'done') {
+          yield { type: "token", content: update.content };
+        } else if (update.type === "done") {
           yield {
-            type: 'result',
+            type: "result",
             content: fullContent,
             model: update.model,
             modelName: update.modelName,
@@ -120,7 +122,7 @@ class Orchestrator {
       }
     } catch (e) {
       yield {
-        type: 'error',
+        type: "error",
         content: `❌ All models failed: ${e.message}`,
         error: e.message,
       };
@@ -129,7 +131,7 @@ class Orchestrator {
 
   // ── Code Tasks — with token streaming ──
   async *_handleCodeTask(message, history, context) {
-    yield { type: 'thinking', content: `💻 Routing to code-optimized model...` };
+    yield { type: "thinking", content: `💻 Routing to code-optimized model...` };
 
     try {
       const systemPrompt = `You are an expert programming assistant. Help the user write, debug, analyze, or explain code.
@@ -139,95 +141,107 @@ When creating files for the user, always put a filename comment at the top of ea
 For example: "// filename: app.js" or "# filename: main.py" or "<!-- filename: index.html -->".
 The user can then click "Create File" to save the code directly to disk.`;
       const messages = [
-        { role: 'system', content: systemPrompt },
+        { role: "system", content: systemPrompt },
         ...(history || []).slice(-10),
-        { role: 'user', content: message },
+        { role: "user", content: message },
       ];
 
-      let fullContent = '';
+      let fullContent = "";
       for await (const update of this.nim.chatStream(messages, {
-        task: 'code',
+        task: "code",
         max_tokens: 8192,
         temperature: 0.3,
       })) {
-        if (update.type === 'model_info') {
-          yield { type: 'model_info', ...update, route: 'code' };
-          yield { type: 'thinking', content: 'Generating...' };
-        } else if (update.type === 'token') {
+        if (update.type === "model_info") {
+          yield { type: "model_info", ...update, route: "code" };
+          yield { type: "thinking", content: "Generating..." };
+        } else if (update.type === "token") {
           fullContent += update.content;
-          yield { type: 'token', content: update.content };
-        } else if (update.type === 'done') {
-          yield { type: 'result', content: fullContent, model: update.model, modelName: update.modelName };
+          yield { type: "token", content: update.content };
+        } else if (update.type === "done") {
+          yield {
+            type: "result",
+            content: fullContent,
+            model: update.model,
+            modelName: update.modelName,
+          };
         }
       }
     } catch (e) {
-      yield { type: 'error', content: `❌ Code generation failed: ${e.message}` };
+      yield { type: "error", content: `❌ Code generation failed: ${e.message}` };
     }
   }
 
   // ── Deep Reasoning Tasks — with token streaming ──
   async *_handleReasoningTask(message, history, context) {
-    yield { type: 'thinking', content: `🧠 Routing to deep reasoning model (QWQ 32B)...` };
+    yield { type: "thinking", content: `🧠 Routing to deep reasoning model (QWQ 32B)...` };
 
     try {
       const systemPrompt = `You are a deep reasoning assistant. Think step by step through complex problems.
 Break down the problem, consider multiple angles, and provide thorough analysis.
 Use chain-of-thought reasoning before giving your final answer.`;
       const messages = [
-        { role: 'system', content: systemPrompt },
+        { role: "system", content: systemPrompt },
         ...(history || []).slice(-8),
-        { role: 'user', content: message },
+        { role: "user", content: message },
       ];
 
-      let fullContent = '';
+      let fullContent = "";
       for await (const update of this.nim.chatStream(messages, {
-        task: 'reasoning',
+        task: "reasoning",
         max_tokens: 8192,
         temperature: 0.5,
       })) {
-        if (update.type === 'model_info') {
-          yield { type: 'model_info', ...update, route: 'reasoning' };
-          yield { type: 'thinking', content: 'Generating...' };
-        } else if (update.type === 'token') {
+        if (update.type === "model_info") {
+          yield { type: "model_info", ...update, route: "reasoning" };
+          yield { type: "thinking", content: "Generating..." };
+        } else if (update.type === "token") {
           fullContent += update.content;
-          yield { type: 'token', content: update.content };
-        } else if (update.type === 'done') {
-          yield { type: 'result', content: fullContent, model: update.model, modelName: update.modelName };
+          yield { type: "token", content: update.content };
+        } else if (update.type === "done") {
+          yield {
+            type: "result",
+            content: fullContent,
+            model: update.model,
+            modelName: update.modelName,
+          };
         }
       }
     } catch (e) {
-      yield { type: 'error', content: `❌ Reasoning failed: ${e.message}` };
+      yield { type: "error", content: `❌ Reasoning failed: ${e.message}` };
     }
   }
 
   // ── Fast / Simple Responses — with token streaming ──
   async *_handleFastResponse(message, history, context) {
-    yield { type: 'thinking', content: `⚡ Using fast model for quick response...` };
+    yield { type: "thinking", content: `⚡ Using fast model for quick response...` };
 
     try {
-      const messages = [
-        ...(history || []).slice(-5),
-        { role: 'user', content: message },
-      ];
+      const messages = [...(history || []).slice(-5), { role: "user", content: message }];
 
-      let fullContent = '';
+      let fullContent = "";
       for await (const update of this.nim.chatStream(messages, {
-        task: 'fast',
+        task: "fast",
         max_tokens: 1024,
         temperature: 0.7,
       })) {
-        if (update.type === 'model_info') {
-          yield { type: 'model_info', ...update, route: 'fast' };
-          yield { type: 'thinking', content: 'Generating...' };
-        } else if (update.type === 'token') {
+        if (update.type === "model_info") {
+          yield { type: "model_info", ...update, route: "fast" };
+          yield { type: "thinking", content: "Generating..." };
+        } else if (update.type === "token") {
           fullContent += update.content;
-          yield { type: 'token', content: update.content };
-        } else if (update.type === 'done') {
-          yield { type: 'result', content: fullContent, model: update.model, modelName: update.modelName };
+          yield { type: "token", content: update.content };
+        } else if (update.type === "done") {
+          yield {
+            type: "result",
+            content: fullContent,
+            model: update.model,
+            modelName: update.modelName,
+          };
         }
       }
     } catch (e) {
-      yield { type: 'error', content: `❌ Quick response failed: ${e.message}` };
+      yield { type: "error", content: `❌ Quick response failed: ${e.message}` };
     }
   }
 
@@ -241,22 +255,24 @@ Use chain-of-thought reasoning before giving your final answer.`;
     if (context.imagineHeight) imgOpts.height = context.imagineHeight;
     if (context.imagineSteps) imgOpts.steps = context.imagineSteps;
 
-    yield { type: 'thinking', content: modelOverride
-      ? `🎨 Generating with selected model: ${modelOverride.split('/').pop()}...`
-      : `🎨 Generating image: "${prompt.slice(0, 80)}..."`
+    yield {
+      type: "thinking",
+      content: modelOverride
+        ? `🎨 Generating with selected model: ${modelOverride.split("/").pop()}...`
+        : `🎨 Generating image: "${prompt.slice(0, 80)}..."`,
     };
 
     try {
       const result = await this.nim.generateImage(prompt, { ...imgOpts, model: modelOverride });
 
       const modelInfo = getModelInfo(result.model);
-      const modelName = modelInfo?.name || result.model.split('/').pop();
+      const modelName = modelInfo?.name || result.model.split("/").pop();
 
       yield {
-        type: 'model_info',
+        type: "model_info",
         model: result.model,
         modelName,
-        route: 'image',
+        route: "image",
         fallbackUsed: result.fallback_used,
         content: result.fallback_used
           ? `🎨 Generated with **${modelName}** (fallback)`
@@ -264,21 +280,21 @@ Use chain-of-thought reasoning before giving your final answer.`;
       };
 
       if (result.image) {
-        yield { type: 'image', image: result.image, model: result.model, modelName, prompt };
+        yield { type: "image", image: result.image, model: result.model, modelName, prompt };
         yield {
-          type: 'result',
+          type: "result",
           content: `🎨 **Image Generated!**\n\nCreated with **${modelName}** (${result.width}x${result.height})\n\nPrompt: *${prompt}*`,
           model: result.model,
           image: result.image,
         };
       } else {
         yield {
-          type: 'result',
+          type: "result",
           content: `❌ Failed to generate image. The model responded but no image data was returned.`,
         };
       }
     } catch (e) {
-      yield { type: 'error', content: `❌ Image generation failed: ${e.message}` };
+      yield { type: "error", content: `❌ Image generation failed: ${e.message}` };
     }
   }
 
@@ -287,25 +303,25 @@ Use chain-of-thought reasoning before giving your final answer.`;
     const imageData = context.imageData || context.currentImage;
     if (!imageData) {
       yield {
-        type: 'error',
+        type: "error",
         content: `👁️ I need an image to analyze! Please attach an image and try again.`,
       };
       return;
     }
 
-    yield { type: 'thinking', content: `👁️ Analyzing image with vision model...` };
+    yield { type: "thinking", content: `👁️ Analyzing image with vision model...` };
 
     try {
       const result = await this.nim.vision(imageData, message);
 
       const modelInfo = getModelInfo(result.model);
-      const modelName = modelInfo?.name || result.model.split('/').pop();
+      const modelName = modelInfo?.name || result.model.split("/").pop();
 
       yield {
-        type: 'model_info',
+        type: "model_info",
         model: result.model,
         modelName,
-        route: 'vision',
+        route: "vision",
         fallbackUsed: result.fallback_used,
         content: result.fallback_used
           ? `👁️ Analyzed with **${modelName}** (fallback)`
@@ -313,101 +329,114 @@ Use chain-of-thought reasoning before giving your final answer.`;
       };
 
       yield {
-        type: 'result',
+        type: "result",
         content: `**🔍 Vision Analysis**\n**Model:** ${modelName}\n\n${result.content}`,
         model: result.model,
         modelName,
         usage: result.usage,
       };
     } catch (e) {
-      yield { type: 'error', content: `❌ Vision analysis failed: ${e.message}` };
+      yield { type: "error", content: `❌ Vision analysis failed: ${e.message}` };
     }
   }
 
   // ── Translation — with token streaming ──
   async *_handleTranslation(message, history, context) {
-    yield { type: 'thinking', content: `🌐 Translating...` };
+    yield { type: "thinking", content: `🌐 Translating...` };
 
     try {
       const systemPrompt = `You are a professional translator. Translate the user's message to their requested language.
 Respond with ONLY the translation, no explanations or notes.`;
       const messages = [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: message },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: message },
       ];
 
-      let fullContent = '';
+      let fullContent = "";
       for await (const update of this.nim.chatStream(messages, {
-        task: 'translate',
+        task: "translate",
         max_tokens: 2048,
         temperature: 0.1,
       })) {
-        if (update.type === 'model_info') {
-          yield { type: 'model_info', ...update, route: 'translate' };
-          yield { type: 'thinking', content: 'Generating...' };
-        } else if (update.type === 'token') {
+        if (update.type === "model_info") {
+          yield { type: "model_info", ...update, route: "translate" };
+          yield { type: "thinking", content: "Generating..." };
+        } else if (update.type === "token") {
           fullContent += update.content;
-          yield { type: 'token', content: update.content };
-        } else if (update.type === 'done') {
-          yield { type: 'result', content: fullContent, model: update.model, modelName: update.modelName };
+          yield { type: "token", content: update.content };
+        } else if (update.type === "done") {
+          yield {
+            type: "result",
+            content: fullContent,
+            model: update.model,
+            modelName: update.modelName,
+          };
         }
       }
     } catch (e) {
-      yield { type: 'error', content: `❌ Translation failed: ${e.message}` };
+      yield { type: "error", content: `❌ Translation failed: ${e.message}` };
     }
   }
 
   // ── Safety Check ──
   async *_handleSafetyCheck(message, context) {
-    yield { type: 'thinking', content: `🛡️ Analyzing content safety...` };
+    yield { type: "thinking", content: `🛡️ Analyzing content safety...` };
 
     try {
-      const safetyModel = 'nvidia/llama-3.1-nemoguard-8b-content-safety';
+      const safetyModel = "nvidia/llama-3.1-nemoguard-8b-content-safety";
       const messages = [
-        { role: 'system', content: 'Analyze the following content for safety violations. Respond with SAFE or UNSAFE and explain which categories are triggered.' },
-        { role: 'user', content: message },
+        {
+          role: "system",
+          content:
+            "Analyze the following content for safety violations. Respond with SAFE or UNSAFE and explain which categories are triggered.",
+        },
+        { role: "user", content: message },
       ];
 
-      const result = await this.nim.chat(messages, { task: 'chat', max_tokens: 512, temperature: 0.1 });
+      const result = await this.nim.chat(messages, {
+        task: "chat",
+        max_tokens: 512,
+        temperature: 0.1,
+      });
 
       const modelInfo = getModelInfo(result.model);
-      const modelName = modelInfo?.name || result.model.split('/').pop();
+      const modelName = modelInfo?.name || result.model.split("/").pop();
 
-      const isSafe = !result.content.toLowerCase().includes('unsafe');
+      const isSafe = !result.content.toLowerCase().includes("unsafe");
 
       yield {
-        type: 'model_info',
+        type: "model_info",
         model: result.model,
         modelName,
-        route: 'safety',
+        route: "safety",
         content: `🛡️ Safety checked with **${modelName}**`,
       };
 
       yield {
-        type: 'result',
-        content: `**🛡️ Safety Analysis**\n\n**Status:** ${isSafe ? '✅ SAFE' : '⚠️ UNSAFE'}\n**Model:** ${modelName}\n\n${result.content}`,
+        type: "result",
+        content: `**🛡️ Safety Analysis**\n\n**Status:** ${isSafe ? "✅ SAFE" : "⚠️ UNSAFE"}\n**Model:** ${modelName}\n\n${result.content}`,
         model: result.model,
         safe: isSafe,
       };
     } catch (e) {
-      yield { type: 'error', content: `❌ Safety check failed: ${e.message}` };
+      yield { type: "error", content: `❌ Safety check failed: ${e.message}` };
     }
   }
 
   // ── Embedding ──
   async *_handleEmbedding(message, context) {
-    yield { type: 'thinking', content: `📊 Generating embeddings...` };
+    yield { type: "thinking", content: `📊 Generating embeddings...` };
 
     try {
       const result = await this.nim.generateEmbeddings(message);
       const modelInfo = getModelInfo(result.model);
-      const modelName = modelInfo?.name || result.model.split('/').pop();
+      const modelName = modelInfo?.name || result.model.split("/").pop();
 
       yield {
-        type: 'model_info',
+        type: "model_info",
         model: result.model,
         modelName,
-        route: 'embedding',
+        route: "embedding",
         content: `📊 Embeddings generated with **${modelName}**`,
       };
 
@@ -416,20 +445,23 @@ Respond with ONLY the translation, no explanations or notes.`;
 
       if (embedding) {
         yield {
-          type: 'result',
-          content: `**📊 Embeddings**\n\n**Model:** ${modelName}\n**Dimensions:** ${embedding.length}\n**First 5 values:** [${embedding.slice(0, 5).map(n => typeof n === 'number' ? n.toFixed(4) : n).join(', ')}]`,
+          type: "result",
+          content: `**📊 Embeddings**\n\n**Model:** ${modelName}\n**Dimensions:** ${embedding.length}\n**First 5 values:** [${embedding
+            .slice(0, 5)
+            .map((n) => (typeof n === "number" ? n.toFixed(4) : n))
+            .join(", ")}]`,
           model: result.model,
           dimensions: embedding.length,
         };
       } else {
         yield {
-          type: 'result',
+          type: "result",
           content: `**📊 Embeddings Result**\n\n**Model:** ${modelName}\n\n\`\`\`json\n${JSON.stringify(data, null, 2).slice(0, 2000)}\n\`\`\``,
           model: result.model,
         };
       }
     } catch (e) {
-      yield { type: 'error', content: `❌ Embedding generation failed: ${e.message}` };
+      yield { type: "error", content: `❌ Embedding generation failed: ${e.message}` };
     }
   }
 
@@ -448,7 +480,7 @@ You can handle: conversation, coding, image generation, vision analysis, transla
 
 ## Current Context
 - Today: ${new Date().toLocaleDateString()}
-${context.hasImage ? '- User has attached an image for analysis' : ''}`;
+${context.hasImage ? "- User has attached an image for analysis" : ""}`;
   }
 
   _buildUserMessage(userMessage, context) {
@@ -477,8 +509,8 @@ ${context.hasImage ? '- User has attached an image for analysis' : ''}`;
 
     // Remove common prefixes and return the rest
     return message
-      .replace(/^(generate|create|make|draw|paint|render)\s+(me\s+)?(a|an|the)\s+/i, '')
-      .replace(/^(i want|i'd like|can you|please|could you)\s+/i, '')
+      .replace(/^(generate|create|make|draw|paint|render)\s+(me\s+)?(a|an|the)\s+/i, "")
+      .replace(/^(i want|i'd like|can you|please|could you)\s+/i, "")
       .trim();
   }
 }

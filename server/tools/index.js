@@ -12,7 +12,7 @@ function getTool(name) {
 }
 
 function listTools() {
-  return Object.values(tools).map(t => ({
+  return Object.values(tools).map((t) => ({
     name: t.name,
     description: t.description,
     parameters: t.parameters,
@@ -20,8 +20,8 @@ function listTools() {
 }
 
 function getOpenAITools() {
-  return Object.values(tools).map(t => ({
-    type: 'function',
+  return Object.values(tools).map((t) => ({
+    type: "function",
     function: {
       name: t.name,
       description: t.description,
