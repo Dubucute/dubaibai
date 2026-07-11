@@ -1,0 +1,151 @@
+/* ===== Syntax Highlighting — Prism Token Overrides ===== */
+/* These colors adapt to each Dubu theme via CSS custom properties */
+
+:root {
+  --syn-comment: #6c7a8d;
+  --syn-punctuation: #7fa2c1;
+  --syn-keyword: #f97583;
+  --syn-string: #9ecbff;
+  --syn-number: #ff9d4a;
+  --syn-function: #b392f0;
+  --syn-class: #ffab70;
+  --syn-constant: #79c0ff;
+  --syn-attr: #c8e1ff;
+  --syn-variable: #ffcda1;
+  --syn-operator: #d2a8ff;
+  --syn-tag: #f97583;
+  --syn-builtin: #d2a8ff;
+  --syn-regex: #7ee787;
+}
+
+.theme-light {
+  --syn-comment: #6e7781;
+  --syn-punctuation: #656d76;
+  --syn-keyword: #cf222e;
+  --syn-string: #0a3069;
+  --syn-number: #953800;
+  --syn-function: #8250df;
+  --syn-class: #8250df;
+  --syn-constant: #0550ae;
+  --syn-attr: #0a3069;
+  --syn-variable: #953800;
+  --syn-operator: #8250df;
+  --syn-tag: #cf222e;
+  --syn-builtin: #8250df;
+  --syn-regex: #116329;
+}
+
+/* Core tokens */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: var(--syn-comment) !important;
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: var(--syn-punctuation) !important;
+}
+
+/* Values */
+.token.property,
+.token.tag,
+.token.boolean,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: var(--syn-tag) !important;
+}
+
+.token.tag {
+  color: var(--syn-tag) !important;
+}
+
+.token.boolean,
+.token.number {
+  color: var(--syn-number) !important;
+}
+
+/* Strings and selectors */
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: var(--syn-string) !important;
+}
+
+.token.string {
+  color: var(--syn-string) !important;
+}
+
+/* Operators */
+.token.operator,
+.token.entity,
+.token.url {
+  color: var(--syn-operator) !important;
+}
+
+/* Keywords */
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: var(--syn-keyword) !important;
+}
+
+/* Functions and classes */
+.token.function,
+.token.class-name,
+.token.maybe-class-name {
+  color: var(--syn-function) !important;
+}
+
+/* Regex and variables */
+.token.regex,
+.token.important,
+.token.variable {
+  color: var(--syn-regex) !important;
+}
+
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+.token.italic {
+  font-style: italic;
+}
+.token.entity {
+  cursor: help;
+}
+
+/* Line numbers styling */
+.code-block.line-numbers {
+  padding-left: 3.5em !important;
+}
+
+.line-numbers .line-numbers-rows {
+  border-right-color: var(--border-color) !important;
+}
+
+.line-numbers-rows > span:before {
+  color: var(--text-muted) !important;
+}
+
+/* Prism base reset for chat context */
+.code-block pre[class*="language-"],
+.code-block code[class*="language-"] {
+  background: transparent !important;
+  text-shadow: none !important;
+  font-family: var(--font-mono) !important;
+}
+
+/* Inline code tags inside messages should not get Prism styles */
+.msg-content code:not([class*="language-"]) {
+  background: var(--tag-bg);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}

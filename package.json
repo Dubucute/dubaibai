@@ -1,0 +1,15 @@
+{
+  "name": "dubu-ai",
+  "version": "2.0.0",
+  "description": "Dubu AI — Autonomous Agent Platform powered by NVIDIA NIM",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^10.0.0"
+  }
+}
