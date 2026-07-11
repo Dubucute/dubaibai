@@ -1817,7 +1817,49 @@ body {
   text-transform: uppercase;
 }
 
-/* File creation UI */
+/* ===== Line numbers gutter ===== */
+.code-block.line-numbers {
+  position: relative;
+  display: flex;
+  padding-left: 0;
+}
+
+.code-block.line-numbers .code-gutter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  min-width: 36px;
+  padding: 0 8px 0 0;
+  user-select: none;
+  pointer-events: none;
+  color: var(--text-muted);
+  opacity: 0.35;
+  font-size: 11px;
+  line-height: 1.6;
+  border-right: 1px solid var(--border-color);
+  margin-right: 10px;
+  background: var(--code-bg);
+}
+
+.code-block.line-numbers .code-ln {
+  display: block;
+  text-align: right;
+  font-family: var(--font-mono);
+  line-height: 1.6;
+}
+
+.code-block.line-numbers code {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Adjust copy button position to be within the code block, not the gutter */
+.code-block.line-numbers .copy-btn {
+  right: 4px;
+}
+
+/* ===== File creation UI ===== */
 .file-badge {
   display: inline-flex;
   align-items: center;

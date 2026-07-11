@@ -552,7 +552,10 @@ window.sendToAgent = async function () {
               }
               // Highlight code blocks
               setTimeout(() => {
-                if (typeof Prism !== "undefined") Prism.highlightAllUnder(bubble);
+                if (typeof Prism !== "undefined") {
+                  Prism.highlightAllUnder(bubble);
+                  addLineNumbers(bubble);
+                }
               }, 50);
               // Save to history
               agentHistory.push({ role: "assistant", content: streamText });
@@ -716,7 +719,10 @@ window.stopGeneration = function () {
 
     // Highlight code blocks
     setTimeout(() => {
-      if (typeof Prism !== "undefined") Prism.highlightAllUnder(bubble);
+      if (typeof Prism !== "undefined") {
+        Prism.highlightAllUnder(bubble);
+        addLineNumbers(bubble);
+      }
     }, 50);
 
     // Save partial to history
@@ -808,7 +814,10 @@ function addMessage(role, content, authorOverride, options = {}) {
     container.appendChild(div);
     scrollToBottom(container);
     setTimeout(() => {
-      if (typeof Prism !== "undefined") Prism.highlightAllUnder(div);
+      if (typeof Prism !== "undefined") {
+        Prism.highlightAllUnder(div);
+        addLineNumbers(div);
+      }
     }, 50);
   }
 }
@@ -1036,7 +1045,10 @@ function typewriterEffect(contentEl, formattedHtml, rawText, speed = 20) {
         contentEl.insertAdjacentHTML("afterbegin", formattedHtml);
         contentEl.classList.add("formatting-applied");
         setTimeout(() => {
-          if (typeof Prism !== "undefined") Prism.highlightAllUnder(contentEl);
+          if (typeof Prism !== "undefined") {
+            Prism.highlightAllUnder(contentEl);
+            addLineNumbers(contentEl);
+          }
         }, 50);
         scrollToBottom(container);
       }, 400);
@@ -1182,6 +1194,34 @@ window.toggleReasoning = function (header) {
   const content = header.nextElementSibling;
   if (content) content.classList.toggle("open");
 };
+
+// ── Add line numbers to code blocks (called after Prism) ──
+function addLineNumbers(container) {
+  container.querySelectorAll(".code-block.line-numbers:not(.ln-processed)").forEach((block) => {
+    const codeEl = block.querySelector("code");
+    if (!codeEl) return;
+
+    const text = (codeEl.textContent || "").replace(/\n$/, "");
+    const lineCount = text.split("\n").length;
+
+    // Don't add numbers for single-line code
+    if (lineCount <= 1) return;
+
+    const gutter = document.createElement("div");
+    gutter.className = "code-gutter";
+    gutter.setAttribute("aria-hidden", "true");
+
+    for (let i = 1; i <= lineCount; i++) {
+      const lineNum = document.createElement("span");
+      lineNum.className = "code-ln";
+      lineNum.textContent = i;
+      gutter.appendChild(lineNum);
+    }
+
+    block.insertBefore(gutter, codeEl);
+    block.classList.add("ln-processed");
+  });
+}
 
 // ── Copy code block ──
 window.copyCodeBlock = function (btn) {
