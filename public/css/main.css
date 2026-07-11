@@ -1742,6 +1742,13 @@ body {
   color: var(--code-text);
   border: 1px solid var(--border-color);
   position: relative;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.code-block code {
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .code-block .copy-btn {
