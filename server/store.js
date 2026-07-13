@@ -37,7 +37,7 @@ class Store {
         created,
         updated,
         msgCount: messages.length,
-        preview: messages.length > 0 ? messages[messages.length - 1].content.slice(0, 80) : "",
+        preview: messages.length > 0 && messages[messages.length - 1]?.content ? messages[messages.length - 1].content.slice(0, 80) : "",
       }));
   }
 

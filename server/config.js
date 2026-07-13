@@ -1,4 +1,10 @@
 // ===== Configuration =====
+// Load .env file for local development (gitignored, never committed)
+try {
+  const path = require("path");
+  require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
+} catch (e) { /* dotenv not installed, skip */ }
+
 const CONFIG = {
   port: process.env.PORT || 3033,
   apiKey: process.env.NVIDIA_API_KEY || process.env.NVIDIA_NIM_API_KEY || "",
