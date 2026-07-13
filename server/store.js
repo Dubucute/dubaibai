@@ -62,6 +62,15 @@ class Store {
     return convo;
   }
 
+  updateConversationTitle(id, title) {
+    const convo = this.conversations.get(id);
+    if (!convo) return null;
+    convo.title = title;
+    convo.updated = Date.now();
+    this._save();
+    return convo;
+  }
+
   deleteConversation(id) {
     this.conversations.delete(id);
     this._save();

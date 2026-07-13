@@ -80,6 +80,24 @@ app.get("/api/models", async (req, res) => {
   }
 });
 
+// ── API: Generate follow-up suggestions ──
+app.post("/api/suggestions", async (req, res) => {
+  const { response } = req.body;
+  if (!response || response.length < 20) {
+    return res.json({ suggestions: null });
+  }
+
+  try {
+    const orchestrator = new Orchestrator({
+      apiKey: req.headers["x-api-key"] || CONFIG.apiKey,
+    });
+    const suggestions = await orchestrator.generateSuggestions(response);
+    res.json({ suggestions: suggestions || null });
+  } catch (e) {
+    res.json({ suggestions: null, error: e.message });
+  }
+});
+
 // ── API: Detect intent (for frontend) ──
 app.post("/api/detect", (req, res) => {
   const { message, context } = req.body;
@@ -226,6 +244,37 @@ app.post("/api/conversations/:id/messages", async (req, res) => {
 app.delete("/api/conversations/:id", (req, res) => {
   store.deleteConversation(req.params.id);
   res.json({ success: true });
+});
+
+app.post("/api/conversations/:id/generate-title", async (req, res) => {
+  const convo = store.getConversation(req.params.id);
+  if (!convo) return res.status(404).json({ error: "Not found" });
+
+  // Find the first user message to generate a title from
+  const firstUserMsg = convo.messages.find((m) => m.role === "user");
+  if (!firstUserMsg) return res.status(400).json({ error: "No user messages to generate title from" });
+
+  try {
+    const orchestrator = new Orchestrator({
+      apiKey: req.headers["x-api-key"] || CONFIG.apiKey,
+    });
+    const title = await orchestrator.generateTitle(firstUserMsg.content);
+
+    if (title) {
+      store.updateConversationTitle(convo.id, title);
+      res.json({ success: true, title });
+    } else {
+      // Fallback: use first 40 chars of the message
+      const fallbackTitle = firstUserMsg.content.slice(0, 40) + (firstUserMsg.content.length > 40 ? "..." : "");
+      store.updateConversationTitle(convo.id, fallbackTitle);
+      res.json({ success: true, title: fallbackTitle });
+    }
+  } catch (e) {
+    // Silent fallback
+    const fallbackTitle = firstUserMsg.content.slice(0, 40) + (firstUserMsg.content.length > 40 ? "..." : "");
+    store.updateConversationTitle(convo.id, fallbackTitle);
+    res.json({ success: true, title: fallbackTitle, note: "Used fallback" });
+  }
 });
 
 app.post("/api/conversations/:id/fork", (req, res) => {

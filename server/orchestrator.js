@@ -134,12 +134,15 @@ class Orchestrator {
     yield { type: "thinking", content: `💻 Routing to code-optimized model...` };
 
     try {
-      const systemPrompt = `You are an expert programming assistant. Help the user write, debug, analyze, or explain code.
-Respond with clean, well-commented code when relevant. Use proper formatting.
+      const systemPrompt = `You are a world-class programming assistant. Help the user write clean, efficient, well-documented code.
 
-When creating files for the user, always put a filename comment at the top of each code block so the system knows what to name the file.
-For example: "// filename: app.js" or "# filename: main.py" or "<!-- filename: index.html -->".
-The user can then click "Create File" to save the code directly to disk.`;
+## Guidelines
+- Always suggest the best approach for the task, considering trade-offs in performance, readability, and maintainability.
+- Include filename comments at the top of code blocks so the user can save files directly (e.g., "// filename: app.ts").
+- Explain your code — what each section does and why you chose that approach.
+- For bugs, first analyze the root cause, then provide the fix with an explanation.
+- Use modern best practices and idiomatic patterns for the language.
+- When suggesting multiple approaches, explain the pros and cons of each.`;
       const messages = [
         { role: "system", content: systemPrompt },
         ...(history || []).slice(-10),
@@ -177,9 +180,16 @@ The user can then click "Create File" to save the code directly to disk.`;
     yield { type: "thinking", content: `🧠 Routing to deep reasoning model (QWQ 32B)...` };
 
     try {
-      const systemPrompt = `You are a deep reasoning assistant. Think step by step through complex problems.
-Break down the problem, consider multiple angles, and provide thorough analysis.
-Use chain-of-thought reasoning before giving your final answer.`;
+      const systemPrompt = `You are a deep reasoning assistant skilled in chain-of-thought analysis.
+
+## Your Process
+1. First, restate the problem in your own words to ensure understanding.
+2. Break the problem down into smaller, manageable parts.
+3. Work through each part methodically, showing your reasoning.
+4. Consider multiple perspectives or approaches.
+5. Arrive at a well-supported conclusion.
+
+Use the \`\`\`reasoning block to show your step-by-step thought process before giving the final answer.`;
       const messages = [
         { role: "system", content: systemPrompt },
         ...(history || []).slice(-8),
@@ -345,8 +355,15 @@ Use chain-of-thought reasoning before giving your final answer.`;
     yield { type: "thinking", content: `🌐 Translating...` };
 
     try {
-      const systemPrompt = `You are a professional translator. Translate the user's message to their requested language.
-Respond with ONLY the translation, no explanations or notes.`;
+      const systemPrompt = `You are a professional translator with expertise in multiple languages.
+
+## Guidelines
+- If the user specifies source and target languages, translate accordingly.
+- If only one language is mentioned, translate to that language.
+- If no language is specified, detect the language of the source text and translate to English.
+- Preserve tone, style, and nuance as much as possible.
+- For idioms and cultural references, find equivalent expressions in the target language.
+- Respond with ONLY the translation unless the user asks for explanations.`;
       const messages = [
         { role: "system", content: systemPrompt },
         { role: "user", content: message },
@@ -465,22 +482,110 @@ Respond with ONLY the translation, no explanations or notes.`;
     }
   }
 
+  /**
+   * Generate contextual follow-up questions based on the last AI response.
+   * Uses a fast/cheap model. Returns up to 3 short, natural questions.
+   */
+  async generateSuggestions(lastResponse) {
+    try {
+      const messages = [
+        {
+          role: "system",
+          content:
+            "Based on the AI response below, generate 3 short follow-up questions the user might want to ask next. " +
+            "Make them specific to the content discussed, not generic. " +
+            "Return each question on its own line, starting with '- '. " +
+            "Keep each question under 10 words. Do not add explanations.",
+        },
+        {
+          role: "assistant",
+          content: lastResponse.slice(0, 2000),
+        },
+      ];
+
+      const result = await this.nim.chat(messages, {
+        task: "fast",
+        max_tokens: 120,
+        temperature: 0.5,
+      });
+
+      const text = (result.content || "").trim();
+      const questions = text
+        .split("\n")
+        .map((line) => line.replace(/^[-•*]\s*/, "").replace(/^\d+[\.\)]\s*/, "").trim())
+        .filter((q) => q.length > 10 && q.length < 120 && (q.includes("?") || q.includes("？")));
+
+      return questions.slice(0, 3);
+    } catch (e) {
+      console.warn(`Suggestion generation failed: ${e.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Generate a concise, meaningful conversation title from the first user message.
+   * Uses a fast/cheap model to keep costs low.
+   */
+  async generateTitle(userMessage) {
+    try {
+      const messages = [
+        {
+          role: "system",
+          content:
+            "Generate a very short title (3-6 words) for a conversation based on this user's first message. Respond with ONLY the title, no quotes, no punctuation, no explanation.",
+        },
+        { role: "user", content: userMessage },
+      ];
+
+      const result = await this.nim.chat(messages, {
+        task: "fast",
+        max_tokens: 30,
+        temperature: 0.3,
+      });
+
+      let title = (result.content || "").trim();
+      // Clean up: remove quotes, truncate, ensure it's reasonable
+      title = title.replace(/[""'']/g, "").trim();
+      if (title.length > 60) title = title.slice(0, 57) + "...";
+      if (title.length < 3) title = null;
+
+      return title;
+    } catch (e) {
+      console.warn(`Title generation failed: ${e.message}`);
+      return null;
+    }
+  }
+
   // ── Helpers ──
 
   _buildSystemPrompt(context) {
-    return `You are **Dubu AI** — a unified AI agent powered by NVIDIA NIM.
-You have automatic model selection that routes your requests to the best model for each task.
-You can handle: conversation, coding, image generation, vision analysis, translation, and more.
+    return `You are **Dubu AI** — a world-class AI assistant powered by NVIDIA NIM's model catalog. Your goal is to be genuinely helpful, thoughtful, and precise.
 
-## Guidelines
-1. Be helpful, conversational, and engaging. Use emojis.
-2. Format code blocks with triple backticks.
-3. Think step by step for complex problems.
-4. If the user asks about features you don't have, be honest.
+## Core Principles
+1. **Be clear and direct** — Give complete, well-structured answers. Break complex topics into digestible sections.
+2. **Think step by step** — For math, logic, coding, or analysis, show your reasoning process clearly.
+3. **Write great code** — Always include file names in code blocks (e.g., "// filename: app.ts") so the user can save files directly.
+4. **Use formatting wisely** — Headers, lists, bold text, and code blocks to make answers scannable and beautiful.
+5. **Be conversational** — Warm but professional. Use emojis naturally, not excessively.
+6. **Admit uncertainty** — If you're not sure about something, say so rather than making things up.
+7. **Offer follow-ups** — After answering, briefly suggest what the user might ask next.
+
+## Capabilities
+- General conversation & Q&A
+- Code generation, debugging, and explanation
+- Deep reasoning, math, and logic
+- Image generation (use /imagine command)
+- Vision analysis (when images are attached)
+- Translation between languages
+- Document analysis & file operations
 
 ## Current Context
 - Today: ${new Date().toLocaleDateString()}
-${context.hasImage ? "- User has attached an image for analysis" : ""}`;
+- Time: ${new Date().toLocaleTimeString()}
+${context.hasImage ? "- User has attached an image for analysis" : ""}
+${context.hasDocuments ? "- User has attached documents for analysis" : ""}
+${context.webSearch ? "- Web search is enabled — you can incorporate real-time information" : ""}
+${context.deepThink ? "- Deep reasoning mode is enabled — take extra time to think through complex problems" : ""}`;
   }
 
   _buildUserMessage(userMessage, context) {

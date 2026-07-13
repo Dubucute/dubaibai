@@ -189,6 +189,25 @@ window.AgentAPI = {
   },
 
   /**
+   * Generate contextual follow-up questions using AI.
+   */
+  async getSuggestions(responseText) {
+    try {
+      const resp = await fetch("/api/suggestions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ response: responseText }),
+      });
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      return data.suggestions || null;
+    } catch (e) {
+      console.warn("Suggestion fetch failed:", e.message);
+      return null;
+    }
+  },
+
+  /**
    * Detect intent of a message (without sending to agent)
    */
   async detectIntent(message, context = {}) {
@@ -250,6 +269,28 @@ window.AgentAPI = {
     });
     if (!r.ok) throw new Error("Failed to add message");
     return (await r.json()).conversation;
+  },
+
+  /**
+   * Generate a meaningful title for a conversation using AI.
+   * Call this after the first exchange is complete.
+   */
+  async generateConversationTitle(conversationId) {
+    try {
+      const resp = await fetch(`/api/conversations/${conversationId}/generate-title`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!resp.ok) {
+        console.warn("Title generation endpoint returned", resp.status);
+        return null;
+      }
+      const data = await resp.json();
+      return data.title || null;
+    } catch (e) {
+      console.warn("Title generation failed:", e.message);
+      return null;
+    }
   },
 
   // ── Documents ──

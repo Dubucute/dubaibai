@@ -311,6 +311,10 @@ window.sendToAgent = async function () {
     stopBtn.style.display = "flex";
   }
 
+  // ── Context object ──
+  // Define BEFORE /imagine parsing so the /imagine block can write to it
+  const context = { hasImage: false, hasDocuments: false };
+
   // Check for /imagine command
   let isImagineCommand = false;
   let imaginePrompt = msg;
@@ -398,7 +402,6 @@ window.sendToAgent = async function () {
   }
 
   // Collect attached files context
-  const context = { hasImage: false, hasDocuments: false };
   const images = attachedFiles.filter((f) => f.type === "image");
   const docs = attachedFiles.filter((f) => f.type === "document");
 
@@ -499,7 +502,7 @@ window.sendToAgent = async function () {
 
               const imgMsg = document.createElement("div");
               imgMsg.className = "msg msg-agent";
-              imgMsg.innerHTML = `<div class="msg-avatar"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="8" fill="currentColor" opacity="0.15"/><path d="M14 6L8 10v8l6 4 6-4v-8l-6-4z" fill="currentColor" opacity="0.4"/><circle cx="14" cy="14" r="3.5" fill="currentColor"/></svg></div><div class="msg-body"><div class="msg-name">${escHtml(modelName || "Image")}</div><div class="msg-content"><img src="${imageUrl}" class="msg-image" alt="Generated image" onclick="openGalleryImage(${imgIdx})" loading="lazy"></div></div>`;
+              imgMsg.innerHTML = `<div class="msg-avatar"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="8" fill="currentColor" opacity="0.15"/><path d="M14 6L8 10v8l6 4 6-4v-8l-6-4z" fill="currentColor" opacity="0.4"/><circle cx="14" cy="14" r="3.5" fill="currentColor"/></svg></div><div class="msg-body"><div class="msg-name">${escHtml(modelName || "Image")}</div><div class="msg-content"><img src="${imageUrl}" class="msg-image" alt="Generated image" onclick="openGalleryImage(${imgIdx})" loading="lazy"></div><div class="msg-actions"><button class="msg-action-btn" onclick="copyMsgText(this)" title="Copy"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="3.5" y="2.5" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 4.5v5a1 1 0 001 1h3" stroke="currentColor" stroke-width="1.2"/></svg></button></div></div>`;
               container.appendChild(imgMsg);
 
               agentHistory.push({
@@ -513,11 +516,15 @@ window.sendToAgent = async function () {
                   content: `[Generated image: ${data.prompt || imaginePrompt || msg}]`,
                   model: data.model || modelName,
                 })
-                  .then(() => loadConversationList())
+                  .then(() => {
+                    loadConversationList();
+                    autoGenerateTitle();
+                  })
                   .catch(() => {});
               } else {
                 createNewConversation().then((convo) => {
                   if (convo) {
+                    currentConversationId = convo.id;
                     AgentAPI.conversationAddMessage(convo.id, {
                       role: "user",
                       content: userMessage,
@@ -526,8 +533,11 @@ window.sendToAgent = async function () {
                       role: "assistant",
                       content: `[Generated image: ${data.prompt || imaginePrompt || msg}]`,
                       model: data.model,
-                    }).catch(() => {});
+                    }).catch(() => {
+                      autoGenerateTitle();
+                    });
                     loadConversationList();
+                    autoGenerateTitle();
                   }
                 });
               }
@@ -544,8 +554,8 @@ window.sendToAgent = async function () {
                 contentEl.innerHTML = formattedHtml;
                 contentEl.classList.remove("streaming");
               }
-              // Add action buttons
-              const actionsHtml = `<div class="msg-actions"><button class="msg-action-btn" onclick="copyMsgText(this)" title="Copy"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="3.5" y="2.5" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 4.5v5a1 1 0 001 1h3" stroke="currentColor" stroke-width="1.2"/></svg></button></div>`;
+              // Add action buttons with feedback (like/dislike)
+              const actionsHtml = `<div class="msg-actions"><button class="msg-action-btn" onclick="copyMsgText(this)" title="Copy"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="3.5" y="2.5" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 4.5v5a1 1 0 001 1h3" stroke="currentColor" stroke-width="1.2"/></svg></button><button class="msg-action-btn feedback-btn" onclick="feedbackMessage(this, 'like')" title="Like"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6.5L6 2l2 2-1 3h3L7 10H4l-1-3.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="msg-action-btn feedback-btn" onclick="feedbackMessage(this, 'dislike')" title="Dislike"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5.5L6 10l2-2-1-3h3L7 2H4L3 5.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>`;
               // Check if actions already exist
               if (!bubble.querySelector(".msg-actions")) {
                 bubble.insertAdjacentHTML("beforeend", actionsHtml);
@@ -560,6 +570,10 @@ window.sendToAgent = async function () {
               // Save to history
               agentHistory.push({ role: "assistant", content: streamText });
               scrollToBottom();
+              
+              // Add suggested follow-up questions
+              const suggestions = generateFollowUpSuggestions(streamText);
+              addSuggestedQuestions(suggestions);
 
               if (currentConversationId) {
                 AgentAPI.conversationAddMessage(currentConversationId, {
@@ -567,11 +581,15 @@ window.sendToAgent = async function () {
                   content: streamText,
                   model: data.model || modelName,
                 })
-                  .then(() => loadConversationList())
+                  .then(() => {
+                    loadConversationList();
+                    autoGenerateTitle();
+                  })
                   .catch(() => {});
               } else {
                 createNewConversation().then((convo) => {
                   if (convo) {
+                    currentConversationId = convo.id;
                     AgentAPI.conversationAddMessage(convo.id, {
                       role: "user",
                       content: userMessage,
@@ -582,6 +600,7 @@ window.sendToAgent = async function () {
                       model: data.model,
                     }).catch(() => {});
                     loadConversationList();
+                    autoGenerateTitle();
                   }
                 });
               }
@@ -593,6 +612,10 @@ window.sendToAgent = async function () {
                 typewriterSpeed: 18,
               });
               agentHistory.push({ role: "assistant", content: fullResponse });
+              
+              // Add suggested follow-up questions
+              const suggestions = generateFollowUpSuggestions(fullResponse);
+              addSuggestedQuestions(suggestions);
 
               if (currentConversationId) {
                 AgentAPI.conversationAddMessage(currentConversationId, {
@@ -600,11 +623,15 @@ window.sendToAgent = async function () {
                   content: fullResponse,
                   model: data.model || modelName,
                 })
-                  .then(() => loadConversationList())
+                  .then(() => {
+                    loadConversationList();
+                    autoGenerateTitle();
+                  })
                   .catch(() => {});
               } else {
                 createNewConversation().then((convo) => {
                   if (convo) {
+                    currentConversationId = convo.id;
                     AgentAPI.conversationAddMessage(convo.id, {
                       role: "user",
                       content: userMessage,
@@ -615,6 +642,7 @@ window.sendToAgent = async function () {
                       model: data.model,
                     }).catch(() => {});
                     loadConversationList();
+                    autoGenerateTitle();
                   }
                 });
               }
@@ -764,6 +792,12 @@ window.clearAgent = function () {
     }
   });
 
+  // Cleanup suggested questions
+  if (suggestedQuestionsContainer) {
+    suggestedQuestionsContainer.remove();
+    suggestedQuestionsContainer = null;
+  }
+  
   showWelcomeMessage();
   agentHistory = [];
   attachedFiles = [];
@@ -789,28 +823,30 @@ function addMessage(role, content, authorOverride, options = {}) {
 
   let author = role === "user" ? "You" : authorOverride || "Dubu AI";
 
-  const formattedHtml = formatMessageHtml(content);
+  // Timestamp
+  const timestamp = new Date();
+  const timeStr = timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-  // Build action buttons — regenerate only for assistant, edit for user
+  const formattedHtml = formatMessageHtml(content);    // Build action buttons — regenerate only for assistant, edit for user
   let actionsHtml;
   if (role === "user") {
     actionsHtml = `<div class="msg-actions"><button class="msg-action-btn" onclick="copyMsgText(this)" title="Copy"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="3.5" y="2.5" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 4.5v5a1 1 0 001 1h3" stroke="currentColor" stroke-width="1.2"/></svg></button></div>`;
     // Make user message clickable to edit — attach click handler to the msg element
     div.addEventListener("dblclick", () => editUserMessage(div, content));
   } else {
-    actionsHtml = `<div class="msg-actions"><button class="msg-action-btn" onclick="copyMsgText(this)" title="Copy"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="3.5" y="2.5" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 4.5v5a1 1 0 001 1h3" stroke="currentColor" stroke-width="1.2"/></svg></button><button class="msg-action-btn" onclick="regenerateResponse(this)" title="Regenerate"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6a4 4 0 014-4 4 4 0 014 4M10 6a4 4 0 01-4 4 4 4 0 01-4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8.5 6L10 4.5 11.5 6M.5 6L2 4.5 3.5 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>`;
+    actionsHtml = `<div class="msg-actions"><button class="msg-action-btn" onclick="copyMsgText(this)" title="Copy"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="3.5" y="2.5" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 4.5v5a1 1 0 001 1h3" stroke="currentColor" stroke-width="1.2"/></svg></button><button class="msg-action-btn" onclick="regenerateResponse(this)" title="Regenerate"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6a4 4 0 014-4 4 4 0 014 4M10 6a4 4 0 01-4 4 4 4 0 01-4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8.5 6L10 4.5 11.5 6M.5 6L2 4.5 3.5 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="msg-action-btn feedback-btn" onclick="feedbackMessage(this, 'like')" title="Like"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6.5L6 2l2 2-1 3h3L7 10H4l-1-3.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="msg-action-btn feedback-btn" onclick="feedbackMessage(this, 'dislike')" title="Dislike"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5.5L6 10l2-2-1-3h3L7 2H4L3 5.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>`;
   }
 
   if (options.typewriter && role === "agent") {
     // Typewriter mode
-    div.innerHTML = `${avatarHtml}<div class="msg-body"><div class="msg-name">${author}</div><div class="msg-content"></div></div>`;
+    div.innerHTML = `${avatarHtml}<div class="msg-body"><div class="msg-name">${author} <span class="msg-time">${timeStr}</span></div><div class="msg-content"></div></div>`;
     container.appendChild(div);
 
     const contentEl = div.querySelector(".msg-content");
     typewriterEffect(contentEl, formattedHtml, content, options.typewriterSpeed || 20);
   } else {
     // Normal mode
-    div.innerHTML = `${avatarHtml}<div class="msg-body"><div class="msg-name">${author}</div><div class="msg-content">${formattedHtml}</div>${actionsHtml}</div>`;
+    div.innerHTML = `${avatarHtml}<div class="msg-body"><div class="msg-name">${author} <span class="msg-time">${timeStr}</span></div><div class="msg-content">${formattedHtml}</div>${actionsHtml}</div>`;
     container.appendChild(div);
     scrollToBottom(container);
     setTimeout(() => {
@@ -838,6 +874,142 @@ window.copyMsgText = function (btn) {
     }, 1500);
   });
 };
+
+// ── Message Feedback (Like/Dislike) ──
+window.feedbackMessage = function (btn, type) {
+  const parentActions = btn.closest(".msg-actions");
+  if (!parentActions) return;
+  
+  // Toggle if already selected
+  const wasActive = btn.classList.contains("feedback-active");
+  
+  // Clear all feedback buttons in this message
+  parentActions.querySelectorAll(".feedback-btn").forEach((b) => {
+    b.classList.remove("feedback-active");
+  });
+  
+  if (!wasActive) {
+    btn.classList.add("feedback-active");
+    const feedbackType = type === "like" ? "liked" : "disliked";
+    showToast(`Response ${feedbackType}`, "info", 1500);
+  }
+};
+
+// ── Suggested Follow-up Questions ──
+let suggestedQuestionsContainer = null;
+
+function addSuggestedQuestions(suggestions) {
+  // Remove previous suggestions if any
+  if (suggestedQuestionsContainer) {
+    suggestedQuestionsContainer.remove();
+  }
+  
+  if (!suggestions || suggestions.length === 0) return;
+  
+  const container = document.getElementById("agentMessages");
+  suggestedQuestionsContainer = document.createElement("div");
+  suggestedQuestionsContainer.className = "suggested-questions";
+  
+  const label = document.createElement("div");
+  label.className = "sq-label";
+  label.textContent = "Follow-up questions";
+  suggestedQuestionsContainer.appendChild(label);
+  
+  const list = document.createElement("div");
+  list.className = "sq-list";
+  
+  suggestions.slice(0, 3).forEach((question) => {
+    const btn = document.createElement("button");
+    btn.className = "sq-btn";
+    btn.textContent = question;
+    btn.onclick = () => {
+      // Click the suggestion: populate input and send
+      const input = document.getElementById("agentInput");
+      input.value = question;
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 120) + "px";
+      window.sendToAgent();
+      // Remove suggestions after clicking one
+      if (suggestedQuestionsContainer) {
+        suggestedQuestionsContainer.remove();
+        suggestedQuestionsContainer = null;
+      }
+    };
+    list.appendChild(btn);
+  });
+  
+  suggestedQuestionsContainer.appendChild(list);
+  container.appendChild(suggestedQuestionsContainer);
+  scrollToBottom(container);
+}
+
+function generateFollowUpSuggestions(responseText) {
+  // Use the AI model for contextual suggestions, with keyword fallback
+  // Fire-and-forget: show keyword suggestions immediately, upgrade when AI responds
+  const fallback = generateKeywordSuggestions(responseText);
+  
+  // Try AI-generated suggestions (async, won't block)
+  AgentAPI.getSuggestions(responseText).then((aiSuggestions) => {
+    if (aiSuggestions && aiSuggestions.length >= 2) {
+      // Replace the current suggestions with AI-generated ones
+      if (suggestedQuestionsContainer) {
+        // Only upgrade if the user hasn't clicked one yet
+        const stillVisible = document.body.contains(suggestedQuestionsContainer);
+        if (stillVisible) {
+          // Re-render with AI suggestions
+          suggestedQuestionsContainer.remove();
+          addSuggestedQuestions(aiSuggestions);
+        }
+      }
+    }
+  }).catch(() => {
+    // Silently keep keyword fallback
+  });
+  
+  return fallback;
+}
+
+function generateKeywordSuggestions(responseText) {
+  const lower = responseText.toLowerCase();
+  
+  if (lower.includes("function") || lower.includes("class ") || lower.includes("def ") || lower.includes("import ") || lower.includes("const ")) {
+    return [
+      "Can you explain how this code works in more detail?",
+      "Can you show me how to test this?",
+      "Are there any edge cases I should handle?"
+    ];
+  }
+  
+  if (lower.includes("because") || lower.includes("therefore") || lower.includes("reason") || lower.includes("first") || lower.includes("step")) {
+    return [
+      "Can you elaborate more on that?",
+      "What are the alternatives?",
+      "Can you give me an example?"
+    ];
+  }
+  
+  if (lower.includes("image") || lower.includes("picture") || lower.includes("design") || lower.includes("color") || lower.includes("layout")) {
+    return [
+      "Can you generate a similar image?",
+      "Can you describe this in more detail?",
+      "What style would work best?"
+    ];
+  }
+  
+  if (lower.includes("math") || lower.includes("equation") || lower.includes("calculate") || lower.includes("formula") || lower.includes("solve")) {
+    return [
+      "Can you walk me through the steps again?",
+      "What real-world application does this have?",
+      "Can you test this with different values?"
+    ];
+  }
+  
+  return [
+    "Can you tell me more?",
+    "What else should I know about this?",
+    "Can you give me a practical example?"
+  ];
+}
 
 // ── Regenerate response ──
 window.regenerateResponse = function (btn) {
@@ -1113,7 +1285,7 @@ window.createFileFromCode = async function (btn, fileName) {
   }
 };
 
-// ── Format message HTML ──
+// ── Format message HTML with full markdown support ──
 function formatMessageHtml(content) {
   let html = escHtml(content);
 
@@ -1172,6 +1344,65 @@ function formatMessageHtml(content) {
       return `<div class="reasoning-block"><div class="reasoning-header" onclick="toggleReasoning(this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 3l4 3-4 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg> Show reasoning</div><div class="reasoning-content">${cleanContent}</div></div>`;
     },
   );
+
+  // ── Blockquotes ──
+  // Match consecutive lines starting with &gt; (escaped >)
+  html = html.replace(/((?:^|\n)(?:&gt;\s?[^\n]*)+)/g, (match) => {
+    const lines = match.trim().split('\n');
+    const inner = lines
+      .map(line => line.replace(/^&gt;\s?/, '').trim())
+      .join('<br>');
+    return '\n<blockquote>' + inner + '</blockquote>\n';
+  });
+
+  // ── Tables ──
+  // Match groups of lines containing &#124; (escaped |) pipe separators
+  html = html.replace(/((?:^|\n)(?:&#124;[^\n]*&#124;\s*\n?)+)/g, (match, tableBlock) => {
+    const rows = tableBlock.trim().split('\n').filter(r => r.trim().startsWith('&#124;'));
+    if (rows.length < 2) return match;
+
+    // Parse cells from each row
+    const parsedRows = rows.map(row => {
+      const cells = row.trim().split('&#124;').filter(c => c.trim() !== '');
+      return cells.map(c => c.trim());
+    });
+
+    // Validate: second row must be a separator (contains dashes)
+    const sepRow = parsedRows[1];
+    if (!sepRow || sepRow.length < 2 || !sepRow.every(c => /^-+\s*$/.test(c))) {
+      return match; // Not a valid table, leave as-is
+    }
+
+    let tableHtml = '<div class="table-wrap"><table>';
+    // Header row
+    tableHtml += '<thead><tr>';
+    parsedRows[0].forEach(cell => {
+      tableHtml += '<th>' + cell + '</th>';
+    });
+    tableHtml += '</tr></thead>';
+    // Body rows
+    tableHtml += '<tbody>';
+    for (let i = 2; i < parsedRows.length; i++) {
+      tableHtml += '<tr>';
+      parsedRows[i].forEach(cell => {
+        tableHtml += '<td>' + cell + '</td>';
+      });
+      tableHtml += '</tr>';
+    }
+    tableHtml += '</tbody></table></div>';
+    return '\n' + tableHtml + '\n';
+  });
+
+  // ── Task Lists ──
+  // Match: - [ ] or - [x] (with escaped brackets)
+  html = html.replace(/^- &#91;([ x])&#93; ([^\n]*)/gm, (match, checked, text) => {
+    const done = checked === 'x';
+    const cls = 'task-item' + (done ? ' done' : '');
+    const icon = done
+      ? '<svg class="task-icon checked" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="2" fill="currentColor" opacity="0.15"/><path d="M3.5 6L5 7.5 8.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      : '<svg class="task-icon unchecked" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.3" opacity="0.4"/></svg>';
+    return '<div class="' + cls + '">' + icon + '<span class="task-text">' + text.trim() + '</span></div>';
+  });
 
   html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -1413,6 +1644,47 @@ function escHtml(text) {
   return d.innerHTML;
 }
 
+// ── Export conversation as Markdown ──
+window.exportConversation = function () {
+  const messages = document.getElementById("agentMessages")?.querySelectorAll(".msg");
+  if (!messages || messages.length === 0) {
+    showToast("Nothing to export", "warning", 2000);
+    return;
+  }
+
+  let md = `# Dubu AI Conversation\n*Exported ${new Date().toLocaleString()}*\n\n---\n\n`;
+
+  messages.forEach((msg) => {
+    const nameEl = msg.querySelector(".msg-name");
+    const contentEl = msg.querySelector(".msg-content");
+    const author = nameEl?.textContent || "Unknown";
+    const text = contentEl?.innerText?.trim() || "";
+    
+    if (!text) return;
+    
+    md += `### ${author}\n\n${text}\n\n---\n\n`;
+  });
+
+  // Create and download
+  const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  
+  // Generate filename from conversation title or timestamp
+  const activeConvo = conversations.find(c => c.id === currentConversationId);
+  const title = activeConvo?.title || "chat";
+  const safeName = title.replace(/[^a-zA-Z0-9]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").slice(0, 40) || "conversation";
+  a.download = `dubu-${safeName}.md`;
+  
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  showToast("Conversation exported as Markdown", "success", 2500);
+};
+
 // ── Conversation Persistence ──
 async function saveCurrentConversation() {
   if (!currentConversationId || agentHistory.length === 0) return;
@@ -1426,6 +1698,24 @@ async function saveCurrentConversation() {
     // Simpler approach: use a dedicated save endpoint
   } catch (e) {
     console.warn("Failed to save conversation:", e.message);
+  }
+}
+
+// ── Auto generate conversation title from first exchange ──
+async function autoGenerateTitle() {
+  if (!currentConversationId) return;
+  // Generate title only for the first exchange (2 messages: user + assistant)
+  if (agentHistory.length !== 2) return;
+  
+  const title = await AgentAPI.generateConversationTitle(currentConversationId);
+  if (title) {
+    // Update the title in the sidebar without full reload
+    loadConversationList();
+    // Also update the topbar label if it's showing the default title
+    const modelLabel = document.getElementById("topbarModelLabel");
+    if (modelLabel && modelLabel.textContent === "Dubu AI") {
+      // Keep the model label as is
+    }
   }
 }
 
@@ -1489,6 +1779,20 @@ window.deleteConversation = async function (id) {
   } catch (e) {
     showToast("Failed to delete: " + e.message, "error");
   }
+};
+
+// ── Sidebar conversation search ──
+window.filterConversations = function (query) {
+  const list = document.getElementById("convList");
+  if (!list) return;
+  const q = query.toLowerCase().trim();
+  
+  const items = list.querySelectorAll(".conv-item");
+  items.forEach((item) => {
+    const title = item.querySelector(".conv-item-title")?.textContent?.toLowerCase() || "";
+    const shouldShow = !q || title.includes(q);
+    item.style.display = shouldShow ? "" : "none";
+  });
 };
 
 window.selectConversation = async function (id) {
