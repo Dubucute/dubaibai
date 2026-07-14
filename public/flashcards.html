@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flashcard Generator — Dubu AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/themes.css" />
+    <link rel="stylesheet" href="css/tools.css" />
+    <style>
+      body { overflow: auto !important; }
+      .tool-body { padding: 0 !important; max-width: 100% !important; }
+      .tool-description { display: none; }
+      .qb-wrapper { display: flex; flex-direction: column; height: calc(100vh - 56px); height: calc(100dvh - 56px); background: var(--bg-primary, #0a0a0f); }
+      .qb-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); flex-shrink: 0; position: relative; z-index: 70; gap: 12px; }
+      .qb-modes-scroll { flex: 1; min-width: 0; position: relative; overflow: hidden; }
+      .qb-modes { display: flex; align-items: center; gap: 4px; overflow-x: auto; scroll-behavior: smooth; padding: 2px 0; }
+      .qb-modes::-webkit-scrollbar { height: 0; }
+      .qb-modes-scroll::before, .qb-modes-scroll::after { content: ''; position: absolute; top: 0; bottom: 0; width: 32px; pointer-events: none; z-index: 2; opacity: 0; transition: opacity 0.2s; }
+      .qb-modes-scroll::before { left: 0; background: linear-gradient(to right, var(--bg-primary, #0a0a0f), transparent); }
+      .qb-modes-scroll::after { right: 0; background: linear-gradient(to left, var(--bg-primary, #0a0a0f), transparent); }
+      .qb-modes-scroll.show-left::before { opacity: 1; }
+      .qb-modes-scroll.show-right::after { opacity: 1; }
+      .qb-scroll-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border-color, rgba(255,255,255,0.1)); background: var(--bg-secondary, #13131a); color: var(--text-primary, #e8e8ed); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; opacity: 0; pointer-events: none; transition: opacity 0.2s, background 0.2s; flex-shrink: 0; }
+      .qb-scroll-arrow:hover { background: var(--hover-bg, rgba(255,255,255,0.08)); }
+      .qb-scroll-arrow.left { left: 4px; }
+      .qb-scroll-arrow.right { right: 4px; }
+      .qb-modes-scroll.show-left .qb-scroll-arrow.left { opacity: 1; pointer-events: auto; }
+      .qb-modes-scroll.show-right .qb-scroll-arrow.right { opacity: 1; pointer-events: auto; }
+      .qb-mode-btn { padding: 7px 16px; border-radius: 20px; border: 1px solid transparent; background: transparent; color: var(--text-secondary, #9494a3); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-family: inherit; }
+      .qb-mode-btn:hover { color: var(--text-primary, #e8e8ed); background: var(--hover-bg, rgba(255,255,255,0.04)); }
+      .qb-mode-btn.active { color: var(--accent, #818cf8); background: var(--accent-muted, rgba(99,102,241,0.1)); border-color: var(--accent, #818cf8); }
+      .qb-panels { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+      .qb-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; overflow: hidden; }
+      .qb-panel + .qb-panel { border-left: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+      .qb-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.04)); flex-shrink: 0; }
+      .qb-panel-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted, #6b6b80); }
+      .qb-panel-actions { display: flex; gap: 4px; }
+      .qb-icon-btn { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary, #9494a3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; }
+      .qb-icon-btn:hover { background: var(--hover-bg, rgba(255,255,255,0.06)); color: var(--text-primary, #e8e8ed); }
+      .qb-icon-btn.copied { color: #22c55e; }
+      .qb-textarea { flex: 1; width: 100%; padding: 16px; background: transparent; border: none; outline: none; color: var(--text-primary, #e8e8ed); font-size: 15px; line-height: 1.7; font-family: inherit; resize: none; }
+      .qb-textarea::placeholder { color: var(--text-muted, #6b6b80); }
+      .qb-output { flex: 1; padding: 16px; overflow-y: auto; overflow-x: hidden; font-size: 15px; line-height: 1.7; color: var(--text-primary, #e8e8ed); }
+      .qb-output.empty { display: flex; align-items: center; justify-content: center; }
+      .qb-placeholder { text-align: center; color: var(--text-muted, #6b6b80); font-size: 14px; }
+      .qb-placeholder svg { display: block; margin: 0 auto 12px; opacity: 0.3; }
+      .qb-skeleton { width: 100%; padding: 0; }
+      .qb-skeleton-line { height: 14px; border-radius: 7px; background: linear-gradient(90deg, var(--hover-bg, rgba(255,255,255,0.03)) 25%, var(--hover-bg, rgba(255,255,255,0.06)) 50%, var(--hover-bg, rgba(255,255,255,0.03)) 75%); background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite; margin-bottom: 12px; }
+      .qb-skeleton-line:nth-child(1) { width: 90%; }
+      .qb-skeleton-line:nth-child(2) { width: 100%; }
+      .qb-skeleton-line:nth-child(3) { width: 75%; }
+      .qb-skeleton-line:nth-child(4) { width: 85%; }
+      .qb-skeleton-line:nth-child(5) { width: 60%; }
+      @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+      .qb-bottom-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-top: 1px solid var(--border-color, rgba(255,255,255,0.06)); flex-shrink: 0; }
+      .qb-word-count { font-size: 12px; color: var(--text-muted, #6b6b80); }
+      .qb-action-btn { display: flex; align-items: center; gap: 8px; padding: 8px 20px; border-radius: 10px; border: none; background: var(--accent, #818cf8); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: inherit; }
+      .qb-action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+      .qb-action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+      .flashcards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+      .flashcard { border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 10px; background: var(--surface-bg, rgba(15,15,20,0.6)); overflow: hidden; cursor: pointer; transition: all 0.2s ease; }
+      .flashcard:hover { border-color: var(--accent, #6366f1); transform: translateY(-1px); }
+      .fc-front { padding: 14px; font-size: 13px; font-weight: 600; border-bottom: 1px dashed var(--border-color, rgba(255,255,255,0.06)); color: var(--text-primary, #e8e8ed); }
+      .fc-back { padding: 14px; font-size: 12px; color: var(--text-secondary, #9494a3); line-height: 1.5; display: none; }
+      .flashcard.flipped .fc-back { display: block; }
+      .fc-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted, #6b6b80); margin-bottom: 6px; }
+
+      /* ── Custom Dropdown ── */
+      .qb-dropdown { position: relative; flex-shrink: 0; }
+      .qb-dropdown-trigger {
+        display: flex; align-items: center; gap: 6px;
+        padding: 6px 12px; border-radius: 10px;
+        border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+        background: var(--hover-bg, rgba(255,255,255,0.04));
+        color: var(--text-primary, #e8e8ed);
+        font-size: 12px; font-weight: 500;
+        cursor: pointer; white-space: nowrap;
+        transition: all 0.2s ease; font-family: inherit;
+        justify-content: space-between;
+      }
+      .qb-dropdown-trigger:hover { border-color: var(--accent, #818cf8); }
+      .qb-dropdown-trigger svg { flex-shrink: 0; transition: transform 0.2s ease; }
+      .qb-dropdown.open .qb-dropdown-trigger svg { transform: rotate(180deg); }
+      .qb-dropdown-menu {
+        position: fixed; min-width: 140px; max-height: 260px; overflow-y: auto;
+        border-radius: 10px; border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+        background: var(--surface-bg, rgba(20,20,30,0.98)); backdrop-filter: blur(12px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 9999; padding: 4px; display: none;
+      }
+      .qb-dropdown.open .qb-dropdown-menu { display: block; animation: dropIn 0.15s ease; }
+      @keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+      .qb-dropdown-item {
+        display: block; width: 100%; padding: 8px 12px; border: none; border-radius: 7px;
+        background: transparent; color: var(--text-secondary, #9494a3);
+        font-size: 13px; font-weight: 500; cursor: pointer; text-align: left;
+        transition: all 0.15s ease; font-family: inherit; white-space: nowrap;
+      }
+      .qb-dropdown-item:hover { background: var(--hover-bg, rgba(255,255,255,0.06)); color: var(--text-primary, #e8e8ed); }
+      .qb-dropdown-item.active { color: var(--accent, #818cf8); background: var(--accent-muted, rgba(99,102,241,0.1)); }
+
+      @media (max-width: 768px) {
+        .qb-panels { flex-direction: column; }
+        .qb-panel + .qb-panel { border-left: none; border-top: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+        .qb-toolbar { padding: 8px 12px; gap: 8px; }
+        .qb-modes { padding: 4px 8px; }
+        .qb-mode-btn { padding: 6px 12px; font-size: 12px; }
+        .qb-dropdown-trigger { padding: 5px 10px; font-size: 11px; min-width: 0; }
+        .flashcards-grid { grid-template-columns: 1fr; }
+        .fc-front, .fc-back { padding: 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tool-page">
+      <header class="tool-topbar">
+        <a href="index.html" class="tool-back"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Home</a>
+        <h2>Flashcard Generator</h2>
+        <a href="chat.html" class="tool-back">Chat →</a>
+      </header>
+      <div class="tool-body">
+        <div class="qb-wrapper">
+          <div class="qb-toolbar">
+            <div class="qb-modes-scroll" id="modesScroll">
+              <button class="qb-scroll-arrow left" id="scrollLeftBtn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <div class="qb-modes" id="modesContainer">
+                <button class="qb-mode-btn active" data-mode="qanda">Q&A</button>
+                <button class="qb-mode-btn" data-mode="termdef">Term/Definition</button>
+                <button class="qb-mode-btn" data-mode="fillblank">Fill Blank</button>
+                <button class="qb-mode-btn" data-mode="essay">Essay Prompts</button>
+              </div>
+              <button class="qb-scroll-arrow right" id="scrollRightBtn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+            <div class="qb-dropdown" id="countDropdown">
+              <button class="qb-dropdown-trigger" id="countTrigger">
+                <span id="countLabel">10 Cards</span>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="qb-dropdown-menu" id="countMenu"></div>
+            </div>
+          </div>
+          <div class="qb-panels">
+            <div class="qb-panel">
+              <div class="qb-panel-header">
+                <span class="qb-panel-label">Material</span>
+                <div class="qb-panel-actions">
+                  <button class="qb-icon-btn" id="clearBtn" title="Clear"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+                </div>
+              </div>
+              <textarea class="qb-textarea" id="toolInput" placeholder="Paste notes, textbook content, or any study material..."></textarea>
+            </div>
+            <div class="qb-panel">
+              <div class="qb-panel-header">
+                <span class="qb-panel-label">Flashcards</span>
+                <div class="qb-panel-actions">
+                  <button class="qb-icon-btn" id="copyAllBtn" title="Copy All"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 11V3.5A1.5 1.5 0 014.5 2H11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
+                  <button class="qb-icon-btn" id="sendChatBtn" title="Send to Chat"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12V4a2 2 0 012-2h8a2 2 0 012 2v5a2 2 0 01-2 2H5l-3 3z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                </div>
+              </div>
+              <div class="qb-output empty" id="outputBox">
+                <div class="qb-placeholder">
+                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M10 8h20a2 2 0 012 2v20a2 2 0 01-2 2H10a2 2 0 01-2-2V10a2 2 0 012-2z" stroke="currentColor" stroke-width="1.5"/><path d="M15 16h10M15 21h8M15 26h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                  Flashcards will appear here
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="qb-bottom-bar">
+            <span class="qb-word-count" id="wordCount">0 cards</span>
+            <button class="qb-action-btn" id="runBtn" onclick="runFlashcards()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 8h8M8 4v8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+              Generate Flashcards
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="js/page-transition.js"></script>
+    <script src="js/tools.js"></script>
+    <script>
+      const countOptions = [
+        { id: '5', label: '5 Cards' },
+        { id: '10', label: '10 Cards' },
+        { id: '15', label: '15 Cards' },
+        { id: '20', label: '20 Cards' }
+      ];
+
+      const modePrompts = {
+        qanda: 'Create Q&A flashcards. Return ONLY valid JSON array: [{"q":"question","a":"answer"}].',
+        termdef: 'Create term/definition flashcards. Return ONLY valid JSON array: [{"q":"term","a":"definition"}].',
+        fillblank: 'Create fill-in-the-blank flashcards. Return ONLY valid JSON array: [{"q":"sentence with ____","a":"the missing word"}].',
+        essay: 'Create essay prompt flashcards. Return ONLY valid JSON array: [{"q":"essay question or prompt","a":"key points to include in the answer"}].'
+      };
+
+      let selectedMode = 'qanda';
+      let selectedCount = '10';
+      let lastCards = [];
+
+      function renderCountOptions() {
+        const menu = document.getElementById('countMenu');
+        const label = document.getElementById('countLabel');
+        const last = countOptions[countOptions.length - 1];
+        selectedCount = last.id;
+        label.textContent = last.label;
+        menu.innerHTML = countOptions.map(c => `<button class="qb-dropdown-item ${c.id === last.id ? 'active' : ''}" data-count="${c.id}">${c.label}</button>`).join('');
+        menu.querySelectorAll('.qb-dropdown-item').forEach(btn => {
+          btn.addEventListener('click', () => {
+            menu.querySelectorAll('.qb-dropdown-item').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedCount = btn.dataset.count;
+            document.getElementById('countLabel').textContent = btn.textContent;
+            document.getElementById('countDropdown').classList.remove('open');
+          });
+        });
+      }
+
+      document.getElementById('countTrigger').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dd = document.getElementById('countDropdown');
+        const menu = document.getElementById('countMenu');
+        const trigger = document.getElementById('countTrigger');
+        const wasOpen = dd.classList.contains('open');
+        dd.classList.toggle('open');
+        if (!wasOpen) { const rect = trigger.getBoundingClientRect(); menu.style.left = rect.left + 'px'; menu.style.top = (rect.bottom + 4) + 'px'; menu.style.width = Math.max(rect.width, 180) + 'px'; }
+      });
+      document.addEventListener('click', () => document.getElementById('countDropdown').classList.remove('open'));
+      renderCountOptions();
+
+      document.querySelectorAll('.qb-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.qb-mode-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedMode = btn.dataset.mode;
+          const scroll = document.getElementById('modesScroll');
+          const btnRect = btn.getBoundingClientRect();
+          const scrollRect = scroll.getBoundingClientRect();
+          if (btnRect.right > scrollRect.right) btn.scrollIntoView({ inline: 'end', block: 'nearest' });
+          if (btnRect.left < scrollRect.left) btn.scrollIntoView({ inline: 'start', block: 'nearest' });
+          updateModeFades();
+        });
+      });
+
+      function updateModeFades() {
+        const scroll = document.getElementById('modesScroll');
+        const modes = document.getElementById('modesContainer');
+        if (!scroll || !modes) return;
+        const sl = modes.scrollLeft;
+        const maxScroll = modes.scrollWidth - scroll.clientWidth;
+        scroll.classList.toggle('show-left', sl > 4);
+        scroll.classList.toggle('show-right', maxScroll > 4 && sl < maxScroll - 4);
+      }
+      document.getElementById('modesContainer').addEventListener('scroll', updateModeFades);
+      window.addEventListener('resize', updateModeFades);
+      let lastSL = -1;
+      function pollFades() { const m = document.getElementById('modesContainer'); if (m && m.scrollLeft !== lastSL) { lastSL = m.scrollLeft; updateModeFades(); } requestAnimationFrame(pollFades); }
+      requestAnimationFrame(pollFades);
+      document.getElementById('scrollLeftBtn').addEventListener('click', () => document.getElementById('modesContainer').scrollBy({ left: -180, behavior: 'smooth' }));
+      document.getElementById('scrollRightBtn').addEventListener('click', () => document.getElementById('modesContainer').scrollBy({ left: 180, behavior: 'smooth' }));
+
+      const textarea = document.getElementById('toolInput');
+      document.getElementById('clearBtn').addEventListener('click', () => { textarea.value = ''; textarea.focus(); });
+
+      function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      document.getElementById('copyAllBtn').addEventListener('click', () => {
+        if (!lastCards.length) return;
+        const text = lastCards.map((c, i) => `Q${i+1}: ${c.q}\nA: ${c.a}`).join('\n\n');
+        navigator.clipboard.writeText(text);
+        const btn = document.getElementById('copyAllBtn'); btn.classList.add('copied'); setTimeout(() => btn.classList.remove('copied'), 1500);
+      });
+      document.getElementById('sendChatBtn').addEventListener('click', () => {
+        if (!lastCards.length) return;
+        const text = lastCards.map((c, i) => `**Q${i+1}:** ${c.q}\n**A:** ${c.a}`).join('\n\n');
+        localStorage.setItem('dubu_tool_transfer', `Review these flashcards:\n\n${text}`);
+        window.location.href = 'chat.html';
+      });
+
+      async function runFlashcards() {
+        const text = textarea.value.trim();
+        if (!text) { showAlert('Please enter some study material.', 'Flashcard Generator'); return; }
+        const prompt = modePrompts[selectedMode] + ` Create exactly ${selectedCount} flashcards from: ${text}`;
+        const outputBox = document.getElementById('outputBox');
+        const btn = document.getElementById('runBtn');
+        outputBox.classList.remove('empty');
+        outputBox.innerHTML = `<div class="qb-skeleton"><div class="qb-skeleton-line"></div><div class="qb-skeleton-line"></div><div class="qb-skeleton-line"></div><div class="qb-skeleton-line"></div></div>`;
+        btn.disabled = true;
+        try {
+          const raw = await callNIM('You are a JSON-only assistant. Return only valid JSON arrays, no other text.', prompt, { maxTokens: 3000 });
+          const jsonMatch = raw.match(/\[[\s\S]*\]/);
+          if (!jsonMatch) throw new Error('Could not parse flashcards');
+          lastCards = JSON.parse(jsonMatch[0]);
+          outputBox.innerHTML = `<div class="flashcards-grid">${lastCards.map((c, i) => `
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+              <div class="fc-front"><div class="fc-label">Question ${i + 1}</div>${escHtml(c.q)}</div>
+              <div class="fc-back"><div class="fc-label">Answer</div>${escHtml(c.a)}</div>
+            </div>
+          `).join('')}</div>`;
+          document.getElementById('wordCount').textContent = `${lastCards.length} cards`;
+        } catch (e) {
+          outputBox.innerHTML = `<div class="qb-placeholder" style="color:#f87171">${e.message}</div>`;
+        } finally {
+          btn.disabled = false;
+        }
+      }
+    </script>
+  </body>
+</html>

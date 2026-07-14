@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "preview": {
+    "entry": "index.html"
+  },
+  "startup": {},
+  "skills": {
+    "preloaded": [
+      "brainstorm-improvements",
+      "review",
+      "test",
+      "reflect",
+      "commit"
+    ]
+  }
+}

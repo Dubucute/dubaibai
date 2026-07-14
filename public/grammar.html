@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grammar Checker — Dubu AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/themes.css" />
+    <link rel="stylesheet" href="css/tools.css" />
+    <style>
+      body { overflow: auto !important; }
+      .tool-body { padding: 0 !important; max-width: 100% !important; }
+      .tool-description { display: none; }
+      .qb-wrapper { display: flex; flex-direction: column; height: calc(100vh - 56px); height: calc(100dvh - 56px); background: var(--bg-primary, #0a0a0f); }
+      .qb-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); flex-shrink: 0; position: relative; z-index: 70; gap: 12px; }
+      .qb-modes-scroll { flex: 1; min-width: 0; position: relative; overflow: hidden; }
+      .qb-modes { display: flex; align-items: center; gap: 4px; overflow-x: auto; scroll-behavior: smooth; padding: 2px 0; }
+      .qb-modes::-webkit-scrollbar { height: 0; }
+      .qb-modes-scroll::before, .qb-modes-scroll::after { content: ''; position: absolute; top: 0; bottom: 0; width: 32px; pointer-events: none; z-index: 2; opacity: 0; transition: opacity 0.2s; }
+      .qb-modes-scroll::before { left: 0; background: linear-gradient(to right, var(--bg-primary, #0a0a0f), transparent); }
+      .qb-modes-scroll::after { right: 0; background: linear-gradient(to left, var(--bg-primary, #0a0a0f), transparent); }
+      .qb-modes-scroll.show-left::before { opacity: 1; }
+      .qb-modes-scroll.show-right::after { opacity: 1; }
+      .qb-scroll-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border-color, rgba(255,255,255,0.1)); background: var(--bg-secondary, #13131a); color: var(--text-primary, #e8e8ed); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; opacity: 0; pointer-events: none; transition: opacity 0.2s, background 0.2s; flex-shrink: 0; }
+      .qb-scroll-arrow:hover { background: var(--hover-bg, rgba(255,255,255,0.08)); }
+      .qb-scroll-arrow.left { left: 4px; }
+      .qb-scroll-arrow.right { right: 4px; }
+      .qb-modes-scroll.show-left .qb-scroll-arrow.left { opacity: 1; pointer-events: auto; }
+      .qb-modes-scroll.show-right .qb-scroll-arrow.right { opacity: 1; pointer-events: auto; }
+      .qb-mode-btn { padding: 7px 16px; border-radius: 20px; border: 1px solid transparent; background: transparent; color: var(--text-secondary, #9494a3); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-family: inherit; }
+      .qb-mode-btn:hover { color: var(--text-primary, #e8e8ed); background: var(--hover-bg, rgba(255,255,255,0.04)); }
+      .qb-mode-btn.active { color: var(--accent, #818cf8); background: var(--accent-muted, rgba(99,102,241,0.1)); border-color: var(--accent, #818cf8); }
+      .qb-panels { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+      .qb-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; overflow: hidden; }
+      .qb-panel + .qb-panel { border-left: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+      .qb-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.04)); flex-shrink: 0; }
+      .qb-panel-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted, #6b6b80); }
+      .qb-panel-actions { display: flex; gap: 4px; }
+      .qb-icon-btn { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary, #9494a3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; }
+      .qb-icon-btn:hover { background: var(--hover-bg, rgba(255,255,255,0.06)); color: var(--text-primary, #e8e8ed); }
+      .qb-icon-btn.copied { color: #22c55e; }
+      .qb-textarea { flex: 1; width: 100%; padding: 16px; background: transparent; border: none; outline: none; color: var(--text-primary, #e8e8ed); font-size: 15px; line-height: 1.7; font-family: inherit; resize: none; }
+      .qb-textarea::placeholder { color: var(--text-muted, #6b6b80); }
+      .qb-output { flex: 1; padding: 16px; overflow-y: auto; font-size: 15px; line-height: 1.7; color: var(--text-primary, #e8e8ed); white-space: pre-wrap; word-wrap: break-word; }
+      .qb-output.empty { display: flex; align-items: center; justify-content: center; }
+      .qb-placeholder { text-align: center; color: var(--text-muted, #6b6b80); font-size: 14px; }
+      .qb-placeholder svg { display: block; margin: 0 auto 12px; opacity: 0.3; }
+      .qb-skeleton { width: 100%; padding: 0; }
+      .qb-skeleton-line { height: 14px; border-radius: 7px; background: linear-gradient(90deg, var(--hover-bg, rgba(255,255,255,0.03)) 25%, var(--hover-bg, rgba(255,255,255,0.06)) 50%, var(--hover-bg, rgba(255,255,255,0.03)) 75%); background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite; margin-bottom: 12px; }
+      .qb-skeleton-line:nth-child(1) { width: 90%; }
+      .qb-skeleton-line:nth-child(2) { width: 100%; }
+      .qb-skeleton-line:nth-child(3) { width: 75%; }
+      @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+      .qb-bottom-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-top: 1px solid var(--border-color, rgba(255,255,255,0.06)); flex-shrink: 0; }
+      .qb-word-count { font-size: 12px; color: var(--text-muted, #6b6b80); }
+      .qb-action-btn { display: flex; align-items: center; gap: 8px; padding: 8px 20px; border-radius: 10px; border: none; background: var(--accent, #818cf8); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: inherit; }
+      .qb-action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+      .qb-action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+      .grammar-issues { margin-top: 12px; }
+      .grammar-issue { padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color, rgba(255,255,255,0.06)); background: var(--hover-bg, rgba(255,255,255,0.02)); margin-bottom: 8px; font-size: 13px; }
+      .grammar-issue .issue-type { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent, #818cf8); margin-bottom: 4px; }
+      .grammar-issue .fix { background: rgba(34,197,94,0.15); color: #4ade80; padding: 1px 4px; border-radius: 3px; }
+      .grammar-issue .remove { background: rgba(239,68,68,0.15); color: #f87171; text-decoration: line-through; padding: 1px 4px; border-radius: 3px; }
+      @media (max-width: 768px) {
+        .qb-panels { flex-direction: column; }
+        .qb-panel + .qb-panel { border-left: none; border-top: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+        .qb-modes { padding: 8px 12px; }
+        .qb-mode-btn { padding: 6px 12px; font-size: 12px; }
+        .grammar-issue { padding: 12px 14px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tool-page">
+      <header class="tool-topbar">
+        <a href="index.html" class="tool-back">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Home
+        </a>
+        <h2>Grammar Checker</h2>
+        <a href="chat.html" class="tool-back">Chat →</a>
+      </header>
+      <div class="tool-body">
+        <div class="qb-wrapper">
+          <div class="qb-toolbar">
+            <div class="qb-modes-scroll" id="modesScroll">
+              <button class="qb-scroll-arrow left" id="scrollLeftBtn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <div class="qb-modes" id="modesContainer">
+                <button class="qb-mode-btn active" data-mode="check">Check</button>
+                <button class="qb-mode-btn" data-mode="fixall">Fix All</button>
+                <button class="qb-mode-btn" data-mode="simplify">Simplify</button>
+                <button class="qb-mode-btn" data-mode="formal">Formal</button>
+                <button class="qb-mode-btn" data-mode="academic">Academic</button>
+                <button class="qb-mode-btn" data-mode="concise">Concise</button>
+              </div>
+              <button class="qb-scroll-arrow right" id="scrollRightBtn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+          </div>
+          <div class="qb-panels">
+            <div class="qb-panel">
+              <div class="qb-panel-header">
+                <span class="qb-panel-label">Input</span>
+                <div class="qb-panel-actions">
+                  <button class="qb-icon-btn" id="clearBtn" title="Clear"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+                </div>
+              </div>
+              <textarea class="qb-textarea" id="toolInput" placeholder="Paste or type your text to check..."></textarea>
+            </div>
+            <div class="qb-panel">
+              <div class="qb-panel-header">
+                <span class="qb-panel-label">Corrected</span>
+                <div class="qb-panel-actions">
+                  <button class="qb-icon-btn" id="copyBtn" title="Copy"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 11V3.5A1.5 1.5 0 014.5 2H11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
+                  <button class="qb-icon-btn" id="sendChatBtn" title="Send to Chat"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12V4a2 2 0 012-2h8a2 2 0 012 2v5a2 2 0 01-2 2H5l-3 3z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                </div>
+              </div>
+              <div class="qb-output empty" id="outputBox">
+                <div class="qb-placeholder">
+                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M8 32V10a2 2 0 012-2h20a2 2 0 012 2v14a2 2 0 01-2 2H14l-6 6z" stroke="currentColor" stroke-width="1.5"/><path d="M14 20h12M14 25h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                  Corrected text will appear here
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="qb-bottom-bar">
+            <span class="qb-word-count" id="wordCount">0 words · 0 characters</span>
+            <button class="qb-action-btn" id="runBtn" onclick="runGrammar()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13.5 2.5l-9 9L3 14l2.5-1.5 9-9z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Check Grammar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/page-transition.js"></script>
+    <script src="js/tools.js"></script>
+    <script>
+      const modePrompts = {
+        check: 'Check the following text for grammar, spelling, punctuation, and style issues. Return JSON: {"corrected":"the corrected text","issues":[{"type":"Grammar/Spelling/Punctuation/Style","original":"wrong","corrected":"right","explanation":"why"}]}. If no issues, return original text with empty issues array.',
+        fixall: 'Fix ALL grammar, spelling, punctuation, and style issues in the following text. Make it flawless. Return JSON: {"corrected":"the corrected text","issues":[{"type":"...","original":"...","corrected":"...","explanation":"..."}]}',
+        simplify: 'Simplify the following text for clarity. Fix grammar AND make it easier to read. Return JSON: {"corrected":"the simplified corrected text","issues":[{"type":"...","original":"...","corrected":"...","explanation":"..."}]}',
+        formal: 'Rewrite the following text in a formal, professional tone while fixing any grammar issues. Return JSON: {"corrected":"the formal corrected text","issues":[{"type":"...","original":"...","corrected":"...","explanation":"..."}]}',
+        academic: 'Rewrite the following text in an academic style while fixing any grammar issues. Return JSON: {"corrected":"the academic corrected text","issues":[{"type":"...","original":"...","corrected":"...","explanation":"..."}]}',
+        concise: 'Make the following text more concise while fixing grammar. Remove redundancy. Return JSON: {"corrected":"the concise corrected text","issues":[{"type":"...","original":"...","corrected":"...","explanation":"..."}]}'
+      };
+
+      let selectedMode = 'check';
+      let lastCorrected = '';
+
+      document.querySelectorAll('.qb-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.qb-mode-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedMode = btn.dataset.mode;
+          const scroll = document.getElementById('modesScroll');
+          const btnRect = btn.getBoundingClientRect();
+          const scrollRect = scroll.getBoundingClientRect();
+          if (btnRect.right > scrollRect.right) btn.scrollIntoView({ inline: 'end', block: 'nearest' });
+          if (btnRect.left < scrollRect.left) btn.scrollIntoView({ inline: 'start', block: 'nearest' });
+          updateModeFades();
+        });
+      });
+
+      function updateModeFades() {
+        const scroll = document.getElementById('modesScroll');
+        const modes = document.getElementById('modesContainer');
+        if (!scroll || !modes) return;
+        const sl = modes.scrollLeft;
+        const maxScroll = modes.scrollWidth - scroll.clientWidth;
+        scroll.classList.toggle('show-left', sl > 4);
+        scroll.classList.toggle('show-right', maxScroll > 4 && sl < maxScroll - 4);
+      }
+      document.getElementById('modesContainer').addEventListener('scroll', updateModeFades);
+      window.addEventListener('resize', updateModeFades);
+      let lastSL = -1;
+      function pollFades() { const m = document.getElementById('modesContainer'); if (m && m.scrollLeft !== lastSL) { lastSL = m.scrollLeft; updateModeFades(); } requestAnimationFrame(pollFades); }
+      requestAnimationFrame(pollFades);
+      document.getElementById('scrollLeftBtn').addEventListener('click', () => document.getElementById('modesContainer').scrollBy({ left: -180, behavior: 'smooth' }));
+      document.getElementById('scrollRightBtn').addEventListener('click', () => document.getElementById('modesContainer').scrollBy({ left: 180, behavior: 'smooth' }));
+
+      const textarea = document.getElementById('toolInput');
+      const wordCountEl = document.getElementById('wordCount');
+      textarea.addEventListener('input', () => {
+        const text = textarea.value;
+        const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+        wordCountEl.textContent = `${words} word${words !== 1 ? 's' : ''} · ${text.length} characters`;
+      });
+      document.getElementById('clearBtn').addEventListener('click', () => { textarea.value = ''; textarea.dispatchEvent(new Event('input')); textarea.focus(); });
+      document.getElementById('copyBtn').addEventListener('click', () => {
+        if (!lastCorrected) return;
+        navigator.clipboard.writeText(lastCorrected);
+        const btn = document.getElementById('copyBtn'); btn.classList.add('copied'); setTimeout(() => btn.classList.remove('copied'), 1500);
+      });
+      document.getElementById('sendChatBtn').addEventListener('click', () => {
+        if (!lastCorrected) return;
+        localStorage.setItem('dubu_tool_transfer', lastCorrected);
+        window.location.href = 'chat.html';
+      });
+
+      function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      async function runGrammar() {
+        const text = textarea.value.trim();
+        if (!text) { showAlert('Please enter some text.', 'Grammar Checker'); return; }
+        const outputBox = document.getElementById('outputBox');
+        const btn = document.getElementById('runBtn');
+        outputBox.classList.remove('empty');
+        outputBox.innerHTML = `<div class="qb-skeleton"><div class="qb-skeleton-line"></div><div class="qb-skeleton-line"></div><div class="qb-skeleton-line"></div></div>`;
+        btn.disabled = true;
+        try {
+          const prompt = modePrompts[selectedMode] + '\n\nText to check:\n' + text;
+          const raw = await callNIM('You are a JSON-only assistant. Return only valid JSON, no other text.', prompt, { maxTokens: 3000 });
+          const jsonMatch = raw.match(/\{[\s\S]*\}/);
+          if (!jsonMatch) throw new Error('Could not parse grammar results');
+          const result = JSON.parse(jsonMatch[0]);
+          lastCorrected = result.corrected || text;
+
+          let html = `<div style="white-space:pre-wrap;line-height:1.8">${mdToHtml(lastCorrected)}</div>`;
+          if (result.issues && result.issues.length > 0) {
+            html += `<div class="grammar-issues"><div style="font-size:12px;font-weight:600;color:var(--text-muted,#6b6b80);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Issues Found (${result.issues.length})</div>`;
+            result.issues.forEach(iss => {
+              html += `<div class="grammar-issue"><div class="issue-type">${escHtml(iss.type)}</div><div><span class="remove">${escHtml(iss.original)}</span> → <span class="fix">${escHtml(iss.corrected)}</span></div><div style="color:var(--text-secondary,#9494a3);margin-top:4px;font-size:12px">${escHtml(iss.explanation)}</div></div>`;
+            });
+            html += '</div>';
+          } else {
+            html += '<div style="color:var(--text-secondary,#9494a3);font-size:13px;padding:12px 0;margin-top:8px">No issues found — your text looks great!</div>';
+          }
+          outputBox.innerHTML = html;
+        } catch (e) {
+          outputBox.innerHTML = `<div class="qb-placeholder" style="color:#f87171">${e.message}</div>`;
+          lastCorrected = '';
+        } finally {
+          btn.disabled = false;
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -40,9 +40,19 @@ const INTENT_PATTERNS = [
       /^.{1,30}$/, // Very short messages
       /\b(hello|hi|hey|what's up|sup)\b/i,
       /\b(yes|no|maybe|thanks|ok|okay|sure)\b/i,
-      /^(what|who|when|where)\s+(is|was|are|were)\s/i,
+      /^(when|where)\s+(is|was|are|were)\s/i,
       /\b(weather|time|date|news)\b/i,
       /^(quick|fast|simple|short)\s/i,
+    ],
+  },
+  {
+    task: "chat",
+    weight: 6,
+    patterns: [
+      /^(what|who)\s+(is|was|are|were|do|does|did|can|could|would|should)\b/i,
+      /\b(tell me about|explain|describe|who are you|what are you|your name|about you)\b/i,
+      /\b(how do|how can|how does|how would|how should)\b/i,
+      /\b(I want|I need|can you|could you|please|would you)\b/i,
     ],
   },
   {
@@ -171,18 +181,18 @@ function detectIntent(message, context = {}) {
  * Get a human-readable description of the detected task.
  */
 function getIntentEmoji(task) {
-  const emojis = {
-    chat: "💬",
-    code: "💻",
-    reasoning: "🧠",
-    fast: "⚡",
-    vision: "👁️",
-    image: "🎨",
-    translate: "🌐",
-    safety: "🛡️",
-    embedding: "📊",
+  const labels = {
+    chat: "Chat",
+    code: "Code",
+    reasoning: "Reasoning",
+    fast: "Fast",
+    vision: "Vision",
+    image: "Image",
+    translate: "Translate",
+    safety: "Safety",
+    embedding: "Embedding",
   };
-  return emojis[task] || "🤖";
+  return labels[task] || "AI";
 }
 
 function getIntentLabel(task) {
@@ -191,6 +201,7 @@ function getIntentLabel(task) {
     code: "Code & Programming",
     reasoning: "Deep Reasoning",
     fast: "Quick Response",
+    websearch: "🔍 Web Search",
     vision: "Image Analysis",
     image: "Image Generation",
     translate: "Translation",

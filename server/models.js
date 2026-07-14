@@ -2,6 +2,9 @@
 // Every model discovered from the NVIDIA API catalog, categorized by capability.
 // Ordered by priority: smartest models first, fastest models highlighted.
 // Source: https://integrate.api.nvidia.com/v1/models (121 models discovered)
+// Enhanced with real benchmark data from dubu.alwaysdata.net proxy
+
+const { fetchRanked, buildChain, getModelBenchmark } = require("./benchmark");
 
 const MODELS = {
   // ── Large Language Models ──
@@ -821,8 +824,8 @@ const TASK_ROUTES = {
     task: "code",
     description: "Code generation, debugging, and analysis",
     chain: [
-      "deepseek-ai/deepseek-v4-flash",
       "deepseek-ai/deepseek-v4-pro",
+      "deepseek-ai/deepseek-v4-flash",
       "nvidia/llama-3.3-nemotron-super-49b-v1.5",
       "moonshotai/kimi-k2.6",
       "qwen/qwen3.5-122b-a10b",
@@ -850,12 +853,26 @@ const TASK_ROUTES = {
     task: "fast",
     description: "Quick responses for simple queries",
     chain: [
-      "microsoft/phi-4-mini-instruct",
       "deepseek-ai/deepseek-v4-flash",
       "stepfun-ai/step-3.5-flash",
+      "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+      "microsoft/phi-4-mini-instruct",
       "google/gemma-3-4b-it",
       "mistralai/ministral-14b-instruct-2512",
-      "mistralai/mistral-nemotron",
+    ],
+    endpoint: "chat",
+  },
+
+  // Web Search — smart models that can synthesize search results
+  websearch: {
+    task: "websearch",
+    description: "Web search synthesis — fetch + answer from real results",
+    chain: [
+      "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+      "nvidia/llama-3.3-nemotron-super-49b-v1",
+      "qwen/qwen3.5-122b-a10b",
+      "meta/llama-3.3-70b-instruct",
+      "deepseek-ai/deepseek-v4-flash",
     ],
     endpoint: "chat",
   },
@@ -938,7 +955,40 @@ function getModelInfo(modelId) {
   return null;
 }
 
+// ── Benchmark-enhanced chain builder ──
+// Overrides hardcoded chains with real benchmark data when available.
+const BENCHMARK_OVERRIDES = {};
+
+/**
+ * Initialize benchmark data by fetching from the proxy.
+ * Called once at server startup.
+ */
+async function initBenchmarks() {
+  try {
+    await fetchRanked();
+
+    // Build benchmark-driven chains for each task type
+    const tasks = ["fast", "chat", "code", "reasoning", "websearch"];
+    for (const task of tasks) {
+      const chain = buildChain(task, { limit: 8 });
+      if (chain.length >= 3) {
+        BENCHMARK_OVERRIDES[task] = chain;
+        console.log(`  🏆 ${task}: ${chain.slice(0, 3).map((m) => m.split("/").pop()).join(" → ")}...`);
+      }
+    }
+    console.log("  ✅ Benchmark chains loaded");
+  } catch (e) {
+    console.warn(`  ⚠️ Benchmark init failed (using hardcoded chains): ${e.message}`);
+  }
+}
+
 function getTaskRoute(task) {
+  // Use benchmark-driven chain if available, else hardcoded
+  const benchmarkChain = BENCHMARK_OVERRIDES[task];
+  if (benchmarkChain && benchmarkChain.length > 0) {
+    const base = TASK_ROUTES[task] || TASK_ROUTES.chat;
+    return { ...base, chain: benchmarkChain };
+  }
   return TASK_ROUTES[task] || TASK_ROUTES.chat;
 }
 
@@ -969,4 +1019,6 @@ module.exports = {
   getTaskRoute,
   getAllModels,
   getModelsByCapability,
+  initBenchmarks,
+  getModelBenchmark,
 };

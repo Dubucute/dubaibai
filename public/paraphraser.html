@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Paraphraser — Dubu AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/themes.css" />
+    <link rel="stylesheet" href="css/tools.css" />
+    <style>
+      body { overflow: auto !important; }
+      .tool-body { padding: 0 !important; max-width: 100% !important; }
+      .tool-description { display: none; }
+
+      .qb-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 56px);
+        height: calc(100dvh - 56px);
+        background: var(--bg-primary, #0a0a0f);
+      }
+
+      /* ── Mode Bar ── */
+      .qb-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+        border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06));
+        flex-shrink: 0;
+        position: relative;
+        z-index: 70;
+        gap: 12px;
+      }
+      .qb-modes-scroll {
+        flex: 1;
+        min-width: 0;
+        position: relative;
+        overflow: hidden;
+      }
+      .qb-modes {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        padding: 2px 0;
+      }
+      .qb-modes::-webkit-scrollbar { height: 0; }
+      .qb-modes-scroll::before,
+      .qb-modes-scroll::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 32px;
+        pointer-events: none;
+        z-index: 2;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      .qb-modes-scroll::before {
+        left: 0;
+        background: linear-gradient(to right, var(--bg-primary, #0a0a0f), transparent);
+      }
+      .qb-modes-scroll::after {
+        right: 0;
+        background: linear-gradient(to left, var(--bg-primary, #0a0a0f), transparent);
+      }
+      .qb-modes-scroll.show-left::before { opacity: 1; }
+      .qb-modes-scroll.show-right::after { opacity: 1; }
+      .qb-scroll-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+        background: var(--bg-secondary, #13131a);
+        color: var(--text-primary, #e8e8ed);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 5;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s, background 0.2s;
+        flex-shrink: 0;
+      }
+      .qb-scroll-arrow:hover {
+        background: var(--hover-bg, rgba(255,255,255,0.08));
+      }
+      .qb-scroll-arrow.left { left: 4px; }
+      .qb-scroll-arrow.right { right: 4px; }
+      .qb-modes-scroll.show-left .qb-scroll-arrow.left { opacity: 1; pointer-events: auto; }
+      .qb-modes-scroll.show-right .qb-scroll-arrow.right { opacity: 1; pointer-events: auto; }
+      .qb-mode-btn {
+        padding: 7px 16px;
+        border-radius: 20px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text-secondary, #9494a3);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        font-family: inherit;
+      }
+      .qb-mode-btn:hover {
+        color: var(--text-primary, #e8e8ed);
+        background: var(--hover-bg, rgba(255,255,255,0.04));
+      }
+      .qb-mode-btn.active {
+        color: var(--accent, #818cf8);
+        background: var(--accent-muted, rgba(99,102,241,0.1));
+        border-color: var(--accent, #818cf8);
+      }
+      .qb-modes-divider {
+        width: 1px;
+        height: 24px;
+        background: var(--border-color, rgba(255,255,255,0.08));
+        margin: 0 4px;
+        flex-shrink: 0;
+      }
+
+      /* ── Custom Dropdown ── */
+      .qb-dropdown {
+        position: relative;
+        flex-shrink: 0;
+      }
+      .qb-dropdown-trigger {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+        background: var(--hover-bg, rgba(255,255,255,0.04));
+        color: var(--text-primary, #e8e8ed);
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        font-family: inherit;
+        min-width: 120px;
+        justify-content: space-between;
+      }
+      .qb-dropdown-trigger:hover {
+        border-color: var(--accent, #818cf8);
+      }
+      .qb-dropdown-trigger svg {
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+      }
+      .qb-dropdown.open .qb-dropdown-trigger svg {
+        transform: rotate(180deg);
+      }
+      .qb-dropdown-menu {
+        position: fixed;
+        min-width: 180px;
+        max-height: 260px;
+        overflow-y: auto;
+        border-radius: 10px;
+        border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+        background: var(--surface-bg, rgba(20,20,30,0.98));
+        backdrop-filter: blur(12px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        z-index: 9999;
+        padding: 4px;
+        display: none;
+      }
+      .qb-dropdown.open .qb-dropdown-menu {
+        display: block;
+        animation: dropIn 0.15s ease;
+      }
+      @keyframes dropIn {
+        from { opacity: 0; transform: translateY(-6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .qb-dropdown-item {
+        display: block;
+        width: 100%;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--text-secondary, #9494a3);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.15s ease;
+        font-family: inherit;
+        white-space: nowrap;
+      }
+      .qb-dropdown-item:hover {
+        background: var(--hover-bg, rgba(255,255,255,0.06));
+        color: var(--text-primary, #e8e8ed);
+      }
+      .qb-dropdown-item.active {
+        color: var(--accent, #818cf8);
+        background: var(--accent-muted, rgba(99,102,241,0.1));
+      }
+
+      /* ── Diff Highlighting (QuillBot-style) ── */
+      .diff-added {
+        background: rgba(59, 130, 246, 0.18);
+        color: #60a5fa;
+        border-radius: 3px;
+        padding: 0 2px;
+        transition: background 0.2s;
+      }
+      .diff-changed {
+        background: rgba(168, 85, 247, 0.18);
+        color: #c084fc;
+        border-radius: 3px;
+        padding: 0 2px;
+        transition: background 0.2s;
+      }
+      .diff-removed {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border-radius: 3px;
+        padding: 0 2px;
+        text-decoration: line-through;
+        opacity: 0.7;
+      }
+      .diff-kept {
+        color: var(--text-secondary, #9494a3);
+      }
+      .diff-legend {
+        display: flex;
+        gap: 14px;
+        padding: 8px 16px;
+        border-top: 1px solid var(--border-color, rgba(255,255,255,0.04));
+        flex-shrink: 0;
+      }
+      .diff-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: var(--text-muted, #6b6b80);
+      }
+      .diff-toggle-btn {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-left: auto;
+        padding: 3px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+        background: transparent;
+        color: var(--text-muted, #6b6b80);
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        font-family: inherit;
+      }
+      .diff-toggle-btn:hover {
+        border-color: var(--border-color-strong, rgba(255,255,255,0.15));
+        color: var(--text-primary, #e8e8ed);
+      }
+      .diff-toggle-btn.active {
+        background: var(--accent-muted, rgba(99,102,241,0.1));
+        border-color: var(--accent, #818cf8);
+        color: var(--accent, #818cf8);
+      }
+      .diff-legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+      }
+
+      /* ── Split Panels ── */
+      .qb-panels {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .qb-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        position: relative;
+        overflow: hidden;
+      }
+      .qb-panel + .qb-panel {
+        border-left: 1px solid var(--border-color, rgba(255,255,255,0.06));
+      }
+      .qb-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.04));
+        flex-shrink: 0;
+      }
+      .qb-panel-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted, #6b6b80);
+      }
+      .qb-panel-actions { display: flex; gap: 4px; }
+      .qb-icon-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary, #9494a3);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+      }
+      .qb-icon-btn:hover {
+        background: var(--hover-bg, rgba(255,255,255,0.06));
+        color: var(--text-primary, #e8e8ed);
+      }
+      .qb-icon-btn.copied { color: #22c55e; }
+
+      /* ── Input Textarea ── */
+      .qb-textarea {
+        flex: 1;
+        width: 100%;
+        padding: 16px;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text-primary, #e8e8ed);
+        font-size: 15px;
+        line-height: 1.7;
+        font-family: inherit;
+        resize: none;
+      }
+      .qb-textarea::placeholder { color: var(--text-muted, #6b6b80); }
+
+      /* ── Output Box ── */
+      .qb-output {
+        flex: 1;
+        padding: 16px;
+        overflow-y: auto;
+        font-size: 15px;
+        line-height: 1.7;
+        color: var(--text-primary, #e8e8ed);
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      .qb-output.empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .qb-placeholder {
+        text-align: center;
+        color: var(--text-muted, #6b6b80);
+        font-size: 14px;
+      }
+      .qb-placeholder svg { display: block; margin: 0 auto 12px; opacity: 0.3; }
+
+      /* ── Skeleton Loading ── */
+      .qb-skeleton { width: 100%; padding: 0; }
+      .qb-skeleton-line {
+        height: 14px;
+        border-radius: 7px;
+        background: linear-gradient(90deg,
+          var(--hover-bg, rgba(255,255,255,0.03)) 25%,
+          var(--hover-bg, rgba(255,255,255,0.06)) 50%,
+          var(--hover-bg, rgba(255,255,255,0.03)) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s ease-in-out infinite;
+        margin-bottom: 12px;
+      }
+      .qb-skeleton-line:nth-child(1) { width: 90%; }
+      .qb-skeleton-line:nth-child(2) { width: 100%; }
+      .qb-skeleton-line:nth-child(3) { width: 75%; }
+      .qb-skeleton-line:nth-child(4) { width: 85%; }
+      .qb-skeleton-line:nth-child(5) { width: 60%; }
+      @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+
+      /* ── Bottom Bar ── */
+      .qb-bottom-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+        border-top: 1px solid var(--border-color, rgba(255,255,255,0.06));
+        flex-shrink: 0;
+      }
+      .qb-word-count {
+        font-size: 12px;
+        color: var(--text-muted, #6b6b80);
+      }
+      .qb-paraphrase-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 28px;
+        border-radius: 10px;
+        border: none;
+        background: var(--accent, #6366f1);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
+      }
+      .qb-paraphrase-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+      .qb-paraphrase-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+      /* ── Toast ── */
+      .qb-toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        padding: 8px 18px;
+        border-radius: 8px;
+        background: var(--surface-bg, rgba(20,20,30,0.95));
+        border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+        color: var(--text-primary, #e8e8ed);
+        font-size: 13px;
+        font-weight: 500;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.25s ease;
+        z-index: 100;
+        backdrop-filter: blur(8px);
+      }
+      .qb-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+      @media (max-width: 768px) {
+        .qb-panels { flex-direction: column; }
+        .qb-panel + .qb-panel { border-left: none; border-top: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+        .qb-modes { padding: 8px 12px; }
+        .qb-mode-btn { padding: 6px 12px; font-size: 12px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tool-page">
+      <header class="tool-topbar">
+        <a href="index.html" class="tool-back">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Home
+        </a>
+        <h2>Paraphraser</h2>
+        <a href="chat.html" class="tool-back">Chat →</a>
+      </header>
+
+      <div class="tool-body">
+        <div class="qb-wrapper">
+          <!-- Mode + Level Bar -->
+          <div class="qb-toolbar">
+            <div class="qb-modes-scroll" id="modesScroll">
+              <button class="qb-scroll-arrow left" id="scrollLeftBtn" title="Scroll left">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="qb-modes" id="modesContainer">
+                <button class="qb-mode-btn active" data-tone="formal">Formal</button>
+                <button class="qb-mode-btn" data-tone="casual">Casual</button>
+                <button class="qb-mode-btn" data-tone="academic">Academic</button>
+                <button class="qb-mode-btn" data-tone="persuasive">Persuasive</button>
+                <button class="qb-mode-btn" data-tone="creative">Creative</button>
+                <button class="qb-mode-btn" data-tone="concise">Concise</button>
+                <button class="qb-mode-btn" data-tone="shorten">Shorten</button>
+                <button class="qb-mode-btn" data-tone="simplify">Simplify</button>
+                <button class="qb-mode-btn" data-tone="expand">Expand</button>
+                <button class="qb-mode-btn" data-tone="fluency">Fluency</button>
+                <button class="qb-mode-btn" data-tone="formality">Formality</button>
+                <button class="qb-mode-btn" data-tone="emotional">Emotional</button>
+              </div>
+              <button class="qb-scroll-arrow right" id="scrollRightBtn" title="Scroll right">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+            <div class="qb-dropdown" id="levelDropdown">
+              <button class="qb-dropdown-trigger" id="levelTrigger">
+                <span id="levelLabel">Professional</span>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="qb-dropdown-menu" id="levelMenu"></div>
+            </div>
+          </div>
+
+          <!-- Split Panels -->
+          <div class="qb-panels">
+            <div class="qb-panel">
+              <div class="qb-panel-header">
+                <span class="qb-panel-label">Input</span>
+                <div class="qb-panel-actions">
+                  <button class="qb-icon-btn" id="clearBtn" title="Clear">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  </button>
+                </div>
+              </div>
+              <textarea class="qb-textarea" id="toolInput" placeholder="Paste or type your text here..."></textarea>
+            </div>
+            <div class="qb-panel">
+              <div class="qb-panel-header">
+                <span class="qb-panel-label">Output</span>
+                <div class="qb-panel-actions">
+                  <button class="qb-icon-btn" id="copyBtn" title="Copy">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 11V3.5A1.5 1.5 0 014.5 2H11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                  </button>
+                  <button class="qb-icon-btn" id="sendChatBtn" title="Send to Chat">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12V4a2 2 0 012-2h8a2 2 0 012 2v5a2 2 0 01-2 2H5l-3 3z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="qb-output empty" id="outputBox">
+                <div class="qb-placeholder">
+                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M8 32V10a2 2 0 012-2h20a2 2 0 012 2v14a2 2 0 01-2 2H14l-6 6z" stroke="currentColor" stroke-width="1.5"/><path d="M14 20h12M14 25h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                  Paraphrased text will appear here
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Bar -->
+          <div class="qb-bottom-bar">
+            <span class="qb-word-count" id="wordCount">0 words · 0 characters</span>
+            <button class="qb-paraphrase-btn" id="paraphraseBtn" onclick="runParaphrase()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 0111.5-2.3M14 8a6 6 0 01-11.5 2.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 2v3.5h-3.5M3 14v-3.5h3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Paraphrase
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="qb-toast" id="toast"></div>
+
+    <script src="js/page-transition.js"></script>
+    <script src="js/tools.js"></script>
+    <script>
+      const NO_PREAMBLE = ' CRITICAL: Return ONLY the rewritten text. No greetings, no explanations, no quotes, no extra words before or after. Just the paraphrased text alone.';
+      const toneLevels = {
+        formal: [
+          { id: 'elem', label: 'Elementary', prompt: 'Rewrite the following text in a formal tone suitable for a 3rd-4th grader (age 8-10). Use very simple words and short sentences but keep it structured and proper.' + NO_PREAMBLE },
+          { id: 'mid', label: 'Middle School', prompt: 'Rewrite the following text in a formal tone suitable for a middle school student (grades 6-8, age 11-13). Use clear, structured language.' + NO_PREAMBLE },
+          { id: 'high', label: 'High School', prompt: 'Rewrite the following text in a formal tone suitable for a high school student (grades 9-12). Use polished, academic-style language.' + NO_PREAMBLE },
+          { id: 'coll', label: 'College', prompt: 'Rewrite the following text in a formal tone at a college undergraduate level. Use sophisticated vocabulary and clear reasoning.' + NO_PREAMBLE },
+          { id: 'prof', label: 'Professional', prompt: 'Rewrite the following text in a polished, professional workplace tone. Suitable for business emails, reports, and corporate communication.' + NO_PREAMBLE }
+        ],
+        casual: [
+          { id: 'everyday', label: 'Everyday', prompt: 'Rewrite the following text in a relaxed, everyday conversational tone — like talking to a friend at a coffee shop.' + NO_PREAMBLE },
+          { id: 'friendly', label: 'Friendly', prompt: 'Rewrite the following text in a warm, friendly, and approachable tone. Make it feel personal and welcoming.' + NO_PREAMBLE },
+          { id: 'slang', label: 'Slang', prompt: 'Rewrite the following text using modern slang and informal language, like a text message to a close friend.' + NO_PREAMBLE }
+        ],
+        academic: [
+          { id: 'research', label: 'Research Paper', prompt: 'Rewrite the following text in the style of an academic research paper. Use citations-style language, formal structure, and precise terminology.' + NO_PREAMBLE },
+          { id: 'essay', label: 'Essay', prompt: 'Rewrite the following text as a well-structured academic essay. Use thesis-driven language with clear argumentation.' + NO_PREAMBLE },
+          { id: 'report', label: 'Technical Report', prompt: 'Rewrite the following text in the style of a technical report. Use objective, data-driven language with clear methodology.' + NO_PREAMBLE }
+        ],
+        persuasive: [
+          { id: 'sales', label: 'Sales Pitch', prompt: 'Rewrite the following text as a compelling sales pitch. Highlight benefits, create urgency, and drive action.' + NO_PREAMBLE },
+          { id: 'debate', label: 'Debate', prompt: 'Rewrite the following text as a strong debate argument. Use logical reasoning, evidence-based claims, and assertive language.' + NO_PREAMBLE },
+          { id: 'opinion', label: 'Opinion', prompt: 'Rewrite the following text as a persuasive opinion piece or editorial. Be passionate, convincing, and well-reasoned.' + NO_PREAMBLE }
+        ],
+        creative: [
+          { id: 'story', label: 'Story', prompt: 'Rewrite the following text as a short narrative or story. Use vivid descriptions, characters, and engaging storytelling.' + NO_PREAMBLE },
+          { id: 'poetic', label: 'Poetic', prompt: 'Rewrite the following text in a poetic, lyrical style. Use metaphors, rhythm, and beautiful imagery.' + NO_PREAMBLE },
+          { id: 'dramatic', label: 'Dramatic', prompt: 'Rewrite the following text in a dramatic, theatrical style. Use bold language, emotional intensity, and vivid expressions.' + NO_PREAMBLE }
+        ],
+        concise: [
+          { id: 'summary', label: 'Summary', prompt: 'Rewrite the following text as a brief 2-3 sentence summary capturing only the most essential points.' + NO_PREAMBLE },
+          { id: 'bullets', label: 'Bullets', prompt: 'Rewrite the following text as clear, scannable bullet points. Keep each point short and actionable.' + NO_PREAMBLE },
+          { id: 'tldr', label: 'TL;DR', prompt: 'Rewrite the following text as a one-sentence TL;DR. Make it as short as possible while keeping the core meaning.' + NO_PREAMBLE }
+        ],
+        shorten: [
+          { id: 'trim', label: 'Light Trim', prompt: 'Shorten the following text by removing unnecessary words and filler while keeping all key information. Reduce length by about 20-30%.' + NO_PREAMBLE },
+          { id: 'cut', label: 'Half Length', prompt: 'Shorten the following text to roughly half its original length. Keep only the essential meaning and core message.' + NO_PREAMBLE },
+          { id: 'minimal', label: 'Minimal', prompt: 'Shorten the following text to the absolute minimum words possible while preserving the core meaning. Remove all redundancy.' + NO_PREAMBLE }
+        ],
+        simplify: [
+          { id: 'easy', label: 'Easy Read', prompt: 'Rewrite the following text to be extremely easy to read. Use short sentences, common words, and simple grammar.' + NO_PREAMBLE },
+          { id: 'clear', label: 'Clear', prompt: 'Rewrite the following text for maximum clarity. Remove jargon, simplify complex ideas, and use direct language.' + NO_PREAMBLE },
+          { id: 'plain', label: 'Plain English', prompt: 'Rewrite the following text in plain English. No technical terms, no fancy words — just clear, simple communication.' + NO_PREAMBLE }
+        ],
+        expand: [
+          { id: 'detail', label: 'Add Detail', prompt: 'Rewrite the following text adding more detail, examples, and explanations to make it richer and more informative.' + NO_PREAMBLE },
+          { id: 'elaborate', label: 'Elaborate', prompt: 'Rewrite the following text elaborating on each point. Expand ideas with supporting details and context.' + NO_PREAMBLE },
+          { id: 'deep', label: 'Deep Dive', prompt: 'Rewrite the following text as an in-depth exploration. Add background information, nuance, and thorough analysis.' + NO_PREAMBLE }
+        ],
+        fluency: [
+          { id: 'smooth', label: 'Smooth', prompt: 'Rewrite the following text to flow smoothly and naturally. Fix any awkward phrasing, improve transitions, and make it read well aloud.' + NO_PREAMBLE },
+          { id: 'natural', label: 'Natural', prompt: 'Rewrite the following text so it sounds like a native speaker wrote it. Natural rhythm, natural word choices, natural flow.' + NO_PREAMBLE },
+          { id: 'elegant', label: 'Elegant', prompt: 'Rewrite the following text with elegant, refined prose. Smooth transitions, beautiful sentence structures, polished flow.' + NO_PREAMBLE }
+        ],
+        formality: [
+          { id: 'more', label: 'More Formal', prompt: 'Rewrite the following text making it more formal. Use proper grammar, avoid contractions, and elevate the register.' + NO_PREAMBLE },
+          { id: 'less', label: 'Less Formal', prompt: 'Rewrite the following text making it less formal. Use contractions, casual phrasing, and a relaxed tone.' + NO_PREAMBLE },
+          { id: 'neutral', label: 'Neutral', prompt: 'Rewrite the following text in a neutral, balanced register — neither too formal nor too casual.' + NO_PREAMBLE }
+        ],
+        emotional: [
+          { id: 'empathy', label: 'Empathetic', prompt: 'Rewrite the following text with empathy and compassion. Show understanding, warmth, and emotional support.' + NO_PREAMBLE },
+          { id: 'excited', label: 'Excited', prompt: 'Rewrite the following text with excitement and enthusiasm. Use energetic language and a positive, upbeat tone.' + NO_PREAMBLE },
+          { id: 'serious', label: 'Serious', prompt: 'Rewrite the following text with a serious, somber tone. Convey gravity, importance, and weight.' + NO_PREAMBLE }
+        ]
+      };
+
+      let selectedTone = 'formal';
+      let selectedLevel = 'prof';
+      let lastResult = '';
+
+      function renderLevels(tone) {
+        const levels = toneLevels[tone];
+        const menu = document.getElementById('levelMenu');
+        const label = document.getElementById('levelLabel');
+        const last = levels[levels.length - 1];
+        selectedLevel = last.id;
+        label.textContent = last.label;
+        menu.innerHTML = levels.map(l =>
+          `<button class="qb-dropdown-item ${l.id === last.id ? 'active' : ''}" data-level="${l.id}">${l.label}</button>`
+        ).join('');
+        menu.querySelectorAll('.qb-dropdown-item').forEach(btn => {
+          btn.addEventListener('click', () => {
+            menu.querySelectorAll('.qb-dropdown-item').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedLevel = btn.dataset.level;
+            label.textContent = btn.textContent;
+            document.getElementById('levelDropdown').classList.remove('open');
+          });
+        });
+      }
+
+      document.getElementById('levelTrigger').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dd = document.getElementById('levelDropdown');
+        const menu = document.getElementById('levelMenu');
+        const trigger = document.getElementById('levelTrigger');
+        const wasOpen = dd.classList.contains('open');
+        dd.classList.toggle('open');
+        if (!wasOpen) {
+          const rect = trigger.getBoundingClientRect();
+          menu.style.left = rect.left + 'px';
+          menu.style.top = (rect.bottom + 4) + 'px';
+          menu.style.width = Math.max(rect.width, 180) + 'px';
+        }
+      });
+      document.addEventListener('click', () => {
+        document.getElementById('levelDropdown').classList.remove('open');
+      });
+
+      document.querySelectorAll('.qb-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.qb-mode-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedTone = btn.dataset.tone;
+          renderLevels(selectedTone);
+          // Auto-scroll active button into view
+          const scroll = document.getElementById('modesScroll');
+          const btnRect = btn.getBoundingClientRect();
+          const scrollRect = scroll.getBoundingClientRect();
+          if (btnRect.right > scrollRect.right) btn.scrollIntoView({ inline: 'end', block: 'nearest' });
+          if (btnRect.left < scrollRect.left) btn.scrollIntoView({ inline: 'start', block: 'nearest' });
+          updateModeFades();
+        });
+      });
+      renderLevels('formal');
+
+      // Scroll fade indicators for mode bar
+      function updateModeFades() {
+        const scroll = document.getElementById('modesScroll');
+        const modes = document.getElementById('modesContainer');
+        if (!scroll || !modes) return;
+        const sl = modes.scrollLeft;
+        const maxScroll = modes.scrollWidth - scroll.clientWidth;
+        scroll.classList.toggle('show-left', sl > 4);
+        scroll.classList.toggle('show-right', maxScroll > 4 && sl < maxScroll - 4);
+      }
+      const modesContainer = document.getElementById('modesContainer');
+      modesContainer.addEventListener('scroll', updateModeFades);
+      window.addEventListener('resize', updateModeFades);
+      // Use RAF loop to catch all scroll changes including programmatic
+      let lastScrollLeft = -1;
+      function pollModeFades() {
+        const modes = document.getElementById('modesContainer');
+        if (modes && modes.scrollLeft !== lastScrollLeft) {
+          lastScrollLeft = modes.scrollLeft;
+          updateModeFades();
+        }
+        requestAnimationFrame(pollModeFades);
+      }
+      requestAnimationFrame(pollModeFades);
+
+      // Scroll arrow buttons
+      const scrollAmount = 180;
+      document.getElementById('scrollLeftBtn').addEventListener('click', () => {
+        document.getElementById('modesContainer').scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+      });
+      document.getElementById('scrollRightBtn').addEventListener('click', () => {
+        document.getElementById('modesContainer').scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      });
+
+      const textarea = document.getElementById('toolInput');
+      const wordCountEl = document.getElementById('wordCount');
+      textarea.addEventListener('input', () => {
+        const text = textarea.value;
+        const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+        wordCountEl.textContent = `${words} word${words !== 1 ? 's' : ''} · ${text.length} characters`;
+      });
+
+      document.getElementById('clearBtn').addEventListener('click', () => {
+        textarea.value = '';
+        textarea.dispatchEvent(new Event('input'));
+        textarea.focus();
+      });
+
+      document.getElementById('copyBtn').addEventListener('click', () => {
+        if (!lastResult) return;
+        navigator.clipboard.writeText(lastResult).then(() => {
+          const btn = document.getElementById('copyBtn');
+          btn.classList.add('copied');
+          showToast('Copied to clipboard');
+          setTimeout(() => btn.classList.remove('copied'), 1500);
+        });
+      });
+
+      document.getElementById('sendChatBtn').addEventListener('click', () => {
+        if (!lastResult) return;
+        localStorage.setItem('dubu_tool_transfer', lastResult);
+        window.location.href = 'chat.html';
+      });
+
+      function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
+      }
+
+      /* ── Word Diff Algorithm ── */
+      function wordDiff(input, output) {
+        const inputWords = input.split(/(\s+)/);
+        const outputWords = output.split(/(\s+)/);
+        const inputNorm = inputWords.map(w => w.toLowerCase().replace(/[^a-z0-9]/g, ''));
+        const outputNorm = outputWords.map(w => w.toLowerCase().replace(/[^a-z0-9]/g, ''));
+
+        // Build LCS table
+        const m = inputNorm.length, n = outputNorm.length;
+        const dp = Array.from({length: m + 1}, () => new Array(n + 1).fill(0));
+        for (let i = 1; i <= m; i++) {
+          for (let j = 1; j <= n; j++) {
+            if (inputNorm[i-1] && inputNorm[i-1] === outputNorm[j-1] && inputNorm[i-1]) {
+              dp[i][j] = dp[i-1][j-1] + 1;
+            } else {
+              dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+            }
+          }
+        }
+
+        // Traceback
+        const result = [];
+        let i = m, j = n;
+        while (i > 0 || j > 0) {
+          if (i > 0 && j > 0 && inputNorm[i-1] === outputNorm[j-1] && inputNorm[i-1]) {
+            result.unshift({ type: 'kept', word: outputWords[j-1] });
+            i--; j--;
+          } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
+            // Check if this is a changed word (replacing an input word) or truly added
+            if (i > 0 && dp[i-1][j] < dp[i][j-1]) {
+              result.unshift({ type: 'added', word: outputWords[j-1] });
+            } else {
+              result.unshift({ type: 'added', word: outputWords[j-1] });
+            }
+            j--;
+          } else {
+            result.unshift({ type: 'removed', word: inputWords[i-1] });
+            i--;
+          }
+        }
+
+        // Merge adjacent same-type non-space tokens
+        return result;
+      }
+
+      function renderDiff(input, output) {
+        const diffs = wordDiff(input, output);
+        // Group: attach trailing whitespace to the preceding token
+        const merged = [];
+        for (let i = 0; i < diffs.length; i++) {
+          const d = diffs[i];
+          if (/^\s+$/.test(d.word) && merged.length > 0) {
+            // Attach whitespace to previous token's word
+            merged[merged.length - 1].word += d.word;
+          } else {
+            merged.push({ ...d });
+          }
+        }
+        const html = merged.map(d => {
+          if (d.type === 'kept') return `<span class="diff-kept">${escHtml(d.word)}</span>`;
+          if (d.type === 'added') return `<span class="diff-added">${escHtml(d.word)}</span>`;
+          if (d.type === 'removed') return `<span class="diff-removed">${escHtml(d.word)}</span>`;
+          return escHtml(d.word);
+        }).join('');
+        return html;
+      }
+
+      let removedVisible = false;
+      function toggleRemoved() {
+        removedVisible = !removedVisible;
+        const btn = document.getElementById('removedToggle');
+        if (!btn) return;
+        btn.classList.toggle('active', removedVisible);
+        btn.innerHTML = removedVisible
+          ? '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> Hide Removed'
+          : '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3v8M3 7h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> Show Removed';
+        document.querySelectorAll('.diff-removed').forEach(el => {
+          el.style.display = removedVisible ? '' : 'none';
+        });
+      }
+
+      function applyInitialDiffVisibility() {
+        removedVisible = false;
+        document.querySelectorAll('.diff-removed').forEach(el => {
+          el.style.display = 'none';
+        });
+      }
+
+      function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+
+      function stripEmojis(str) {
+        return str.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2702}-\u{27B0}\u{200D}\u{20E3}\u{FE0F}\u{E0020}-\u{E007F}]/gu, '').replace(/\s{2,}/g, ' ').trim();
+      }
+
+      function stripPreamble(original, result) {
+        // If the result is very long and starts with a common preamble pattern,
+        // try to find where the actual paraphrase begins by matching against the original content
+        const preamblePatterns = [
+          /^(?:dear\s+\w+,?\s*)/i,
+          /^(?:here\s+(?:is|are)\s+(?:the\s+)?(?:rewritten|paraphrased|revised|rephrased)\s+(?:version|text|sentence|paragraph|content)[^.!:\n]*[:.]\s*\n?\s*)/i,
+          /^(?:i\s+(?:am|will|would|have)\s+.{0,60}?\n)/i,
+          /^(?:as\s+(?:requested|an?\s+ai)[^.!:\n]*[.]\s*\n?\s*)/i,
+          /^(?:below\s+(?:is|are)\s+(?:the\s+)?(?:rewritten|paraphrased)[^.!:\n]*[:.]\s*\n?\s*)/i,
+          /^(?:sure[!.]?\s*\n?\s*)/i,
+          /^(?:of\s+course[!.]?\s*\n?\s*)/i,
+        ];
+        let cleaned = result;
+        for (const pat of preamblePatterns) {
+          cleaned = cleaned.replace(pat, '');
+        }
+        // If result got significantly shorter after stripping, use cleaned version
+        if (cleaned.length > original.length * 0.5) return cleaned;
+        return result;
+      }
+
+      async function runParaphrase() {
+        const text = textarea.value.trim();
+        if (!text) { showAlert('Please enter some text.', 'Paraphraser'); return; }
+
+        const levels = toneLevels[selectedTone];
+        const level = levels.find(l => l.id === selectedLevel) || levels[levels.length - 1];
+
+        const outputBox = document.getElementById('outputBox');
+        const btn = document.getElementById('paraphraseBtn');
+
+        outputBox.classList.remove('empty');
+        outputBox.innerHTML = `<div class="qb-skeleton"><div class="qb-skeleton-line"></div><div class="qb-skeleton-line"></div><div class="qb-skeleton-line"></div><div class="qb-skeleton-line"></div><div class="qb-skeleton-line"></div></div>`;
+        btn.disabled = true;
+
+        try {
+          const result = await callNIM(level.prompt, text);
+          const cleaned = stripPreamble(text, result);
+          lastResult = stripEmojis(cleaned);
+          outputBox.innerHTML = renderDiff(text, lastResult);
+          applyInitialDiffVisibility();
+
+          // Show diff legend with toggle
+          const existingLegend = outputBox.parentElement.querySelector('.diff-legend');
+          if (existingLegend) existingLegend.remove();
+          const legend = document.createElement('div');
+          legend.className = 'diff-legend';
+          legend.innerHTML = `
+            <div class="diff-legend-item"><div class="diff-legend-dot" style="background:#60a5fa"></div> Added</div>
+            <div class="diff-legend-item"><div class="diff-legend-dot" style="background:#9494a3"></div> Kept</div>
+            <button class="diff-toggle-btn" id="removedToggle" onclick="toggleRemoved()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3v8M3 7h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+              Show Removed
+            </button>
+          `;
+          outputBox.parentElement.appendChild(legend);
+        } catch (e) {
+          outputBox.innerHTML = `<div class="qb-placeholder" style="color:#f87171">${e.message}</div>`;
+          lastResult = '';
+        } finally {
+          btn.disabled = false;
+        }
+      }
+    </script>
+  </body>
+</html>

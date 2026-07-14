@@ -139,6 +139,7 @@
   background: transparent !important;
   text-shadow: none !important;
   font-family: var(--font-mono) !important;
+  white-space: pre-wrap !important;
 }
 
 /* Inline code tags inside messages should not get Prism styles */

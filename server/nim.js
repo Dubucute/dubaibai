@@ -12,15 +12,20 @@ class NIMClient {
 
   /**
    * Send a chat completion request with automatic fallback.
-   * Tries each model in the chain until one succeeds.
+   * If `modelOverride` is provided, uses that model directly (with fallback chain if it fails).
    */
-  async chat(messages, { task = "chat", max_tokens = 4096, temperature, stream = false } = {}) {
+  async chat(messages, { task = "chat", max_tokens = 4096, temperature, stream = false, model: modelOverride } = {}) {
     const route = getTaskRoute(task);
     const temp = temperature !== undefined ? temperature : CONFIG.temperature;
     const errors = [];
     let lastModel = null;
+    
+    // If user specified a model, try it first, then fallback to chain
+    const modelsToTry = modelOverride 
+      ? [modelOverride, ...route.chain.filter(m => m !== modelOverride)]
+      : route.chain;
 
-    for (const modelId of route.chain) {
+    for (const modelId of modelsToTry) {
       try {
         lastModel = modelId;
         const result = await this._chatCompletion(modelId, messages, {
@@ -59,16 +64,20 @@ class NIMClient {
 
   /**
    * Stream a chat completion request — yields tokens one by one via SSE.
-   * Tries each model in the chain until one succeeds.
-   * Yields: { type: 'model_info', model, modelName } then { type: 'token', content } chunks.
+   * If `model` is provided in opts, uses that model first, then falls back to the task chain.
    */
-  async *chatStream(messages, { task = "chat", max_tokens = 4096, temperature } = {}) {
+  async *chatStream(messages, { task = "chat", max_tokens = 4096, temperature, model: modelOverride } = {}) {
     const route = getTaskRoute(task);
     const temp = temperature !== undefined ? temperature : CONFIG.temperature;
     const errors = [];
     let lastModel = null;
+    
+    // If user specified a model, try it first, then fallback to chain (excluding the already-tried model)
+    const modelsToTry = modelOverride 
+      ? [modelOverride, ...route.chain.filter(m => m !== modelOverride)]
+      : route.chain;
 
-    for (const modelId of route.chain) {
+    for (const modelId of modelsToTry) {
       try {
         lastModel = modelId;
         const body = await this._chatCompletion(modelId, messages, {

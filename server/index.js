@@ -13,7 +13,7 @@ const CONFIG = require("./config");
 const store = require("./store");
 const Orchestrator = require("./orchestrator");
 const NIMClient = require("./nim");
-const { getTaskRoute, getModelInfo, getAllModels } = require("./models");
+const { getTaskRoute, getModelInfo, getAllModels, initBenchmarks } = require("./models");
 const { detectIntent } = require("./router");
 const { listTools, getTool } = require("./tools/index");
 
@@ -143,7 +143,7 @@ app.post("/api/agent/process", async (req, res) => {
     res.setHeader("Connection", "keep-alive");
 
     try {
-      for await (const update of orchestrator.process(message, history, context)) {
+      for await (const update of orchestrator.process(message, history, context, model)) {
         res.write(`data: ${JSON.stringify(update)}\n\n`);
       }
       res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
@@ -154,7 +154,7 @@ app.post("/api/agent/process", async (req, res) => {
   } else {
     try {
       let finalResult = null;
-      for await (const update of orchestrator.process(message, history, context)) {
+      for await (const update of orchestrator.process(message, history, context, model)) {
         if (update.type === "result") finalResult = update;
       }
       res.json({
@@ -406,9 +406,19 @@ app.post("/api/filesystem/list", (req, res) => {
   }
 });
 
-// ── Serve SPA (fallback to index.html) ──
-app.get("*", (req, res) => {
+// ── Serve static files ──
+// index.html = home page (served at /)
+// chat.html = chat interface (served at /chat.html)
+// *.html pages served directly by express.static
+
+// ── Root → home page ──
+app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "index.html"));
+});
+
+// ── SPA fallback → chat page ──
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "chat.html"));
 });
 
 // ── Export for Vercel (serverless) ──
@@ -417,11 +427,14 @@ module.exports = app;
 // ── Start (local development only) ──
 // Vercel handles this automatically; we only call listen() when running directly
 if (!process.env.VERCEL) {
-  app.listen(CONFIG.port, () => {
-    console.log(`\n  🚀 Dubu AI v2.1.0 — Unified Agent Platform`);
-    console.log(`  ⚡ Powered by NVIDIA NIM`);
-    console.log(`  🤖 Auto model selection + fallback enabled`);
-    console.log(`  🌐 http://localhost:${CONFIG.port}`);
-    console.log(`  📚 API: http://localhost:${CONFIG.port}/api/health\n`);
+  // Load benchmark data from proxy before starting
+  initBenchmarks().then(() => {
+    app.listen(CONFIG.port, () => {
+      console.log(`\n  🚀 Dubu AI v2.1.0 — Unified Agent Platform`);
+      console.log(`  ⚡ Powered by NVIDIA NIM`);
+      console.log(`  🤖 Auto model selection + fallback enabled`);
+      console.log(`  🌐 http://localhost:${CONFIG.port}`);
+      console.log(`  📚 API: http://localhost:${CONFIG.port}/api/health\n`);
+    });
   });
 }

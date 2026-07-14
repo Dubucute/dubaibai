@@ -12,66 +12,9 @@ let attachedFiles = [];
 let imageGallery = []; // { url, prompt, model, timestamp }
 let loadedModels = []; // Dynamically fetched from server /api/models
 
-// ── Model Preset Info (for tooltips) ──
-const MODEL_INFO = {
-  "": {
-    name: "Auto-Select",
-    icon: "⚡",
-    desc: "Automatically selects the best model for your task based on message intent, complexity, and context.",
-    capabilities: ["Smart routing", "Intent detection", "Automatic fallback"],
-  },
-  "deepseek-ai/deepseek-v4-flash": {
-    name: "DeepSeek V4 Flash",
-    icon: "🚀",
-    desc: "High-speed reasoning model optimized for fast responses. Perfect for coding, analysis, and chat with minimal latency.",
-    capabilities: ["Fast inference", "Code generation", "Reasoning", "Low latency"],
-  },
-  "nvidia/llama-3.3-nemotron-super-49b-v1.5": {
-    name: "Nemotron Super 49B",
-    icon: "🧠",
-    desc: "NVIDIA's flagship 49B parameter model with superior reasoning, instruction following, and multilingual capabilities.",
-    capabilities: ["Deep reasoning", "Multilingual", "Complex tasks", "Instruction following"],
-  },
-  "deepseek-ai/deepseek-v4-pro": {
-    name: "DeepSeek V4 Pro",
-    icon: "⭐",
-    desc: "Premium reasoning model with advanced chain-of-thought capabilities. Best for complex problem-solving and deep analysis.",
-    capabilities: ["Advanced reasoning", "Problem-solving", "Deep analysis", "High accuracy"],
-  },
-  "microsoft/phi-4-mini-instruct": {
-    name: "Phi-4 Mini",
-    icon: "⚡",
-    desc: "Microsoft's compact yet powerful model optimized for speed and efficiency. Ideal for quick tasks and simple queries.",
-    capabilities: ["Lightning fast", "Efficient", "Simple queries", "Low compute"],
-  },
-};
-
 // ── Model icon & group helpers ──
 function getModelIcon(modelId, info) {
-  const name = (info.name || modelId).toLowerCase();
-  if (info.capabilities?.includes("vision") || name.includes("vision") || name.includes("vl"))
-    return "👁️";
-  if (info.capabilities?.includes("code") || name.includes("code") || name.includes("coder"))
-    return "💻";
-  if (info.capabilities?.includes("embedding")) return "📐";
-  if (info.capabilities?.includes("safety") || info.capabilities?.includes("content_safety"))
-    return "🛡️";
-  if (
-    info.capabilities?.includes("text_to_image") ||
-    info.capabilities?.includes("image_generation")
-  )
-    return "🎨";
-  if (info.capabilities?.includes("video")) return "🎬";
-  if (info.capabilities?.includes("finance")) return "📊";
-  if (info.capabilities?.includes("medical")) return "🏥";
-  if (info.capabilities?.includes("writing") || info.capabilities?.includes("creative"))
-    return "✍️";
-  if (info.capabilities?.includes("multilingual")) return "🌐";
-  if (info.capabilities?.includes("rag")) return "🔍";
-  if (info.capabilities?.includes("fast") || info.speed === "very_fast") return "⚡";
-  if ((info.quality || 0) >= 9) return "🏆";
-  if ((info.quality || 0) >= 7) return "⭐";
-  return "🤖";
+  return "";
 }
 
 function getModelGroup(info) {
@@ -169,10 +112,17 @@ window.toggleTheme = function () {
 };
 
 function applyTheme(name) {
-  document.body.className = "";
-  document.getElementById("app").className = "";
+  const app = document.getElementById("app");
+  // Remove all old theme classes — preserves non-theme classes
+  THEMES.forEach(t => {
+    document.body.classList.remove(`theme-${t}`);
+    if (app) app.classList.remove(`theme-${t}`);
+    document.documentElement.classList.remove(`theme-${t}`);
+  });
+  // Add the new one — elements always have a theme class, no flash
   document.body.classList.add(`theme-${name}`);
-  document.getElementById("app").classList.add(`theme-${name}`);
+  if (app) app.classList.add(`theme-${name}`);
+  document.documentElement.classList.add(`theme-${name}`);
   state.set("theme", name);
 }
 
@@ -458,7 +408,14 @@ window.sendToAgent = async function () {
             document.getElementById("topbarStatus").querySelector(".ts-text").textContent =
               modelName || "Ready";
             document.getElementById("tsDot").className = "ts-dot" + (modelName ? " connected" : "");
-            const badgeHtml = `<span class="routing-badge ${fallbackUsed ? "fallback" : ""}">${fallbackUsed ? "⚡ Fallback: " : ""}${modelName || "Model selected"}</span>`;
+            // Build badge with benchmark rank if available
+            let badgeLabel = fallbackUsed ? "Fallback: " : "";
+            badgeLabel += modelName || "Model selected";
+            if (data.benchmark?.rank) {
+              badgeLabel += `  #${data.benchmark.rank}`;
+              if (data.benchmark.score) badgeLabel += ` (${data.benchmark.score})`;
+            }
+            const badgeHtml = `<span class="routing-badge ${fallbackUsed ? "fallback" : ""}">${sanitizeText(badgeLabel)}</span>`;
             bubble.innerHTML = `${badgeHtml}<div class="thinking-indicator"><div class="thinking-dots"><span></span><span></span><span></span></div><span class="thinking-text">Generating...</span></div>`;
             // Reset streaming state for new generation
             delete thinkingDiv.dataset.streaming;
@@ -1255,9 +1212,8 @@ function detectFileFromCodeBlock(code, lang) {
 // ── Build create file button HTML ──
 function buildFileCreateHtml(fileName) {
   const fileId = "file_" + Math.random().toString(36).slice(2, 7);
-  const fileBadge = `<span class="file-badge"><svg viewBox="0 0 12 12" fill="none"><path d="M3 1h4l3 3v7H3V1z" stroke="currentColor" stroke-width="1.2"/><path d="M7 1v3h3" stroke="currentColor" stroke-width="1.2"/></svg> ${escHtml(fileName)}</span>`;
   const createBtn = `<button class="file-create-btn" onclick="createFileFromCode(this, '${escHtml(fileName)}')" data-file-id="${fileId}"><svg viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Create File</button>`;
-  return `<div class="file-path-input" data-file-id="${fileId}">${fileBadge}${createBtn}</div>`;
+  return `<div class="file-path-input" data-file-id="${fileId}">${createBtn}</div>`;
 }
 
 // ── Handle file creation from code block ──
@@ -1287,54 +1243,30 @@ window.createFileFromCode = async function (btn, fileName) {
 
 // ── Format message HTML with full markdown support ──
 function formatMessageHtml(content) {
+  // ── Phase 1: Extract special blocks before processing ──
+  // Store code/reasoning blocks separately so they're never affected
+  // by markdown processing or the \n→<br> conversion.
+  const blocks = [];
+
+  // Extract reasoning blocks (```reasoning ... ```)
+  content = content.replace(/```reasoning\s*\n([\s\S]*?)```/g, (match, reasoning) => {
+    const idx = blocks.length;
+    blocks.push({ type: "reasoning", content: reasoning.trim() });
+    return `%%BLOCK_${idx}%%`;
+  });
+
+  // Extract code blocks (```lang ... ```)
+  content = content.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+    const idx = blocks.length;
+    blocks.push({ type: "code", lang: lang || "code", code: code });
+    return `%%BLOCK_${idx}%%`;
+  });
+
+  // ── Phase 2: HTML-escape the remaining text (no code blocks) ──
   let html = escHtml(content);
 
-  // Extract reasoning blocks (content between  response  and final answer)
-  html = html.replace(/```reasoning\s*\n([\s\S]*?)```/g, (match, reasoning) => {
-    const cleanReasoning = escHtml(reasoning.trim());
-    return `<div class="reasoning-block"><div class="reasoning-header" onclick="toggleReasoning(this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 3l4 3-4 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg> Show reasoning</div><div class="reasoning-content">${cleanReasoning}</div></div>`;
-  });
-
-  // Process code blocks
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
-    const codeHtml = escHtml(code);
-    const langLabel = lang || "code";
-    const langMap = {
-      js: "javascript",
-      ts: "typescript",
-      jsx: "jsx",
-      tsx: "tsx",
-      py: "python",
-      rb: "ruby",
-      rs: "rust",
-      go: "go",
-      sh: "bash",
-      yml: "yaml",
-      yaml: "yaml",
-      json: "json",
-      html: "html",
-      css: "css",
-      md: "markdown",
-      kt: "kotlin",
-      java: "java",
-      c: "c",
-      cpp: "cpp",
-      h: "c",
-      php: "php",
-      swift: "swift",
-      sql: "sql",
-      bash: "bash",
-      shell: "bash",
-      text: "none",
-      xml: "xml",
-    };
-    const prismLang = langMap[langLabel] || langLabel || "none";
-    const langClass = `language-${prismLang}`;
-    const fileName = detectFileFromCodeBlock(code, lang);
-    const fileUi = fileName ? buildFileCreateHtml(fileName) : "";
-    const copyBtn = `<button class="copy-btn" onclick="copyCodeBlock(this)" title="Copy code"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="3.5" y="2.5" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 4.5v5a1 1 0 001 1h3" stroke="currentColor" stroke-width="1.2"/></svg> Copy</button>`;
-    return `<div class="code-block-wrap"><div class="code-header"><span class="code-lang">${escHtml(langLabel)}</span></div>${fileUi}<div class="code-block line-numbers">${copyBtn}<code class="${langClass}">${codeHtml}</code></div></div>`;
-  });
+  // ── Phase 3: Markdown processing on non-code-block text ──
+  // (All these patterns need \n characters to match correctly)
 
   // Also detect reasoning from markdown-style headers
   html = html.replace(
@@ -1346,7 +1278,6 @@ function formatMessageHtml(content) {
   );
 
   // ── Blockquotes ──
-  // Match consecutive lines starting with &gt; (escaped >)
   html = html.replace(/((?:^|\n)(?:&gt;\s?[^\n]*)+)/g, (match) => {
     const lines = match.trim().split('\n');
     const inner = lines
@@ -1356,37 +1287,28 @@ function formatMessageHtml(content) {
   });
 
   // ── Tables ──
-  // Match groups of lines containing &#124; (escaped |) pipe separators
-  html = html.replace(/((?:^|\n)(?:&#124;[^\n]*&#124;\s*\n?)+)/g, (match, tableBlock) => {
-    const rows = tableBlock.trim().split('\n').filter(r => r.trim().startsWith('&#124;'));
+  html = html.replace(/((?:^|\n)(?:\s*\|[^\n]*\|[\s]*\n?)+)/g, (match, tableBlock) => {
+    const rows = tableBlock.trim().split('\n').filter(r => r.trim().startsWith('|'));
     if (rows.length < 2) return match;
 
-    // Parse cells from each row
     const parsedRows = rows.map(row => {
-      const cells = row.trim().split('&#124;').filter(c => c.trim() !== '');
+      const cells = row.trim().split('|').filter(c => c.trim() !== '');
       return cells.map(c => c.trim());
     });
 
-    // Validate: second row must be a separator (contains dashes)
     const sepRow = parsedRows[1];
     if (!sepRow || sepRow.length < 2 || !sepRow.every(c => /^-+\s*$/.test(c))) {
-      return match; // Not a valid table, leave as-is
+      return match;
     }
 
     let tableHtml = '<div class="table-wrap"><table>';
-    // Header row
     tableHtml += '<thead><tr>';
-    parsedRows[0].forEach(cell => {
-      tableHtml += '<th>' + cell + '</th>';
-    });
+    parsedRows[0].forEach(cell => { tableHtml += '<th>' + cell + '</th>'; });
     tableHtml += '</tr></thead>';
-    // Body rows
     tableHtml += '<tbody>';
     for (let i = 2; i < parsedRows.length; i++) {
       tableHtml += '<tr>';
-      parsedRows[i].forEach(cell => {
-        tableHtml += '<td>' + cell + '</td>';
-      });
+      parsedRows[i].forEach(cell => { tableHtml += '<td>' + cell + '</td>'; });
       tableHtml += '</tr>';
     }
     tableHtml += '</tbody></table></div>';
@@ -1394,8 +1316,7 @@ function formatMessageHtml(content) {
   });
 
   // ── Task Lists ──
-  // Match: - [ ] or - [x] (with escaped brackets)
-  html = html.replace(/^- &#91;([ x])&#93; ([^\n]*)/gm, (match, checked, text) => {
+  html = html.replace(/^- \[([ x])\] ([^\n]*)/gm, (match, checked, text) => {
     const done = checked === 'x';
     const cls = 'task-item' + (done ? ' done' : '');
     const icon = done
@@ -1404,9 +1325,44 @@ function formatMessageHtml(content) {
     return '<div class="' + cls + '">' + icon + '<span class="task-text">' + text.trim() + '</span></div>';
   });
 
+  // ── Headers ──
+  html = html.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>');
+  html = html.replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>');
+  html = html.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+
+  // ── Horizontal Rules ──
+  html = html.replace(/^(?:[-*_]){3,}\s*$/gm, '<hr>');
+
+  // ── Unordered Lists ──
+  html = html.replace(/(?:^|\n)([*-])\s+([^\n]+)((?:\n\1\s+[^\n]+)*)/g, (match, marker, firstItem, rest) => {
+    const items = [firstItem, ...rest.split('\n').filter(Boolean).map(l => l.replace(/^[*-]\s+/, ''))];
+    return '<ul>' + items.map(content => '<li>' + content + '</li>').join('') + '</ul>';
+  });
+
+  // ── Ordered Lists ──
+  html = html.replace(/(?:^|\n)\d+\.\s+([^\n]+)((?:\n\d+\.\s+[^\n]+)*)/g, (match, firstItem, rest) => {
+    const items = [firstItem, ...rest.split('\n').filter(Boolean).map(l => l.replace(/^\d+\.\s+/, ''))];
+    return '<ol>' + items.map(content => '<li>' + content + '</li>').join('') + '</ol>';
+  });
+
+  // ── Bold ──
   html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+  // ── Strikethrough ──
+  html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
+
+  // ── Italic ──
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
   html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  // ── Convert \n to <br> for ALL remaining text ──
+  // This runs BEFORE restoring code blocks, so code blocks keep their \n
   html = html.replace(/\n/g, "<br>");
+
   html = html.replace(/!\[(.*?)\]\((.*?)\)/g, (m, alt, src) => {
     if (src.startsWith("data:") || src.startsWith("http"))
       return `<img src="${src}" alt="${escHtml(alt)}" class="msg-image" loading="lazy">`;
@@ -1416,6 +1372,44 @@ function formatMessageHtml(content) {
     /(https?:\/\/[^\s<]+)/g,
     '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">$1</a>',
   );
+
+  // ── Phase 4: Restore code & reasoning blocks ──
+  // Code blocks are restored AFTER \n→<br>, so they keep their \n characters.
+  // CSS white-space:pre-wrap + Prism will render them correctly.
+  html = html.replace(/%%BLOCK_(\d+)%%/g, (match, idxStr) => {
+    const block = blocks[parseInt(idxStr)];
+    if (!block) return match;
+
+    if (block.type === "reasoning") {
+      const cleanReasoning = escHtml(block.content);
+      return `<div class="reasoning-block"><div class="reasoning-header" onclick="toggleReasoning(this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 3l4 3-4 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg> Show reasoning</div><div class="reasoning-content">${cleanReasoning}</div></div>`;
+    }
+
+    if (block.type === "code") {
+      const codeHtml = escHtml(block.code);
+      const langLabel = block.lang;
+      const langMap = {
+        js: "javascript", ts: "typescript", jsx: "jsx", tsx: "tsx",
+        py: "python", rb: "ruby", rs: "rust", go: "go", sh: "bash",
+        yml: "yaml", yaml: "yaml", json: "json", html: "html", css: "css",
+        md: "markdown", kt: "kotlin", java: "java", c: "c", cpp: "cpp",
+        h: "c", php: "php", swift: "swift", sql: "sql", bash: "bash",
+        shell: "bash", text: "none", xml: "xml",
+      };
+      const prismLang = langMap[langLabel] || langLabel || "none";
+      const langClass = `language-${prismLang}`;
+      const fileName = detectFileFromCodeBlock(block.code, block.lang);
+      const fileBadgeHtml = fileName
+        ? `<span class="code-file-badge"><svg viewBox="0 0 12 12" fill="none"><path d="M3 1h4l3 3v7H3V1z" stroke="currentColor" stroke-width="1.2"/><path d="M7 1v3h3" stroke="currentColor" stroke-width="1.2"/></svg>${escHtml(fileName)}</span>`
+        : "";
+      const fileUi = fileName ? buildFileCreateHtml(fileName) : "";
+      const copyBtn = `<button class="copy-btn" onclick="copyCodeBlock(this)" title="Copy code"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="3.5" y="2.5" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 4.5v5a1 1 0 001 1h3" stroke="currentColor" stroke-width="1.2"/></svg> Copy</button>`;
+      return `<div class="code-block-wrap"><div class="code-header"><span class="code-lang">${escHtml(langLabel)}</span>${fileBadgeHtml}</div>${fileUi}<div class="code-block line-numbers">${copyBtn}<code class="${langClass}">${codeHtml}</code></div></div>`;
+    }
+
+    return match;
+  });
+
   return html;
 }
 
@@ -1798,17 +1792,18 @@ window.filterConversations = function (query) {
 window.selectConversation = async function (id) {
   if (id === currentConversationId) return;
 
-  // Save current first
-  const currentMessages = agentHistory;
-  if (currentMessages.length > 0 && currentConversationId) {
-    try {
-      await AgentAPI.conversationAddMessage(currentConversationId, {
-        role: "assistant",
-        content: "Conversation continued in another session",
-      });
-    } catch (e) {
-      /* silent */
-    }
+  // Each conversation is its own independent session — don't abort anything.
+  // The previous conversation's streaming continues in the background
+  // and saves to the server on its own.
+
+  // Remove any streaming cursors from the current view (they belong to the old chat)
+  const streamCursor = document.querySelector(".streaming-cursor");
+  if (streamCursor) streamCursor.remove();
+
+  // Remove any suggested questions from the current view
+  if (suggestedQuestionsContainer) {
+    suggestedQuestionsContainer.remove();
+    suggestedQuestionsContainer = null;
   }
 
   try {
@@ -1918,21 +1913,287 @@ function showWelcomeMessage() {
     </div>`;
 }
 
-// ── Model Preset Selection ──
-function syncPresets() {
-  const current = state.get("agentModel") || "";
-  document.querySelectorAll(".preset-btn").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.model === current);
+// ── Custom Model Dropdown ──
+const QUICK_PRESETS = [
+  { id: "", label: "Auto", icon: "", name: "Auto-Select" },
+  { id: "deepseek-ai/deepseek-v4-flash", label: "DeepSeek Flash", icon: "", name: "DeepSeek V4 Flash" },
+  { id: "nvidia/llama-3.3-nemotron-super-49b-v1.5", label: "Nemotron 49B", icon: "", name: "Nemotron Super 49B" },
+  { id: "deepseek-ai/deepseek-v4-pro", label: "DeepSeek Pro", icon: "", name: "DeepSeek V4 Pro" },
+  { id: "microsoft/phi-4-mini-instruct", label: "Phi-4 Mini", icon: "", name: "Phi-4 Mini" },
+];
+
+function updateModelDropdownTrigger() {
+  const currentId = state.get("agentModel") || "";
+  const triggerIcon = document.getElementById("mdTriggerIcon");
+  const triggerName = document.getElementById("mdTriggerName");
+  
+  if (currentId === "") {
+    triggerIcon.textContent = "";
+    triggerName.textContent = "Auto-Select";
+  } else {
+    const model = loadedModels.find(m => m.id === currentId);
+    if (model) {
+      triggerIcon.textContent = model.icon || "";
+      triggerName.textContent = model.name;
+    } else {
+      const shortName = currentId.split("/").pop() || currentId;
+      triggerIcon.textContent = "";
+      triggerName.textContent = shortName;
+    }
+  }
+}
+
+window.toggleModelDropdown = function () {
+  const trigger = document.getElementById("mdTrigger");
+  const panel = document.getElementById("mdPanel");
+  const isOpen = panel.classList.contains("open");
+  
+  if (isOpen) {
+    trigger.classList.remove("open");
+    panel.classList.remove("open");
+  } else {
+    // Check if there's enough space below to open downward
+    const triggerRect = trigger.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - triggerRect.bottom - 8;
+    const panelMaxHeight = 380;
+    
+    if (spaceBelow < panelMaxHeight) {
+      panel.classList.add("upward");
+    } else {
+      panel.classList.remove("upward");
+    }
+    
+    trigger.classList.add("open");
+    panel.classList.add("open");
+    renderDropdownContent();
+    setTimeout(() => {
+      document.getElementById("mdSearchInput")?.focus();
+    }, 100);
+  }
+};
+
+function closeModelDropdown() {
+  document.getElementById("mdTrigger")?.classList.remove("open");
+  document.getElementById("mdPanel")?.classList.remove("open");
+  const searchInput = document.getElementById("mdSearchInput");
+  if (searchInput) {
+    searchInput.value = "";
+    filterModelDropdown("");
+  }
+}
+
+window.selectModelFromDropdown = function (id) {
+  state.set("agentModel", id);
+  updateModelDropdownTrigger();
+  closeModelDropdown();
+  
+  // Update quick presets active state
+  document.querySelectorAll(".md-quick-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.model === id);
+  });
+  
+  // Update list items active state
+  document.querySelectorAll(".md-item").forEach(item => {
+    item.classList.toggle("active", item.dataset.model === id);
+  });
+  
+  const model = loadedModels.find(m => m.id === id);
+  showToast(model ? `Model: ${model.name}` : "Auto-Select mode", "info", 1500);
+};
+
+window.filterModelDropdown = function (query) {
+  renderDropdownContent(query);
+};
+
+// ── Shared tooltip helpers for model dropdown ──
+function populateTooltip(model) {
+  const tooltip = document.getElementById("mdTooltip");
+  if (!tooltip || !model) {
+    if (tooltip) tooltip.classList.remove("visible");
+    return;
+  }
+  document.getElementById("mdtIcon").textContent = model.icon || "";
+  document.getElementById("mdtName").textContent = model.name || model.id || "";
+  document.getElementById("mdtDesc").textContent = model.desc || "";
+  
+  // Badges
+  const badgesEl = document.getElementById("mdtBadges");
+  let badgesHtml = "";
+  if (model.quality) {
+    const qClass = model.quality >= 9 ? "quality-high" : model.quality >= 7 ? "quality-mid" : "";
+    if (qClass) badgesHtml += `<span class="mdt-badge ${qClass}">Q${model.quality}</span>`;
+  }
+  if (model.speed) {
+    badgesHtml += `<span class="mdt-badge speed-fast">${model.speed === "very_fast" ? "FAST " : ""}${model.speed.replace("_", " ")}</span>`;
+  }
+  if (model.group) {
+    badgesHtml += `<span class="mdt-badge group">${escHtml(model.group)}</span>`;
+  }
+  badgesEl.innerHTML = badgesHtml;
+  
+  // Capabilities
+  const capsEl = document.getElementById("mdtCaps");
+  if (model.capabilities && model.capabilities.length > 0) {
+    capsEl.innerHTML = model.capabilities
+      .slice(0, 6)
+      .map(c => `<span>${escHtml(c)}</span>`)
+      .join("");
+    capsEl.style.display = "";
+  } else {
+    capsEl.style.display = "none";
+  }
+}
+
+function positionTooltip(targetEl) {
+  const tooltip = document.getElementById("mdTooltip");
+  const panel = document.getElementById("mdPanel");
+  if (!tooltip || !panel) return;
+  const targetRect = targetEl.getBoundingClientRect();
+  const panelRect = panel.getBoundingClientRect();
+  
+  tooltip.style.position = "fixed";
+  
+  const tooltipWidth = 240;
+  const gap = 6;
+  let leftPos = targetRect.left - gap - tooltipWidth;
+  let flipped = false;
+  
+  if (leftPos < panelRect.left + 8) {
+    leftPos = targetRect.right + gap;
+    flipped = true;
+  }
+  
+  tooltip.classList.toggle("flip", flipped);
+  tooltip.style.left = leftPos + "px";
+  tooltip.style.top = Math.max(panelRect.top + 8, targetRect.top - 2) + "px";
+}
+
+function setupTooltipListeners(elements) {
+  const tooltip = document.getElementById("mdTooltip");
+  if (!tooltip) return;
+  
+  elements.forEach(el => {
+    const modelId = el.dataset.model;
+    
+    el.addEventListener("mouseenter", () => {
+      if (tooltip._hideTimer) {
+        clearTimeout(tooltip._hideTimer);
+        tooltip._hideTimer = null;
+      }
+      
+      const model = loadedModels.find(m => m.id === modelId);
+      if (!model) {
+        tooltip.classList.remove("visible");
+        return;
+      }
+      
+      populateTooltip(model);
+      positionTooltip(el);
+      tooltip.classList.add("visible");
+    });
+    
+    el.addEventListener("mouseleave", () => {
+      tooltip._hideTimer = setTimeout(() => {
+        tooltip.classList.remove("visible");
+        tooltip._hideTimer = null;
+      }, 80);
+    });
   });
 }
 
-window.selectModelPreset = function (btn) {
-  const modelId = btn.dataset.model;
-  state.set("agentModel", modelId);
-  // Update active state on all presets
-  syncPresets();
-  showToast(modelId ? `Model: ${btn.textContent.trim()}` : "Auto-Select mode", "info", 1500);
-};
+function renderDropdownContent(filter = "") {
+  // Hide any visible tooltip from previous render
+  const tooltip = document.getElementById("mdTooltip");
+  if (tooltip) tooltip.classList.remove("visible");
+  
+  const currentId = state.get("agentModel") || "";
+  const q = filter.toLowerCase().trim();
+  
+  // Always show quick presets when not filtering
+  const quickList = document.getElementById("mdQuickList");
+  const quickSection = document.getElementById("mdQuickSection");
+  const allSection = document.getElementById("mdAllSection");
+  const emptyEl = document.getElementById("mdEmpty");
+  
+  if (!q) {
+    quickSection.style.display = "";
+    quickList.innerHTML = QUICK_PRESETS
+      .map(p => `<button class="md-quick-btn ${p.id === currentId ? "active" : ""}" data-model="${p.id}" onclick="selectModelFromDropdown('${p.id}')">${p.label}</button>`)
+      .join("");
+  } else {
+    quickSection.style.display = "none";
+  }
+  
+  // Render all models
+  const models = loadedModels.length > 0 ? loadedModels : [
+    { id: "", name: "Auto-Select", icon: "", desc: "Auto-select best model", group: "" },
+  ];
+  
+  const filtered = q
+    ? models.filter(m => 
+        m.name.toLowerCase().includes(q) ||
+        m.id.toLowerCase().includes(q) ||
+        (m.desc || "").toLowerCase().includes(q) ||
+        (m.group || "").toLowerCase().includes(q)
+      )
+    : models;
+  
+  // ── Setup quick preset tooltips ──
+  setupTooltipListeners(quickList.querySelectorAll(".md-quick-btn"));
+  
+  // Show empty state if no models match
+  if (filtered.length === 0) {
+    allSection.style.display = "none";
+    emptyEl.style.display = "flex";
+    return;
+  }
+  
+  emptyEl.style.display = "none";
+  allSection.style.display = "";
+  
+  // Group models by category
+  const GROUP_ORDER = [
+    "Smart", "Vision", "Code", "Image Gen", "Creative",
+    "Fast", "Finance", "Medical", "Embeddings", "Safety", "Other",
+  ];
+  
+  const groups = {};
+  filtered.forEach(m => {
+    const g = m.group || "Other";
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(m);
+  });
+  
+  // Sort groups by predefined order; models within each group are already sorted by quality
+  const sortedGroups = Object.entries(groups).sort((a, b) => {
+    const ia = GROUP_ORDER.indexOf(a[0]);
+    const ib = GROUP_ORDER.indexOf(b[0]);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
+  
+  const list = document.getElementById("mdList");
+  let listHtml = "";
+  sortedGroups.forEach(([groupName, models]) => {
+    listHtml += `<div class="md-group-label">${escHtml(groupName)}</div>`;
+    models.forEach(m => {
+      const isActive = m.id === currentId;
+      const modelIdDisplay = m.id ? `<div class="md-item-id">${escHtml(m.id)}</div>` : "";
+      const checkHtml = `<div class="md-item-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+      listHtml += `<div class="md-item ${isActive ? "active" : ""}" data-model="${m.id}" onclick="selectModelFromDropdown('${m.id}')">
+        <span class="md-item-icon">${m.icon || ""}</span>
+        <div class="md-item-info">
+          <div class="md-item-name">${escHtml(m.name)}</div>
+          ${modelIdDisplay}
+        </div>
+        ${checkHtml}
+      </div>`;
+    });
+  });
+  list.innerHTML = listHtml;
+  
+  // ── Setup hover tooltips on list items ──
+  setupTooltipListeners(list.querySelectorAll(".md-item"));
+}
 
 // ── Model Picker (Dynamic) ──
 async function loadModelsFromServer() {
@@ -1957,7 +2218,7 @@ async function loadModelsFromServer() {
     loadedModels.unshift({
       id: "",
       name: "Auto-Select",
-      icon: "⚡",
+      icon: "",
       desc: "Automatically selects the best model for your task",
       group: "",
       quality: 99,
@@ -1969,198 +2230,13 @@ async function loadModelsFromServer() {
       {
         id: "",
         name: "Auto-Select",
-        icon: "⚡",
+        icon: "",
         desc: "Automatically selects the best model",
         group: "",
         quality: 99,
       },
     ];
   }
-}
-
-// Group order for display
-const MODEL_GROUP_ORDER = [
-  "Smart",
-  "Vision",
-  "Code",
-  "Image Gen",
-  "Creative",
-  "Fast",
-  "Finance",
-  "Medical",
-  "Embeddings",
-  "Safety",
-  "Other",
-];
-
-window.openModelPicker = function () {
-  document.getElementById("modelPickerModal").style.display = "flex";
-  document.getElementById("modelPickerSearch").value = "";
-  renderModelPicker();
-  // Focus search after render
-  setTimeout(() => document.getElementById("modelPickerSearch")?.focus(), 100);
-};
-
-window.closeModelPicker = function () {
-  document.getElementById("modelPickerModal").style.display = "none";
-};
-
-window.filterModelPicker = function (query) {
-  renderModelPicker(query);
-};
-
-window.selectModelFromPicker = function (id) {
-  state.set("agentModel", id);
-  syncPresets();
-  closeModelPicker();
-  const model = loadedModels.find((m) => m.id === id);
-  showToast(model ? `Model: ${model.name}` : "Auto-Select mode", "info", 1500);
-};
-
-function renderModelPicker(filter = "") {
-  const list = document.getElementById("modelPickerList");
-  if (!list) return;
-  const current = state.get("agentModel") || "";
-  const q = filter.toLowerCase().trim();
-
-  const models =
-    loadedModels.length > 0
-      ? loadedModels
-      : [
-          {
-            id: "",
-            name: "Auto-Select",
-            icon: "⚡",
-            desc: "Auto-select best model",
-            group: "",
-            quality: 99,
-          },
-        ];
-
-  const filtered = q
-    ? models.filter(
-        (m) =>
-          m.name.toLowerCase().includes(q) ||
-          m.id.toLowerCase().includes(q) ||
-          m.desc.toLowerCase().includes(q) ||
-          m.group.toLowerCase().includes(q),
-      )
-    : models;
-
-  // Group models
-  const groups = {};
-  for (const m of filtered) {
-    const g = m.group || "";
-    if (!groups[g]) groups[g] = [];
-    groups[g].push(m);
-  }
-
-  let html = "";
-  // Auto-Select always first if not filtering
-  if (!q && groups[""]) {
-    for (const m of groups[""]) {
-      const isActive = m.id === current;
-      html += `<div class="picker-item ${isActive ? "active" : ""}" onclick="selectModelFromPicker('${m.id}')">
-        <span class="picker-item-icon">${m.icon}</span>
-        <div class="picker-item-info">
-          <div class="picker-item-name">${m.name}</div>
-          <div class="picker-item-desc">${m.desc}</div>
-        </div>
-        <div class="picker-item-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>`;
-    }
-    delete groups[""];
-  }
-
-  // Render remaining groups in order
-  const groupsToRender = Object.keys(groups).sort((a, b) => {
-    const ia = MODEL_GROUP_ORDER.indexOf(a);
-    const ib = MODEL_GROUP_ORDER.indexOf(b);
-    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-  });
-
-  for (const g of groupsToRender) {
-    if (!groups[g] || groups[g].length === 0) continue;
-    html += `<div class="picker-group-label">${g}</div>`;
-    for (const m of groups[g]) {
-      const isActive = m.id === current;
-      html += `<div class="picker-item ${isActive ? "active" : ""}" onclick="selectModelFromPicker('${m.id}')">
-        <span class="picker-item-icon">${m.icon}</span>
-        <div class="picker-item-info">
-          <div class="picker-item-name">${escHtml(m.name)}</div>
-          <div class="picker-item-desc">${escHtml(m.desc)}</div>
-        </div>
-        <div class="picker-item-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>`;
-    }
-  }
-
-  if (!html) {
-    html = `<div style="padding:40px 20px;text-align:center;color:var(--text-muted);font-size:12px">No models match "${escHtml(filter)}"</div>`;
-  }
-
-  list.innerHTML = html;
-}
-
-// ── Preset Tooltips ──
-function setupPresetTooltips() {
-  const bar = document.getElementById("presetBar");
-  const tooltip = document.getElementById("presetTooltip");
-  if (!bar || !tooltip) return;
-
-  let hideTimeout = null;
-
-  bar.querySelectorAll(".preset-btn:not(.preset-btn-more)").forEach((btn) => {
-    btn.addEventListener("mouseenter", () => {
-      clearTimeout(hideTimeout);
-      const modelId = btn.dataset.model;
-      const info = MODEL_INFO[modelId];
-      if (!info) return;
-
-      // Populate tooltip content
-      document.getElementById("ptIcon").textContent = info.icon || "";
-      document.getElementById("ptName").textContent = info.name;
-      document.getElementById("ptDesc").textContent = info.desc;
-      document.getElementById("ptCaps").innerHTML = info.capabilities
-        .map((c) => `<span>${c}</span>`)
-        .join("");
-
-      // Position horizontally (safe before visible)
-      const rect = btn.getBoundingClientRect();
-      tooltip.style.left = Math.max(8, rect.left + rect.width / 2 - 130) + "px";
-
-      // Show tooltip first so we can measure its height
-      tooltip.classList.add("visible");
-
-      // Position vertically after layout (offsetHeight is valid now)
-      requestAnimationFrame(() => {
-        const gap = 6;
-        // Clamp horizontally
-        const tRect = tooltip.getBoundingClientRect();
-        if (tRect.left < 8) tooltip.style.left = "8px";
-        if (tRect.right > window.innerWidth - 8) {
-          tooltip.style.left = window.innerWidth - tooltip.offsetWidth - 8 + "px";
-        }
-        // Position above the button
-        tooltip.style.top = rect.top - gap - tooltip.offsetHeight + "px";
-      });
-    });
-
-    btn.addEventListener("mouseleave", () => {
-      hideTimeout = setTimeout(() => {
-        tooltip.classList.remove("visible");
-      }, 100);
-    });
-
-    // Keep tooltip visible when hovering the tooltip itself
-    tooltip.addEventListener("mouseenter", () => {
-      clearTimeout(hideTimeout);
-    });
-
-    tooltip.addEventListener("mouseleave", () => {
-      tooltip.classList.remove("visible");
-    });
-  });
 }
 
 // ── Settings ──
@@ -2282,8 +2358,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (e.key === "Escape") {
       closeMobileSidebar();
-      const pickerModal = document.getElementById("modelPickerModal");
-      if (pickerModal.style.display !== "none") closeModelPicker();
+      closeModelDropdown();
       closeSettings();
     }
   });
@@ -2305,16 +2380,36 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch(() => {});
   }, 1000);
 
-  // Sync model presets with saved state
-  syncPresets();
-
-  // Setup preset tooltips
-  setupPresetTooltips();
+  // Init model dropdown trigger
+  updateModelDropdownTrigger();
+  
+  // Close dropdown on outside click
+  document.addEventListener("click", (e) => {
+    const dropdown = document.getElementById("modelDropdown");
+    if (dropdown && !dropdown.contains(e.target)) {
+      closeModelDropdown();
+    }
+  });
 
   // Restore conversations
   setTimeout(() => {
     autoRestoreConversation().then(() => loadConversationList());
   }, 200);
+
+  // Check for tool transfer text from educational tools
+  setTimeout(() => {
+    const transfer = localStorage.getItem('dubu_tool_transfer');
+    if (transfer) {
+      localStorage.removeItem('dubu_tool_transfer');
+      const textarea = document.getElementById("userInput");
+      if (textarea) {
+        textarea.value = transfer;
+        textarea.focus();
+        textarea.style.height = "auto";
+        textarea.style.height = textarea.scrollHeight + "px";
+      }
+    }
+  }, 500);
 
   // Restore web search and deep think states
   if (state.get("webSearch")) toggleWebSearch();

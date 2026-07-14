@@ -5,7 +5,8 @@
 const CONFIG = require("./config");
 const NIMClient = require("./nim");
 const { detectIntent, getIntentEmoji, getIntentLabel } = require("./router");
-const { getModelInfo, getTaskRoute } = require("./models");
+const { getModelInfo, getTaskRoute, getModelBenchmark } = require("./models");
+const { webSearch } = require("./websearch");
 
 class Orchestrator {
   constructor(options = {}) {
@@ -16,9 +17,12 @@ class Orchestrator {
 
   /**
    * Process a user request through the unified agent loop.
-   * Auto-detects intent, selects the best model chain, and auto-fallbacks.
+   * @param {string} userMessage - The user's message
+   * @param {Array} history - Previous conversation messages
+   * @param {object} context - Additional context (images, docs, modes)
+   * @param {string} [modelOverride] - Optional explicit model to use (skips auto-selection)
    */
-  async *process(userMessage, history = [], context = {}) {
+  async *process(userMessage, history = [], context = {}, modelOverride = null) {
     // Clean history: filter out any malformed messages (empty objects, missing role/content)
     const cleanHistory = (history || []).filter(
       (m) =>
@@ -39,16 +43,52 @@ class Orchestrator {
       task,
       confidence: intent.confidence,
       label: getIntentLabel(task),
-      emoji: getIntentEmoji(task),
-      content: `${getIntentEmoji(task)} Detected: **${getIntentLabel(task)}** (${(intent.confidence * 100).toFixed(0)}% confidence)`,
+      content: modelOverride
+        ? `Using selected model: **${modelOverride.split("/").pop()}**`
+        : `Detected: **${getIntentLabel(task)}** (${(intent.confidence * 100).toFixed(0)}% confidence)`,
       reasoning: intent.reasoning,
     };
 
     // Replace history with cleaned version for downstream handlers
     history = cleanHistory;
 
+    // Attach model override to context so all handlers can access it
+    context._modelOverride = modelOverride;
+
+    // Debug: log context flags
+    console.log(`  📡 Context flags: webSearch=${context.webSearch}, deepThink=${context.deepThink}, task=${task}`);
+
+    // ── Web Search override: when web search is enabled, force the websearch
+    // model chain (smart models that can synthesize search results).
+    let effectiveTask = task;
+    if (context.webSearch) {
+      effectiveTask = "websearch";
+      yield {
+        type: "intent",
+        task: "websearch",
+        confidence: 1,
+        label: "Web Search",
+        content: "Web search enabled — using smart model to synthesize results",
+        reasoning: `Web search active, overriding "${task}" route to websearch chain`,
+      };
+    }
+
+    // ── Deep Reasoning override: when deep think is enabled, force the reasoning
+    // model chain (QWQ 32B → Nemotron Ultra → etc.) for chain-of-thought analysis.
+    if (context.deepThink && effectiveTask === task) {
+      effectiveTask = "reasoning";
+      yield {
+        type: "intent",
+        task: "reasoning",
+        confidence: 1,
+        label: "Deep Reasoning",
+        content: "Deep reasoning enabled — using large reasoning model",
+        reasoning: `Deep think active, overriding "${task}" route to reasoning chain`,
+      };
+    }
+
     // Step 2: Route to the right handler based on task type
-    switch (task) {
+    switch (effectiveTask) {
       case "image":
         yield* this._handleImageGeneration(userMessage, history, context);
         break;
@@ -82,31 +122,75 @@ class Orchestrator {
         break;
 
       default:
-        yield* this._handleGeneralChat(userMessage, history, context, task);
+        yield* this._handleGeneralChat(userMessage, history, context, effectiveTask);
         break;
     }
   }
 
+  // Helper to build chatStream options with model override
+  _streamOpts(task, overrides = {}) {
+    const opts = {
+      task,
+      max_tokens: overrides.max_tokens ?? CONFIG.maxTokens,
+      temperature: overrides.temperature ?? CONFIG.temperature,
+    };
+    if (overrides._modelOverride || overrides.model) {
+      opts.model = overrides._modelOverride || overrides.model;
+    }
+    return opts;
+  }
+
+  // Helper to enrich model_info with benchmark rank data
+  _enrichModelInfo(update) {
+    const bench = getModelBenchmark(update.model);
+    if (bench) {
+      update.benchmark = { rank: bench.rank, score: bench.combinedScore, speed: bench.speed };
+      // Enhance the content string with rank info
+      const rankStr = `#${bench.rank}`;
+      const scoreStr = `${bench.combinedScore}`;
+      update.content = `**${update.modelName}** ${rankStr} (score: ${scoreStr})` +
+        (update.fallbackUsed ? ` (fallback)` : '');
+    }
+    return update;
+  }
+
   // ── General Chat (default) — with token streaming ──
   async *_handleGeneralChat(message, history, context, task = "chat") {
-    const systemPrompt = this._buildSystemPrompt(context);
+    yield { type: "thinking", content: context._modelOverride ? `Using ${context._modelOverride.split("/").pop()}...` : `Thinking with auto-selected model...` };
+
+    // ── Web Search: fetch real results if enabled ──
+    let searchContext = "";
+    if (context.webSearch) {
+      console.log(`  🔍 Web search triggered for: "${message.slice(0, 60)}"`);
+      yield { type: "thinking", content: `Searching the web for "${message.slice(0, 60)}"...` };
+      try {
+        const searchResult = await webSearch(message, { count: 6 });
+        console.log(`  🔍 Search returned ${searchResult.results.length} results`);
+        if (searchResult.results.length > 0) {
+          searchContext = `\n\n## Web Search Results\n以下是关于「${searchResult.query}」的搜索结果：\n${searchResult.raw}\n\n请优先基于以上搜索结果回答用户的问题。如果搜索结果包含相关信息，请引用来源。`;
+          yield { type: "thinking", content: `Found ${searchResult.results.length} results. Generating answer...` };
+        } else {
+          yield { type: "thinking", content: `No web results found. Answering from knowledge...` };
+        }
+      } catch (e) {
+        console.warn(`  ⚠️ Web search failed: ${e.message}`);
+        console.warn(`  ⚠️ Stack: ${e.stack}`);
+        yield { type: "thinking", content: `Search unavailable. Answering from knowledge...` };
+      }
+    }
+
+    const systemPrompt = this._buildSystemPrompt(context) + searchContext;
     const messages = [
       { role: "system", content: systemPrompt },
       ...(history || []).slice(-15),
       { role: "user", content: this._buildUserMessage(message, context) },
     ];
 
-    yield { type: "thinking", content: `💭 Thinking with auto-selected model...` };
-
     try {
       let fullContent = "";
-      for await (const update of this.nim.chatStream(messages, {
-        task,
-        max_tokens: CONFIG.maxTokens,
-        temperature: CONFIG.temperature,
-      })) {
+      for await (const update of this.nim.chatStream(messages, this._streamOpts(task, context))) {
         if (update.type === "model_info") {
-          yield { type: "model_info", ...update, route: update.route || task };
+          yield { type: "model_info", ...this._enrichModelInfo(update), route: update.route || task };
           yield { type: "thinking", content: "Generating..." };
         } else if (update.type === "token") {
           fullContent += update.content;
@@ -123,7 +207,7 @@ class Orchestrator {
     } catch (e) {
       yield {
         type: "error",
-        content: `❌ All models failed: ${e.message}`,
+        content: `All models failed: ${e.message}`,
         error: e.message,
       };
     }
@@ -131,12 +215,15 @@ class Orchestrator {
 
   // ── Code Tasks — with token streaming ──
   async *_handleCodeTask(message, history, context) {
-    yield { type: "thinking", content: `💻 Routing to code-optimized model...` };
+    yield { type: "thinking", content: context._modelOverride ? `Using ${context._modelOverride.split("/").pop()} for code...` : `Routing to code-optimized model...` };
 
     try {
       const systemPrompt = `You are a world-class programming assistant. Help the user write clean, efficient, well-documented code.
 
-## Guidelines
+## Critical Rules
+- **ALWAYS generate COMPLETE, RUNNABLE programs.** Never output a snippet, skeleton, or abbreviated code. The user expects a full, working file they can save and run immediately.
+- **Never truncate code** with comments like "// rest of code", "/* more code here */", "...", or "# continue with other methods". Every single line must be present.
+- **Write multi-line code.** A single line or a few lines is never enough for a real program. Include all imports, all functions, all classes, and the full implementation.
 - Always suggest the best approach for the task, considering trade-offs in performance, readability, and maintainability.
 - Include filename comments at the top of code blocks so the user can save files directly (e.g., "// filename: app.ts").
 - Explain your code — what each section does and why you chose that approach.
@@ -150,13 +237,9 @@ class Orchestrator {
       ];
 
       let fullContent = "";
-      for await (const update of this.nim.chatStream(messages, {
-        task: "code",
-        max_tokens: 8192,
-        temperature: 0.3,
-      })) {
+      for await (const update of this.nim.chatStream(messages, this._streamOpts("code", { ...context, max_tokens: 8192, temperature: 0.3 }))) {
         if (update.type === "model_info") {
-          yield { type: "model_info", ...update, route: "code" };
+          yield { type: "model_info", ...this._enrichModelInfo(update), route: "code" };
           yield { type: "thinking", content: "Generating..." };
         } else if (update.type === "token") {
           fullContent += update.content;
@@ -171,13 +254,13 @@ class Orchestrator {
         }
       }
     } catch (e) {
-      yield { type: "error", content: `❌ Code generation failed: ${e.message}` };
+      yield { type: "error", content: `Code generation failed: ${e.message}` };
     }
   }
 
   // ── Deep Reasoning Tasks — with token streaming ──
   async *_handleReasoningTask(message, history, context) {
-    yield { type: "thinking", content: `🧠 Routing to deep reasoning model (QWQ 32B)...` };
+    yield { type: "thinking", content: context._modelOverride ? `Using ${context._modelOverride.split("/").pop()} for reasoning...` : `Routing to deep reasoning model...` };
 
     try {
       const systemPrompt = `You are a deep reasoning assistant skilled in chain-of-thought analysis.
@@ -197,13 +280,9 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
       ];
 
       let fullContent = "";
-      for await (const update of this.nim.chatStream(messages, {
-        task: "reasoning",
-        max_tokens: 8192,
-        temperature: 0.5,
-      })) {
+      for await (const update of this.nim.chatStream(messages, this._streamOpts("reasoning", { ...context, max_tokens: 8192, temperature: 0.5 }))) {
         if (update.type === "model_info") {
-          yield { type: "model_info", ...update, route: "reasoning" };
+          yield { type: "model_info", ...this._enrichModelInfo(update), route: "reasoning" };
           yield { type: "thinking", content: "Generating..." };
         } else if (update.type === "token") {
           fullContent += update.content;
@@ -218,25 +297,21 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
         }
       }
     } catch (e) {
-      yield { type: "error", content: `❌ Reasoning failed: ${e.message}` };
+      yield { type: "error", content: `Reasoning failed: ${e.message}` };
     }
   }
 
   // ── Fast / Simple Responses — with token streaming ──
   async *_handleFastResponse(message, history, context) {
-    yield { type: "thinking", content: `⚡ Using fast model for quick response...` };
+    yield { type: "thinking", content: context._modelOverride ? `Using ${context._modelOverride.split("/").pop()}...` : `Using fast model for quick response...` };
 
     try {
       const messages = [...(history || []).slice(-5), { role: "user", content: message }];
 
       let fullContent = "";
-      for await (const update of this.nim.chatStream(messages, {
-        task: "fast",
-        max_tokens: 1024,
-        temperature: 0.7,
-      })) {
+      for await (const update of this.nim.chatStream(messages, this._streamOpts("fast", { ...context, max_tokens: 1024, temperature: 0.7 }))) {
         if (update.type === "model_info") {
-          yield { type: "model_info", ...update, route: "fast" };
+          yield { type: "model_info", ...this._enrichModelInfo(update), route: "fast" };
           yield { type: "thinking", content: "Generating..." };
         } else if (update.type === "token") {
           fullContent += update.content;
@@ -251,7 +326,7 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
         }
       }
     } catch (e) {
-      yield { type: "error", content: `❌ Quick response failed: ${e.message}` };
+      yield { type: "error", content: `Quick response failed: ${e.message}` };
     }
   }
 
@@ -268,8 +343,8 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
     yield {
       type: "thinking",
       content: modelOverride
-        ? `🎨 Generating with selected model: ${modelOverride.split("/").pop()}...`
-        : `🎨 Generating image: "${prompt.slice(0, 80)}..."`,
+        ? `Generating with selected model: ${modelOverride.split("/").pop()}...`
+        : `Generating image: "${prompt.slice(0, 80)}..."`,
     };
 
     try {
@@ -285,26 +360,26 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
         route: "image",
         fallbackUsed: result.fallback_used,
         content: result.fallback_used
-          ? `🎨 Generated with **${modelName}** (fallback)`
-          : `🎨 Generated with **${modelName}**`,
+          ? `Generated with **${modelName}** (fallback)`
+          : `Generated with **${modelName}**`,
       };
 
       if (result.image) {
         yield { type: "image", image: result.image, model: result.model, modelName, prompt };
         yield {
           type: "result",
-          content: `🎨 **Image Generated!**\n\nCreated with **${modelName}** (${result.width}x${result.height})\n\nPrompt: *${prompt}*`,
+          content: `**Image Generated!**\n\nCreated with **${modelName}** (${result.width}x${result.height})\n\nPrompt: *${prompt}*`,
           model: result.model,
           image: result.image,
         };
       } else {
         yield {
           type: "result",
-          content: `❌ Failed to generate image. The model responded but no image data was returned.`,
+          content: `Failed to generate image. The model responded but no image data was returned.`,
         };
       }
     } catch (e) {
-      yield { type: "error", content: `❌ Image generation failed: ${e.message}` };
+      yield { type: "error", content: `Image generation failed: ${e.message}` };
     }
   }
 
@@ -314,12 +389,12 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
     if (!imageData) {
       yield {
         type: "error",
-        content: `👁️ I need an image to analyze! Please attach an image and try again.`,
+        content: `I need an image to analyze. Please attach an image and try again.`,
       };
       return;
     }
 
-    yield { type: "thinking", content: `👁️ Analyzing image with vision model...` };
+    yield { type: "thinking", content: `Analyzing image with vision model...` };
 
     try {
       const result = await this.nim.vision(imageData, message);
@@ -334,25 +409,25 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
         route: "vision",
         fallbackUsed: result.fallback_used,
         content: result.fallback_used
-          ? `👁️ Analyzed with **${modelName}** (fallback)`
-          : `👁️ Analyzed with **${modelName}**`,
+          ? `Analyzed with **${modelName}** (fallback)`
+          : `Analyzed with **${modelName}**`,
       };
 
       yield {
         type: "result",
-        content: `**🔍 Vision Analysis**\n**Model:** ${modelName}\n\n${result.content}`,
+        content: `**Vision Analysis**\n**Model:** ${modelName}\n\n${result.content}`,
         model: result.model,
         modelName,
         usage: result.usage,
       };
     } catch (e) {
-      yield { type: "error", content: `❌ Vision analysis failed: ${e.message}` };
+      yield { type: "error", content: `Vision analysis failed: ${e.message}` };
     }
   }
 
   // ── Translation — with token streaming ──
   async *_handleTranslation(message, history, context) {
-    yield { type: "thinking", content: `🌐 Translating...` };
+    yield { type: "thinking", content: `Translating...` };
 
     try {
       const systemPrompt = `You are a professional translator with expertise in multiple languages.
@@ -370,11 +445,7 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
       ];
 
       let fullContent = "";
-      for await (const update of this.nim.chatStream(messages, {
-        task: "translate",
-        max_tokens: 2048,
-        temperature: 0.1,
-      })) {
+      for await (const update of this.nim.chatStream(messages, this._streamOpts("translate", { ...context, max_tokens: 2048, temperature: 0.1 }))) {
         if (update.type === "model_info") {
           yield { type: "model_info", ...update, route: "translate" };
           yield { type: "thinking", content: "Generating..." };
@@ -391,13 +462,13 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
         }
       }
     } catch (e) {
-      yield { type: "error", content: `❌ Translation failed: ${e.message}` };
+      yield { type: "error", content: `Translation failed: ${e.message}` };
     }
   }
 
   // ── Safety Check ──
   async *_handleSafetyCheck(message, context) {
-    yield { type: "thinking", content: `🛡️ Analyzing content safety...` };
+    yield { type: "thinking", content: `Analyzing content safety...` };
 
     try {
       const safetyModel = "nvidia/llama-3.1-nemoguard-8b-content-safety";
@@ -436,13 +507,13 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
         safe: isSafe,
       };
     } catch (e) {
-      yield { type: "error", content: `❌ Safety check failed: ${e.message}` };
+      yield { type: "error", content: `Safety check failed: ${e.message}` };
     }
   }
 
   // ── Embedding ──
   async *_handleEmbedding(message, context) {
-    yield { type: "thinking", content: `📊 Generating embeddings...` };
+    yield { type: "thinking", content: `Generating embeddings...` };
 
     try {
       const result = await this.nim.generateEmbeddings(message);
@@ -478,7 +549,7 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
         };
       }
     } catch (e) {
-      yield { type: "error", content: `❌ Embedding generation failed: ${e.message}` };
+      yield { type: "error", content: `Embedding generation failed: ${e.message}` };
     }
   }
 
@@ -559,33 +630,41 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
   // ── Helpers ──
 
   _buildSystemPrompt(context) {
-    return `You are **Dubu AI** — a world-class AI assistant powered by NVIDIA NIM's model catalog. Your goal is to be genuinely helpful, thoughtful, and precise.
+    return `You are **Dubu AI** — a world-class AI assistant powered by NVIDIA NIM's full model catalog with automatic model selection and fallback. You have access to over 120 models, real-time web search, deep reasoning, code generation, image generation, vision analysis, and translation.
 
-## Core Principles
-1. **Be clear and direct** — Give complete, well-structured answers. Break complex topics into digestible sections.
-2. **Think step by step** — For math, logic, coding, or analysis, show your reasoning process clearly.
-3. **Write great code** — Always include file names in code blocks (e.g., "// filename: app.ts") so the user can save files directly.
-4. **Use formatting wisely** — Headers, lists, bold text, and code blocks to make answers scannable and beautiful.
-5. **Be conversational** — Warm but professional. Use emojis naturally, not excessively.
-6. **Admit uncertainty** — If you're not sure about something, say so rather than making things up.
-7. **Offer follow-ups** — After answering, briefly suggest what the user might ask next.
+## Identity & Personality
+- You are knowledgeable, precise, and genuinely helpful.
+- You speak naturally and conversationally — never robotic or generic.
+- You give honest, direct answers. If you don't know, say so clearly.
+- You adapt your tone to the user — casual for quick questions, thorough for complex ones.
+- You never use emojis excessively. Keep responses clean and professional.
+
+## Core Rules
+1. **Be complete** — Give full, well-structured answers. Break complex topics into clear sections with headers.
+2. **Show your work** — For math, logic, coding, or analysis, show your reasoning step by step before the final answer.
+3. **Code must be runnable** — Always generate complete, working programs with all imports, functions, and full implementation. Never truncate with "// rest of code" or "...". Include filenames in code blocks so users can save files directly.
+4. **Use formatting well** — Headers, lists, bold text, tables, and code blocks. Make answers scannable and beautiful.
+5. **Cite sources** — When web search results are provided, reference them. When stating facts, be accurate.
+6. **Admit uncertainty** — "I'm not sure" is better than a wrong answer.
+7. **Think before answering** — Consider edge cases, alternative interpretations, and what the user actually needs.
 
 ## Capabilities
-- General conversation & Q&A
-- Code generation, debugging, and explanation
-- Deep reasoning, math, and logic
-- Image generation (use /imagine command)
-- Vision analysis (when images are attached)
-- Translation between languages
-- Document analysis & file operations
+- General conversation, Q&A, and analysis
+- Code generation, debugging, review, and explanation (all languages)
+- Deep reasoning and chain-of-thought for math, logic, and complex problems
+- Real-time web search for current events, news, and live data
+- Image generation from text descriptions
+- Vision analysis when images are attached
+- Professional translation between languages
+- Document analysis and file operations
 
 ## Current Context
 - Today: ${new Date().toLocaleDateString()}
 - Time: ${new Date().toLocaleTimeString()}
 ${context.hasImage ? "- User has attached an image for analysis" : ""}
 ${context.hasDocuments ? "- User has attached documents for analysis" : ""}
-${context.webSearch ? "- Web search is enabled — you can incorporate real-time information" : ""}
-${context.deepThink ? "- Deep reasoning mode is enabled — take extra time to think through complex problems" : ""}`;
+${context.webSearch ? "- Web search is enabled — incorporate real-time information from search results" : ""}
+${context.deepThink ? "- Deep reasoning mode is enabled — think step by step, show your full reasoning process" : ""}`;
   }
 
   _buildUserMessage(userMessage, context) {

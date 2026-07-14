@@ -1,0 +1,1349 @@
+﻿{
+    "object":  "list",
+    "total":  121,
+    "benchmarkedCount":  37,
+    "query":  {
+                  "limit":  "40"
+              },
+    "data":  [
+                 {
+                     "id":  "meta/llama-3.2-1b-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "meta",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  1,
+                                       "combinedScore":  9285,
+                                       "speed":  1.78,
+                                       "speedRank":  "fast",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "fast",
+                                                    "smart",
+                                                    "best_overall",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "microsoft/phi-4-multimodal-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "microsoft",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  true
+                                      },
+                     "benchmark":  {
+                                       "rank":  2,
+                                       "combinedScore":  9097,
+                                       "speed":  2.08,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "mistralai/mistral-small-4-119b-2603",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "mistralai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  3,
+                                       "combinedScore":  9091,
+                                       "speed":  2.09,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "meta/llama-3.1-8b-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "meta",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  4,
+                                       "combinedScore":  9042,
+                                       "speed":  2.17,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "nvidia/nemotron-3-ultra-550b-a55b",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "nvidia",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  5,
+                                       "combinedScore":  8706,
+                                       "speed":  2.9,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "nvidia/nemotron-3-nano-30b-a3b",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "nvidia",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  6,
+                                       "combinedScore":  8676,
+                                       "speed":  2.97,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "nvidia/nemotron-nano-12b-v2-vl",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "nvidia",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  true
+                                      },
+                     "benchmark":  {
+                                       "rank":  7,
+                                       "combinedScore":  8643,
+                                       "speed":  3.07,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "mistralai/mistral-nemotron",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "mistralai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  8,
+                                       "combinedScore":  8638,
+                                       "speed":  3.08,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "openai/gpt-oss-20b",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "openai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  9,
+                                       "combinedScore":  8578,
+                                       "speed":  3.25,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "nvidia/nemotron-3-super-120b-a12b",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "nvidia",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  10,
+                                       "combinedScore":  8526,
+                                       "speed":  3.41,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "mistralai/mistral-medium-3.5-128b",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "mistralai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  11,
+                                       "combinedScore":  8503,
+                                       "speed":  3.49,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "nvidia",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  12,
+                                       "combinedScore":  8460,
+                                       "speed":  3.64,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "meta/llama-3.2-11b-vision-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "meta",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  true
+                                      },
+                     "benchmark":  {
+                                       "rank":  13,
+                                       "combinedScore":  8433,
+                                       "speed":  3.73,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "upstage/solar-10.7b-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "upstage",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  14,
+                                       "combinedScore":  8357,
+                                       "speed":  4.03,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "microsoft/phi-4-mini-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "microsoft",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  15,
+                                       "combinedScore":  8166,
+                                       "speed":  4.93,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "mistralai/mistral-large-3-675b-instruct-2512",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "mistralai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  16,
+                                       "combinedScore":  8157,
+                                       "speed":  4.98,
+                                       "speedRank":  "medium",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "nvidia/nemotron-mini-4b-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "nvidia",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  17,
+                                       "combinedScore":  7985,
+                                       "speed":  1.64,
+                                       "speedRank":  "fast",
+                                       "intelligence":  80,
+                                       "codingScore":  "4/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  false,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "fast",
+                                                    "smart",
+                                                    "best_overall",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "google/gemma-2-2b-it",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "google",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  18,
+                                       "combinedScore":  7981,
+                                       "speed":  1.65,
+                                       "speedRank":  "fast",
+                                       "intelligence":  80,
+                                       "codingScore":  "4/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  false
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "fast",
+                                                    "smart",
+                                                    "best_overall",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "mistralai/ministral-14b-instruct-2512",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "mistralai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  19,
+                                       "combinedScore":  7947,
+                                       "speed":  6.42,
+                                       "speedRank":  "slow",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "mistralai/mixtral-8x7b-instruct-v0.1",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "mistralai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  20,
+                                       "combinedScore":  7922,
+                                       "speed":  6.64,
+                                       "speedRank":  "slow",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "stockmark/stockmark-2-100b-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "stockmark",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  21,
+                                       "combinedScore":  7788,
+                                       "speed":  8.02,
+                                       "speedRank":  "slow",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "meta/llama-3.1-70b-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "meta",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  22,
+                                       "combinedScore":  7765,
+                                       "speed":  8.3,
+                                       "speedRank":  "slow",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "z-ai/glm-5.2",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "z-ai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  23,
+                                       "combinedScore":  7684,
+                                       "speed":  9.46,
+                                       "speedRank":  "slow",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "minimaxai/minimax-m3",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "minimaxai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  24,
+                                       "combinedScore":  7605,
+                                       "speed":  10.9,
+                                       "speedRank":  "very_slow",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "sarvamai/sarvam-m",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "sarvamai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  25,
+                                       "combinedScore":  7406,
+                                       "speed":  16.96,
+                                       "speedRank":  "very_slow",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "deepseek-ai/deepseek-v4-pro",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "deepseek-ai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  26,
+                                       "combinedScore":  7391,
+                                       "speed":  17.7,
+                                       "speedRank":  "very_slow",
+                                       "intelligence":  100,
+                                       "codingScore":  "5/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "nvidia/llama-3.3-nemotron-super-49b-v1",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "nvidia",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  27,
+                                       "combinedScore":  6240,
+                                       "speed":  10.22,
+                                       "speedRank":  "very_slow",
+                                       "intelligence":  80,
+                                       "codingScore":  "4/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  false,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "meta/llama-3.2-90b-vision-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "meta",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  true
+                                      },
+                     "benchmark":  {
+                                       "rank":  28,
+                                       "combinedScore":  5985,
+                                       "speed":  17.99,
+                                       "speedRank":  "very_slow",
+                                       "intelligence":  80,
+                                       "codingScore":  "4/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  false
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "meta/llama-3.3-70b-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "meta",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  29,
+                                       "combinedScore":  5970,
+                                       "speed":  18.75,
+                                       "speedRank":  "very_slow",
+                                       "intelligence":  80,
+                                       "codingScore":  "4/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  false,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "smart",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "stepfun-ai/step-3.5-flash",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "stepfun-ai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  30,
+                                       "combinedScore":  5239,
+                                       "speed":  5.72,
+                                       "speedRank":  "slow",
+                                       "intelligence":  60,
+                                       "codingScore":  "3/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  false,
+                                                           "apiHandler":  true,
+                                                           "promiseAllSettled":  false
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "abacusai/dracarys-llama-3.1-70b-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "abacusai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  31,
+                                       "combinedScore":  4621,
+                                       "speed":  16.3,
+                                       "speedRank":  "very_slow",
+                                       "intelligence":  60,
+                                       "codingScore":  "3/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  false,
+                                                           "promiseAllSettled":  false
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "minimaxai/minimax-m2.7",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "minimaxai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  32,
+                                       "combinedScore":  4527,
+                                       "speed":  21.47,
+                                       "speedRank":  "very_slow",
+                                       "intelligence":  60,
+                                       "codingScore":  "3/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  false,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  true,
+                                                           "apiHandler":  false,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "stepfun-ai/step-3.7-flash",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "stepfun-ai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  33,
+                                       "combinedScore":  3424,
+                                       "speed":  10.53,
+                                       "speedRank":  "very_slow",
+                                       "intelligence":  40,
+                                       "codingScore":  "2/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  true,
+                                                           "arrayChunk":  true,
+                                                           "debounce":  false,
+                                                           "apiHandler":  false,
+                                                           "promiseAllSettled":  false
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "deepseek-ai/deepseek-v4-flash",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "deepseek-ai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  34,
+                                       "combinedScore":  2381,
+                                       "speed":  6.14,
+                                       "speedRank":  "slow",
+                                       "intelligence":  20,
+                                       "codingScore":  "1/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  false,
+                                                           "arrayChunk":  false,
+                                                           "debounce":  false,
+                                                           "apiHandler":  false,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "openai/gpt-oss-120b",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "openai",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  35,
+                                       "combinedScore":  1738,
+                                       "speed":  20.67,
+                                       "speedRank":  "very_slow",
+                                       "intelligence":  20,
+                                       "codingScore":  "1/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  false,
+                                                           "arrayChunk":  false,
+                                                           "debounce":  false,
+                                                           "apiHandler":  false,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "meta/llama-3.2-3b-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "meta",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  36,
+                                       "combinedScore":  1688,
+                                       "speed":  24.57,
+                                       "speedRank":  "very_slow",
+                                       "intelligence":  20,
+                                       "codingScore":  "1/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  false,
+                                                           "arrayChunk":  false,
+                                                           "debounce":  false,
+                                                           "apiHandler":  false,
+                                                           "promiseAllSettled":  true
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "nvidia/nvidia-nemotron-nano-9b-v2",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "nvidia",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      },
+                     "benchmark":  {
+                                       "rank":  37,
+                                       "combinedScore":  593,
+                                       "speed":  11.15,
+                                       "speedRank":  "very_slow",
+                                       "intelligence":  0,
+                                       "codingScore":  "0/5",
+                                       "codingTasks":  {
+                                                           "fizzBuzz":  false,
+                                                           "arrayChunk":  false,
+                                                           "debounce":  false,
+                                                           "apiHandler":  false,
+                                                           "promiseAllSettled":  false
+                                                       },
+                                       "tags":  [
+                                                    "coding_expert",
+                                                    "top_tier"
+                                                ]
+                                   }
+                 },
+                 {
+                     "id":  "ai21labs/jamba-1.5-large-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "ai21labs",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      }
+                 },
+                 {
+                     "id":  "aisingapore/sea-lion-7b-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "aisingapore",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      }
+                 },
+                 {
+                     "id":  "bytedance/seed-oss-36b-instruct",
+                     "object":  "model",
+                     "created":  735790403,
+                     "owned_by":  "bytedance",
+                     "type":  "chat",
+                     "capabilities":  {
+                                          "chat":  true,
+                                          "embedding":  false,
+                                          "image":  false,
+                                          "audio":  false,
+                                          "toolCalling":  true,
+                                          "vision":  false
+                                      }
+                 }
+             ]
+}
+

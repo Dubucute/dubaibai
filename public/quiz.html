@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz Generator — Dubu AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/themes.css" />
+    <link rel="stylesheet" href="css/tools.css" />
+    <style>
+      body { overflow: auto !important; }
+      .tool-body { padding: 0 !important; max-width: 100% !important; }
+      .tool-description { display: none; }
+      .qb-wrapper { display: flex; flex-direction: column; height: calc(100vh - 56px); height: calc(100dvh - 56px); background: var(--bg-primary, #0a0a0f); }
+      .qb-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); flex-shrink: 0; position: relative; z-index: 70; gap: 12px; }
+      .qb-modes-scroll { flex: 1; min-width: 0; position: relative; overflow: hidden; }
+      .qb-modes { display: flex; align-items: center; gap: 4px; overflow-x: auto; scroll-behavior: smooth; padding: 2px 0; }
+      .qb-modes::-webkit-scrollbar { height: 0; }
+      .qb-modes-scroll::before, .qb-modes-scroll::after { content: ''; position: absolute; top: 0; bottom: 0; width: 32px; pointer-events: none; z-index: 2; opacity: 0; transition: opacity 0.2s; }
+      .qb-modes-scroll::before { left: 0; background: linear-gradient(to right, var(--bg-primary, #0a0a0f), transparent); }
+      .qb-modes-scroll::after { right: 0; background: linear-gradient(to left, var(--bg-primary, #0a0a0f), transparent); }
+      .qb-modes-scroll.show-left::before { opacity: 1; }
+      .qb-modes-scroll.show-right::after { opacity: 1; }
+      .qb-scroll-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border-color, rgba(255,255,255,0.1)); background: var(--bg-secondary, #13131a); color: var(--text-primary, #e8e8ed); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; opacity: 0; pointer-events: none; transition: opacity 0.2s, background 0.2s; flex-shrink: 0; }
+      .qb-scroll-arrow:hover { background: var(--hover-bg, rgba(255,255,255,0.08)); }
+      .qb-scroll-arrow.left { left: 4px; }
+      .qb-scroll-arrow.right { right: 4px; }
+      .qb-modes-scroll.show-left .qb-scroll-arrow.left { opacity: 1; pointer-events: auto; }
+      .qb-modes-scroll.show-right .qb-scroll-arrow.right { opacity: 1; pointer-events: auto; }
+      .qb-mode-btn { padding: 7px 16px; border-radius: 20px; border: 1px solid transparent; background: transparent; color: var(--text-secondary, #9494a3); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-family: inherit; }
+      .qb-mode-btn:hover { color: var(--text-primary, #e8e8ed); background: var(--hover-bg, rgba(255,255,255,0.04)); }
+      .qb-mode-btn.active { color: var(--accent, #818cf8); background: var(--accent-muted, rgba(99,102,241,0.1)); border-color: var(--accent, #818cf8); }
+      .qb-panels { display: flex; flex: 1; min-height: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
+      .qb-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; overflow: hidden; transition: flex 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, min-width 0.4s ease; }
+      .qb-panel + .qb-panel { border-left: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+      .qb-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.04)); flex-shrink: 0; }
+      .qb-panel-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted, #6b6b80); }
+      .qb-panel-actions { display: flex; gap: 4px; }
+      .qb-icon-btn { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary, #9494a3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; }
+      .qb-icon-btn:hover { background: var(--hover-bg, rgba(255,255,255,0.06)); color: var(--text-primary, #e8e8ed); }
+      .qb-icon-btn.copied { color: #22c55e; }
+      .qb-textarea { flex: 1; width: 100%; padding: 16px; background: transparent; border: none; outline: none; color: var(--text-primary, #e8e8ed); font-size: 15px; line-height: 1.7; font-family: inherit; resize: none; }
+      .qb-textarea::placeholder { color: var(--text-muted, #6b6b80); }
+      .qb-output { flex: 1; overflow-y: auto; font-size: 15px; line-height: 1.7; color: var(--text-primary, #e8e8ed); display: flex; flex-direction: column; }
+      .qb-output.empty { align-items: center; justify-content: center; }
+      .qb-placeholder { text-align: center; color: var(--text-muted, #6b6b80); font-size: 14px; padding: 20px; }
+      .qb-placeholder svg { display: block; margin: 0 auto 12px; opacity: 0.3; }
+      .qb-bottom-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-top: 1px solid var(--border-color, rgba(255,255,255,0.06)); flex-shrink: 0; }
+      .qb-word-count { font-size: 12px; color: var(--text-muted, #6b6b80); }
+      .qb-action-btn { display: flex; align-items: center; gap: 8px; padding: 8px 20px; border-radius: 10px; border: none; background: var(--accent, #818cf8); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: inherit; }
+      .qb-action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+      .qb-action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+      /* ── QUIZ MODE: left panel collapses, quiz takes full width ── */
+      .qb-wrapper.quiz-active .qb-panel:first-child { flex: 0 0 0; min-width: 0; opacity: 0; pointer-events: none; overflow: hidden; }
+      .qb-wrapper.quiz-active .qb-panel:first-child .qb-textarea { display: none; }
+      .qb-wrapper.quiz-active .qb-panel:first-child .qb-panel-header { display: none; }
+      .qb-wrapper.quiz-active .qb-panel + .qb-panel { flex: 1 1 100%; border-left: none; }
+      .qb-wrapper.quiz-active .qb-output { padding: 0; }
+
+      /* ── Full-screen quiz card ── */
+      .quiz-container { display: flex; align-items: center; justify-content: center; flex: 1; padding: 24px 32px; overflow-y: auto; }
+      .quiz-card { width: 100%; max-width: 780px; background: var(--surface-bg, rgba(15,15,20,0.6)); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 20px; padding: 40px 40px 32px; }
+      .quiz-progress { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+      .quiz-progress-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--hover-bg, rgba(255,255,255,0.06)); overflow: hidden; }
+      .quiz-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent, #818cf8), #a78bfa); transition: width 0.5s ease; width: 0%; }
+      .quiz-progress-label { font-size: 13px; font-weight: 600; color: var(--text-muted, #6b6b80); white-space: nowrap; font-variant-numeric: tabular-nums; }
+      .quiz-q-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; background: var(--accent-muted, rgba(99,102,241,0.12)); color: var(--accent, #818cf8); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px; }
+      .quiz-q-text { font-size: 22px; font-weight: 700; line-height: 1.4; color: var(--text-primary, #e8e8ed); margin-bottom: 32px; }
+      .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+      .quiz-opt { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-radius: 14px; border: 2px solid var(--border-color, rgba(255,255,255,0.07)); background: var(--hover-bg, rgba(255,255,255,0.02)); cursor: pointer; transition: all 0.2s ease; }
+      .quiz-opt:hover { border-color: var(--accent, #818cf8); background: var(--accent-muted, rgba(99,102,241,0.05)); }
+      .quiz-opt .opt-letter { width: 36px; height: 36px; border-radius: 50%; background: var(--hover-bg, rgba(255,255,255,0.04)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: var(--text-muted, #6b6b80); flex-shrink: 0; transition: all 0.2s ease; }
+      .quiz-opt:hover .opt-letter { background: var(--accent-muted, rgba(99,102,241,0.12)); color: var(--accent, #818cf8); }
+      .quiz-opt .opt-text { flex: 1; font-size: 16px; line-height: 1.4; color: var(--text-primary, #e8e8ed); }
+      .quiz-opt .opt-icon { flex-shrink: 0; }
+      .quiz-opt.correct { border-color: #22c55e; background: rgba(34,197,94,0.08); pointer-events: none; }
+      .quiz-opt.correct .opt-letter { background: #22c55e; color: #fff; }
+      .quiz-opt.wrong { border-color: #ef4444; background: rgba(239,68,68,0.08); pointer-events: none; }
+      .quiz-opt.wrong .opt-letter { background: #ef4444; color: #fff; }
+      .quiz-opt.disabled { pointer-events: none; }
+      .quiz-opt.fade { opacity: 0.5; }
+      .quiz-explanation { margin-top: 20px; padding: 16px 20px; border-radius: 12px; background: var(--hover-bg, rgba(255,255,255,0.03)); border-left: 4px solid var(--accent, #818cf8); font-size: 14px; color: var(--text-secondary, #9494a3); line-height: 1.6; display: none; animation: fadeSlideIn 0.3s ease; }
+      .quiz-explanation.visible { display: block; }
+      @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+      .quiz-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+      .quiz-nav-left, .quiz-nav-right { display: flex; gap: 8px; }
+      .quiz-nav-btn { display: flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 12px; border: 1.5px solid var(--border-color, rgba(255,255,255,0.1)); background: transparent; color: var(--text-secondary, #9494a3); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; font-family: inherit; }
+      .quiz-nav-btn:hover { border-color: var(--border-color-strong, rgba(255,255,255,0.2)); color: var(--text-primary, #e8e8ed); background: var(--hover-bg, rgba(255,255,255,0.04)); }
+      .quiz-nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+      .quiz-nav-btn.primary { background: var(--accent, #818cf8); border-color: var(--accent, #818cf8); color: #fff; }
+      .quiz-nav-btn.primary:hover { opacity: 0.9; }
+      .quiz-nav-btn.success { background: #22c55e; border-color: #22c55e; color: #fff; }
+      .quiz-nav-btn.success:hover { opacity: 0.9; }
+      .quiz-card-enter { animation: cardSlideIn 0.35s cubic-bezier(0.4,0,0.2,1); }
+      @keyframes cardSlideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+
+      /* ── Score screen ── */
+      .quiz-score-wrap { display: flex; align-items: center; justify-content: center; flex: 1; padding: 24px 32px; }
+      .quiz-score-card { width: 100%; max-width: 520px; background: var(--surface-bg, rgba(15,15,20,0.6)); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 24px; padding: 48px 40px; display: flex; flex-direction: column; align-items: center; text-align: center; animation: scorePop 0.5s cubic-bezier(0.4,0,0.2,1); }
+      @keyframes scorePop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+      .quiz-score-circle { width: 140px; height: 140px; position: relative; margin-bottom: 24px; }
+      .quiz-score-circle svg { width: 140px; height: 140px; transform: rotate(-90deg); }
+      .quiz-score-circle .bg { fill: none; stroke: var(--hover-bg, rgba(255,255,255,0.06)); stroke-width: 8; }
+      .quiz-score-circle .fg { fill: none; stroke: var(--accent, #818cf8); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1); }
+      .quiz-score-val { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 36px; font-weight: 800; color: var(--text-primary, #e8e8ed); }
+      .quiz-score-label { font-size: 13px; color: var(--text-muted, #6b6b80); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 8px; }
+      .quiz-score-msg { font-size: 22px; font-weight: 700; color: var(--text-primary, #e8e8ed); margin-bottom: 28px; }
+      .quiz-score-stats { display: flex; gap: 40px; margin-bottom: 32px; }
+      .quiz-score-stat { text-align: center; }
+      .quiz-score-stat .num { font-size: 28px; font-weight: 800; }
+      .quiz-score-stat .stat-label { font-size: 12px; color: var(--text-muted, #6b6b80); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; font-weight: 500; }
+
+      @media (max-width: 768px) {
+        .qb-panels { flex-direction: column; }
+        .qb-panel + .qb-panel { border-left: none; border-top: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+        .qb-modes { padding: 8px 12px; }
+        .qb-mode-btn { padding: 6px 12px; font-size: 12px; }
+        .quiz-card { padding: 24px 20px; }
+        .quiz-q-text { font-size: 18px; }
+        .quiz-opt { padding: 14px 16px; }
+        .quiz-opt .opt-text { font-size: 14px; }
+        .quiz-score-card { padding: 32px 24px; }
+        .quiz-score-stats { gap: 24px; }
+        .quiz-container, .quiz-score-wrap { padding: 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tool-page">
+      <header class="tool-topbar">
+        <a href="index.html" class="tool-back"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Home</a>
+        <h2>Quiz Generator</h2>
+        <a href="chat.html" class="tool-back">Chat →</a>
+      </header>
+      <div class="tool-body">
+        <div class="qb-wrapper" id="qbWrapper">
+          <div class="qb-toolbar">
+            <div class="qb-modes-scroll" id="modesScroll">
+              <button class="qb-scroll-arrow left" id="scrollLeftBtn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <div class="qb-modes" id="modesContainer">
+                <button class="qb-mode-btn active" data-mode="mcq">Multiple Choice</button>
+                <button class="qb-mode-btn" data-mode="tf">True/False</button>
+                <button class="qb-mode-btn" data-mode="fill">Fill in Blank</button>
+                <button class="qb-mode-btn" data-mode="mixed">Mixed</button>
+              </div>
+              <button class="qb-scroll-arrow right" id="scrollRightBtn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+          </div>
+          <div class="qb-panels">
+            <div class="qb-panel">
+              <div class="qb-panel-header">
+                <span class="qb-panel-label">Topic</span>
+                <div class="qb-panel-actions">
+                  <button class="qb-icon-btn" id="clearBtn" title="Clear"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+                </div>
+              </div>
+              <textarea class="qb-textarea" id="toolInput" placeholder="Enter a topic (e.g., 'Photosynthesis') or paste study material..."></textarea>
+            </div>
+            <div class="qb-panel">
+              <div class="qb-panel-header">
+                <span class="qb-panel-label">Quiz</span>
+                <div class="qb-panel-actions">
+                  <button class="qb-icon-btn" id="resetBtn" title="Reset Quiz"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0A6 6 0 012 8z" stroke="currentColor" stroke-width="1.3"/><path d="M6 8h4M8 6v4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
+                </div>
+              </div>
+              <div class="qb-output empty" id="outputBox">
+                <div class="qb-placeholder">
+                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="16" stroke="currentColor" stroke-width="1.5"/><path d="M16 22l4 4 8-8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <div style="font-size:16px;font-weight:600;margin-bottom:4px">Ready to test yourself?</div>
+                  <div style="font-size:13px;color:var(--text-muted,#6b6b80)">Enter a topic and generate a quiz to begin</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="qb-bottom-bar">
+            <span class="qb-word-count" id="wordCount">0 questions</span>
+            <div style="display:flex;gap:8px">
+              <button class="qb-action-btn" id="topicToggleBtn" style="display:none;background:transparent;border:1px solid var(--border-color,rgba(255,255,255,0.1));color:var(--text-secondary,#9494a3)" onclick="toggleTopic()">
+                <svg width="16" height="16" id="topicToggleIcon" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M8 3v10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                <span id="topicToggleLabel">Hide Topic</span>
+              </button>
+              <button class="qb-action-btn" id="runBtn" onclick="runQuiz()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 8h8M8 4v8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                Generate Quiz
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="js/page-transition.js"></script>
+    <script src="js/tools.js"></script>
+    <script>
+      let quizData = [];
+      let currentQ = 0;
+      let score = 0;
+      let answeredMap = {};
+      let answeredCount = 0;
+      let topicVisible = true;
+
+      const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+      const modePrompts = {
+        mcq: 'Create a multiple-choice quiz. Return ONLY valid JSON array: [{"q":"question","options":["A. ...","B. ...","C. ...","D. ..."],"correct":0,"explanation":"why"}].',
+        tf: 'Create a true/false quiz. Return ONLY valid JSON array: [{"q":"statement","options":["True","False"],"correct":0,"explanation":"why"}].',
+        fill: 'Create a fill-in-the-blank quiz. Return ONLY valid JSON array: [{"q":"question with ____","options":["option1","option2","option3","option4"],"correct":0,"explanation":"why"}].',
+        mixed: 'Create a mixed quiz (MCQ, True/False, Fill-blank). Return ONLY valid JSON array: [{"q":"question","options":["A. ...","B. ...","C. ...","D. ..."],"correct":0,"explanation":"why"}].'
+      };
+
+      let selectedMode = 'mcq';
+
+      function toggleTopic() {
+        const w = document.getElementById('qbWrapper');
+        topicVisible = !topicVisible;
+        w.classList.toggle('quiz-active', !topicVisible);
+        document.getElementById('topicToggleLabel').textContent = topicVisible ? 'Hide Topic' : 'Show Topic';
+        document.getElementById('topicToggleIcon').innerHTML = topicVisible
+          ? '<path d="M3 8h10M8 3v10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>'
+          : '<path d="M3 8h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>';
+        if (topicVisible) setTimeout(() => document.getElementById('toolInput').focus(), 400);
+      }
+
+      document.querySelectorAll('.qb-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.qb-mode-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedMode = btn.dataset.mode;
+          const scroll = document.getElementById('modesScroll');
+          const btnRect = btn.getBoundingClientRect();
+          const scrollRect = scroll.getBoundingClientRect();
+          if (btnRect.right > scrollRect.right) btn.scrollIntoView({ inline: 'end', block: 'nearest' });
+          if (btnRect.left < scrollRect.left) btn.scrollIntoView({ inline: 'start', block: 'nearest' });
+          updateModeFades();
+        });
+      });
+
+      function updateModeFades() {
+        const scroll = document.getElementById('modesScroll');
+        const modes = document.getElementById('modesContainer');
+        if (!scroll || !modes) return;
+        const sl = modes.scrollLeft;
+        const maxScroll = modes.scrollWidth - scroll.clientWidth;
+        scroll.classList.toggle('show-left', sl > 4);
+        scroll.classList.toggle('show-right', maxScroll > 4 && sl < maxScroll - 4);
+      }
+      document.getElementById('modesContainer').addEventListener('scroll', updateModeFades);
+      window.addEventListener('resize', updateModeFades);
+      let lastSL = -1;
+      function pollFades() { const m = document.getElementById('modesContainer'); if (m && m.scrollLeft !== lastSL) { lastSL = m.scrollLeft; updateModeFades(); } requestAnimationFrame(pollFades); }
+      requestAnimationFrame(pollFades);
+      document.getElementById('scrollLeftBtn').addEventListener('click', () => document.getElementById('modesContainer').scrollBy({ left: -180, behavior: 'smooth' }));
+      document.getElementById('scrollRightBtn').addEventListener('click', () => document.getElementById('modesContainer').scrollBy({ left: 180, behavior: 'smooth' }));
+
+      const textarea = document.getElementById('toolInput');
+      const wordCountEl = document.getElementById('wordCount');
+      document.getElementById('clearBtn').addEventListener('click', () => { textarea.value = ''; textarea.focus(); });
+      document.getElementById('resetBtn').addEventListener('click', resetQuiz);
+
+      function resetQuiz() {
+        quizData = []; currentQ = 0; score = 0; answeredMap = {}; answeredCount = 0;
+        const w = document.getElementById('qbWrapper'); w.classList.remove('quiz-active');
+        document.getElementById('topicToggleBtn').style.display = 'none';
+        topicVisible = true;
+        const ob = document.getElementById('outputBox');
+        ob.classList.add('empty');
+        ob.innerHTML = '<div class="qb-placeholder"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="16" stroke="currentColor" stroke-width="1.5"/><path d="M16 22l4 4 8-8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><div style="font-size:16px;font-weight:600;margin-bottom:4px">Ready to test yourself?</div><div style="font-size:13px;color:var(--text-muted,#6b6b80)">Enter a topic and generate a quiz to begin</div></div>';
+        document.getElementById('runBtn').innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 8h8M8 4v8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> Generate Quiz';
+        wordCountEl.textContent = '0 questions';
+      }
+
+      function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      async function runQuiz() {
+        const text = textarea.value.trim();
+        if (!text) { showAlert('Please enter a topic or material.', 'Quiz Generator'); return; }
+        const count = '5';
+        const prompt = modePrompts[selectedMode] + ` Create exactly ${count} questions about: ${text}`;
+        const outputBox = document.getElementById('outputBox');
+        const btn = document.getElementById('runBtn');
+        outputBox.classList.remove('empty');
+        outputBox.innerHTML = '<div class="qb-placeholder" style="color:var(--text-muted)">Generating quiz...</div>';
+        btn.disabled = true;
+        try {
+          const raw = await callNIM('You are a JSON-only assistant. Return only valid JSON arrays, no other text.', prompt, { maxTokens: 4000 });
+          const jsonMatch = raw.match(/\[[\s\S]*\]/);
+          if (!jsonMatch) throw new Error('Could not parse quiz');
+          quizData = JSON.parse(jsonMatch[0]);
+          currentQ = 0; score = 0; answeredMap = {}; answeredCount = 0;
+          wordCountEl.textContent = `${quizData.length} questions`;
+          topicVisible = true;
+          document.getElementById('qbWrapper').classList.remove('quiz-active');
+          document.getElementById('topicToggleBtn').style.display = 'flex';
+          renderQuestion();
+          btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4l-8 8M4 4l8 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> Regenerate';
+        } catch (e) {
+          outputBox.innerHTML = `<div class="qb-placeholder" style="color:#f87171">${e.message}</div>`;
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      function renderQuestion() {
+        const outputBox = document.getElementById('outputBox');
+        if (!quizData.length) return;
+        if (currentQ >= quizData.length) { renderScore(); return; }
+        const q = quizData[currentQ];
+        const total = quizData.length;
+        const pct = ((currentQ) / total) * 100;
+        const isAnswered = answeredMap[currentQ] !== undefined;
+
+        outputBox.innerHTML = `
+          <div class="quiz-container">
+            <div class="quiz-card quiz-card-enter" id="quizCard">
+              <div class="quiz-progress">
+                <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${pct}%"></div></div>
+                <span class="quiz-progress-label">${currentQ + 1} / ${total}</span>
+              </div>
+              <div class="quiz-q-badge">Question ${currentQ + 1}</div>
+              <div class="quiz-q-text">${escHtml(q.q)}</div>
+              <div class="quiz-options">
+                ${q.options.map((opt, j) => {
+                  let cls = 'quiz-opt';
+                  if (isAnswered) {
+                    cls += ' disabled' + (j === answeredMap[currentQ] || j === q.correct ? '' : ' fade');
+                    if (j === q.correct) {
+                      cls += ' correct';
+                    } else if (j === answeredMap[currentQ]) {
+                      cls += ' wrong';
+                    }
+                  }
+                  return `<div class="${cls}" onclick="selectAnswer(${j})">
+                    <span class="opt-letter">${letters[j] || j}</span>
+                    <span class="opt-text">${escHtml(opt)}</span>
+                    ${j === q.correct && isAnswered ? '<svg class="opt-icon" width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="9" fill="rgba(34,197,94,0.15)" stroke="#22c55e" stroke-width="1.5"/><path d="M7 11l3 3 5-5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
+                    ${j === answeredMap[currentQ] && j !== q.correct && isAnswered ? '<svg class="opt-icon" width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="9" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1.5"/><path d="M7 7l8 8M15 7l-8 8" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/></svg>' : ''}
+                  </div>`;
+                }).join('')}
+              </div>
+              <div class="quiz-explanation ${isAnswered ? 'visible' : ''}" id="quizExp">${isAnswered ? escHtml(q.explanation || '') : ''}</div>
+              <div class="quiz-nav">
+                <div class="quiz-nav-left">
+                  <button class="quiz-nav-btn" ${currentQ === 0 ? 'disabled' : ''} onclick="goTo(${currentQ - 1})">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Prev
+                  </button>
+                </div>
+                <div class="quiz-nav-right">
+                  ${currentQ < total - 1
+                    ? `<button class="quiz-nav-btn primary" onclick="goTo(${currentQ + 1})">
+                        Next
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                       </button>`
+                    : `<button class="quiz-nav-btn success" onclick="goTo(${currentQ + 1})">
+                        See Results
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                       </button>`
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        // Scroll to top of quiz container
+        const container = outputBox.querySelector('.quiz-container');
+        if (container) container.scrollTop = 0;
+      }
+
+      function selectAnswer(optIdx) {
+        if (answeredMap[currentQ] !== undefined) return;
+        const q = quizData[currentQ];
+        answeredMap[currentQ] = optIdx;
+        if (optIdx === q.correct) score++;
+        answeredCount = Object.keys(answeredMap).length;
+        // Auto-hide the topic panel after first answer to give more space
+        if (topicVisible) { toggleTopic(); }
+        renderQuestion();
+        const fill = document.querySelector('.quiz-progress-fill');
+        if (fill) fill.style.width = `${(answeredCount / quizData.length) * 100}%`;
+      }
+
+      function goTo(idx) {
+        if (idx < 0 || idx > quizData.length) return;
+        currentQ = idx;
+        renderQuestion();
+      }
+
+      function renderScore() {
+        const outputBox = document.getElementById('outputBox');
+        const total = quizData.length;
+        const pct = Math.round((score / total) * 100);
+        const radius = 60;
+        const circ = 2 * Math.PI * radius;
+        const offset = circ - (pct / 100) * circ;
+        const msg = pct >= 80 ? 'Excellent work!' : pct >= 60 ? 'Good job!' : pct >= 40 ? 'Not bad!' : 'Keep studying!';
+        const sub = pct >= 80 ? 'You really know your stuff' : pct >= 60 ? 'You\'re on the right track' : pct >= 40 ? 'Review the material and try again' : 'Practice makes perfect';
+
+        outputBox.innerHTML = `
+          <div class="quiz-score-wrap">
+            <div class="quiz-score-card">
+              <div class="quiz-score-circle">
+                <svg viewBox="0 0 140 140">
+                  <circle class="bg" cx="70" cy="70" r="${radius}"/>
+                  <circle class="fg" cx="70" cy="70" r="${radius}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
+                </svg>
+                <span class="quiz-score-val">${pct}%</span>
+              </div>
+              <div class="quiz-score-label">Your Score</div>
+              <div class="quiz-score-msg">${msg}</div>
+              <div style="color:var(--text-muted,#6b6b80);font-size:14px;margin-bottom:28px">${sub}</div>
+              <div class="quiz-score-stats">
+                <div class="quiz-score-stat"><div class="num" style="color:#4ade80">${score}</div><div class="stat-label">Correct</div></div>
+                <div class="quiz-score-stat"><div class="num" style="color:#f87171">${total - score}</div><div class="stat-label">Wrong</div></div>
+                <div class="quiz-score-stat"><div class="num" style="color:var(--text-primary)">${total}</div><div class="stat-label">Total</div></div>
+              </div>
+              <div style="display:flex;gap:10px">
+                <button class="quiz-nav-btn primary" onclick="reviewQuiz()">Review Answers</button>
+                <button class="quiz-nav-btn" onclick="resetQuiz()">New Quiz</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function reviewQuiz() {
+        currentQ = 0;
+        // Show topic panel for review
+        const w = document.getElementById('qbWrapper');
+        if (!topicVisible) { topicVisible = true; w.classList.remove('quiz-active'); document.getElementById('topicToggleLabel').textContent = 'Hide Topic'; document.getElementById('topicToggleIcon').innerHTML = '<path d="M3 8h10M8 3v10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>'; }
+        renderQuestion();
+      }
+    </script>
+  </body>
+</html>
+
+    </script>
+  </body>
+</html>

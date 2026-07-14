@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Summarizer — Dubu AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/themes.css" />
+    <link rel="stylesheet" href="css/tools.css" />
+    <style>
+      body { overflow: auto !important; }
+      .tool-body { padding: 0 !important; max-width: 100% !important; }
+      .tool-description { display: none; }
+
+      .qb-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 56px);
+        height: calc(100dvh - 56px);
+        background: var(--bg-primary, #0a0a0f);
+      }
+      .qb-toolbar {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 10px 20px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06));
+        flex-shrink: 0; position: relative; z-index: 70; gap: 12px;
+      }
+      .qb-modes-scroll { flex: 1; min-width: 0; position: relative; overflow: hidden; }
+      .qb-modes { display: flex; align-items: center; gap: 4px; overflow-x: auto; scroll-behavior: smooth; padding: 2px 0; }
+      .qb-modes::-webkit-scrollbar { height: 0; }
+      .qb-modes-scroll::before, .qb-modes-scroll::after {
+        content: ''; position: absolute; top: 0; bottom: 0; width: 32px;
+        pointer-events: none; z-index: 2; opacity: 0; transition: opacity 0.2s;
+      }
+      .qb-modes-scroll::before { left: 0; background: linear-gradient(to right, var(--bg-primary, #0a0a0f), transparent); }
+      .qb-modes-scroll::after { right: 0; background: linear-gradient(to left, var(--bg-primary, #0a0a0f), transparent); }
+      .qb-modes-scroll.show-left::before { opacity: 1; }
+      .qb-modes-scroll.show-right::after { opacity: 1; }
+      .qb-scroll-arrow {
+        position: absolute; top: 50%; transform: translateY(-50%); width: 28px; height: 28px;
+        border-radius: 50%; border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+        background: var(--bg-secondary, #13131a); color: var(--text-primary, #e8e8ed);
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+        z-index: 5; opacity: 0; pointer-events: none; transition: opacity 0.2s, background 0.2s; flex-shrink: 0;
+      }
+      .qb-scroll-arrow:hover { background: var(--hover-bg, rgba(255,255,255,0.08)); }
+      .qb-scroll-arrow.left { left: 4px; }
+      .qb-scroll-arrow.right { right: 4px; }
+      .qb-modes-scroll.show-left .qb-scroll-arrow.left { opacity: 1; pointer-events: auto; }
+      .qb-modes-scroll.show-right .qb-scroll-arrow.right { opacity: 1; pointer-events: auto; }
+      .qb-mode-btn {
+        padding: 7px 16px; border-radius: 20px; border: 1px solid transparent;
+        background: transparent; color: var(--text-secondary, #9494a3);
+        font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+        transition: all 0.2s ease; font-family: inherit;
+      }
+      .qb-mode-btn:hover { color: var(--text-primary, #e8e8ed); background: var(--hover-bg, rgba(255,255,255,0.04)); }
+      .qb-mode-btn.active { color: var(--accent, #818cf8); background: var(--accent-muted, rgba(99,102,241,0.1)); border-color: var(--accent, #818cf8); }
+      .qb-dropdown { position: relative; flex-shrink: 0; }
+      .qb-dropdown-trigger {
+        display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 10px;
+        border: 1px solid var(--border-color, rgba(255,255,255,0.1)); background: var(--hover-bg, rgba(255,255,255,0.04));
+        color: var(--text-primary, #e8e8ed); font-size: 12px; font-weight: 500; cursor: pointer;
+        white-space: nowrap; transition: all 0.2s ease; font-family: inherit; min-width: 120px; justify-content: space-between;
+      }
+      .qb-dropdown-trigger:hover { border-color: var(--accent, #818cf8); }
+      .qb-dropdown-trigger svg { flex-shrink: 0; transition: transform 0.2s ease; }
+      .qb-dropdown.open .qb-dropdown-trigger svg { transform: rotate(180deg); }
+      .qb-dropdown-menu {
+        position: fixed; min-width: 180px; max-height: 260px; overflow-y: auto;
+        border-radius: 10px; border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+        background: var(--surface-bg, rgba(20,20,30,0.98)); backdrop-filter: blur(12px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 9999; padding: 4px; display: none;
+      }
+      .qb-dropdown.open .qb-dropdown-menu { display: block; animation: dropIn 0.15s ease; }
+      @keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+      .qb-dropdown-item {
+        display: block; width: 100%; padding: 8px 12px; border: none; border-radius: 7px;
+        background: transparent; color: var(--text-secondary, #9494a3); font-size: 13px; font-weight: 500;
+        cursor: pointer; text-align: left; transition: all 0.15s ease; font-family: inherit; white-space: nowrap;
+      }
+      .qb-dropdown-item:hover { background: var(--hover-bg, rgba(255,255,255,0.06)); color: var(--text-primary, #e8e8ed); }
+      .qb-dropdown-item.active { color: var(--accent, #818cf8); background: var(--accent-muted, rgba(99,102,241,0.1)); }
+
+      .qb-panels { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+      .qb-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; overflow: hidden; }
+      .qb-panel + .qb-panel { border-left: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+      .qb-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.04)); flex-shrink: 0; }
+      .qb-panel-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted, #6b6b80); }
+      .qb-panel-actions { display: flex; gap: 4px; }
+      .qb-icon-btn { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary, #9494a3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; }
+      .qb-icon-btn:hover { background: var(--hover-bg, rgba(255,255,255,0.06)); color: var(--text-primary, #e8e8ed); }
+      .qb-icon-btn.copied { color: #22c55e; }
+      .qb-textarea { flex: 1; width: 100%; padding: 16px; background: transparent; border: none; outline: none; color: var(--text-primary, #e8e8ed); font-size: 15px; line-height: 1.7; font-family: inherit; resize: none; }
+      .qb-textarea::placeholder { color: var(--text-muted, #6b6b80); }
+      .qb-output { flex: 1; padding: 16px; overflow-y: auto; font-size: 15px; line-height: 1.7; color: var(--text-primary, #e8e8ed); white-space: pre-wrap; word-wrap: break-word; }
+      .qb-output.empty { display: flex; align-items: center; justify-content: center; }
+      .qb-placeholder { text-align: center; color: var(--text-muted, #6b6b80); font-size: 14px; }
+      .qb-placeholder svg { display: block; margin: 0 auto 12px; opacity: 0.3; }
+      .qb-skeleton { width: 100%; padding: 0; }
+      .qb-skeleton-line { height: 14px; border-radius: 7px; background: linear-gradient(90deg, var(--hover-bg, rgba(255,255,255,0.03)) 25%, var(--hover-bg, rgba(255,255,255,0.06)) 50%, var(--hover-bg, rgba(255,255,255,0.03)) 75%); background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite; margin-bottom: 12px; }
+      .qb-skeleton-line:nth-child(1) { width: 90%; }
+      .qb-skeleton-line:nth-child(2) { width: 100%; }
+      .qb-skeleton-line:nth-child(3) { width: 75%; }
+      .qb-skeleton-line:nth-child(4) { width: 85%; }
+      .qb-skeleton-line:nth-child(5) { width: 60%; }
+      @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+      .qb-bottom-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-top: 1px solid var(--border-color, rgba(255,255,255,0.06)); flex-shrink: 0; }
+      .qb-word-count { font-size: 12px; color: var(--text-muted, #6b6b80); }
+      .qb-action-btn {
+        display: flex; align-items: center; gap: 8px; padding: 8px 20px; border-radius: 10px;
+        border: none; background: var(--accent, #818cf8); color: #fff; font-size: 13px; font-weight: 600;
+        cursor: pointer; transition: all 0.2s ease; font-family: inherit;
+      }
+      .qb-action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+      .qb-action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+      @media (max-width: 768px) {
+        .qb-panels { flex-direction: column; }
+        .qb-panel + .qb-panel { border-left: none; border-top: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+        .qb-modes { padding: 8px 12px; }
+        .qb-mode-btn { padding: 6px 12px; font-size: 12px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tool-page">
+      <header class="tool-topbar">
+        <a href="index.html" class="tool-back">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Home
+        </a>
+        <h2>Summarizer</h2>
+        <a href="chat.html" class="tool-back">Chat →</a>
+      </header>
+
+      <div class="tool-body">
+        <div class="qb-wrapper">
+          <div class="qb-toolbar">
+            <div class="qb-modes-scroll" id="modesScroll">
+              <button class="qb-scroll-arrow left" id="scrollLeftBtn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <div class="qb-modes" id="modesContainer">
+                <button class="qb-mode-btn active" data-mode="brief">Brief</button>
+                <button class="qb-mode-btn" data-mode="medium">Medium</button>
+                <button class="qb-mode-btn" data-mode="detailed">Detailed</button>
+                <button class="qb-mode-btn" data-mode="keypoints">Key Points</button>
+                <button class="qb-mode-btn" data-mode="executive">Executive</button>
+              </div>
+              <button class="qb-scroll-arrow right" id="scrollRightBtn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+            <div class="qb-dropdown" id="levelDropdown">
+              <button class="qb-dropdown-trigger" id="levelTrigger">
+                <span id="levelLabel">2 Sentences</span>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="qb-dropdown-menu" id="levelMenu"></div>
+            </div>
+          </div>
+
+          <div class="qb-panels">
+            <div class="qb-panel">
+              <div class="qb-panel-header">
+                <span class="qb-panel-label">Input</span>
+                <div class="qb-panel-actions">
+                  <button class="qb-icon-btn" id="clearBtn" title="Clear">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  </button>
+                </div>
+              </div>
+              <textarea class="qb-textarea" id="toolInput" placeholder="Paste your text here..."></textarea>
+            </div>
+            <div class="qb-panel">
+              <div class="qb-panel-header">
+                <span class="qb-panel-label">Summary</span>
+                <div class="qb-panel-actions">
+                  <button class="qb-icon-btn" id="copyBtn" title="Copy">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 11V3.5A1.5 1.5 0 014.5 2H11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                  </button>
+                  <button class="qb-icon-btn" id="sendChatBtn" title="Send to Chat">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12V4a2 2 0 012-2h8a2 2 0 012 2v5a2 2 0 01-2 2H5l-3 3z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="qb-output empty" id="outputBox">
+                <div class="qb-placeholder">
+                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M8 32V10a2 2 0 012-2h20a2 2 0 012 2v14a2 2 0 01-2 2H14l-6 6z" stroke="currentColor" stroke-width="1.5"/><path d="M14 20h12M14 25h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                  Summary will appear here
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="qb-bottom-bar">
+            <span class="qb-word-count" id="wordCount">0 words · 0 characters</span>
+            <button class="qb-action-btn" id="runBtn" onclick="runSummarize()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2l10 6-10 6V2z" fill="currentColor"/></svg>
+              Summarize
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/page-transition.js"></script>
+    <script src="js/tools.js"></script>
+    <script>
+      const NO_PREAMBLE = ' CRITICAL: Return ONLY the summarized text. No greetings, no explanations, no extra words. Just the summary alone.';
+      const modeLevels = {
+        brief: [
+          { id: '1sent', label: '1 Sentence', prompt: 'Summarize the following text in exactly one concise sentence. Capture the single most important point.' + NO_PREAMBLE },
+          { id: '2sent', label: '2 Sentences', prompt: 'Summarize the following text in exactly 2 concise sentences. Capture the most important points.' + NO_PREAMBLE },
+          { id: '3sent', label: '3 Sentences', prompt: 'Summarize the following text in exactly 3 concise sentences. Capture all key points.' + NO_PREAMBLE }
+        ],
+        medium: [
+          { id: 'short', label: 'Short Paragraph', prompt: 'Summarize the following text in one short paragraph (3-4 sentences). Cover the main ideas concisely.' + NO_PREAMBLE },
+          { id: 'full', label: 'Full Paragraph', prompt: 'Summarize the following text in one well-structured paragraph. Cover all main ideas with supporting details.' + NO_PREAMBLE }
+        ],
+        detailed: [
+          { id: '5bullets', label: '5 Bullets', prompt: 'Summarize the following text as exactly 5 bullet points. Each point should be concise and actionable.' + NO_PREAMBLE },
+          { id: '8bullets', label: '8 Bullets', prompt: 'Summarize the following text as 8 bullet points. Group related points and cover all key information.' + NO_PREAMBLE },
+          { id: 'allbullets', label: 'All Points', prompt: 'Summarize the following text as a comprehensive bullet-point list. Cover every important point.' + NO_PREAMBLE }
+        ],
+        keypoints: [
+          { id: 'top3', label: 'Top 3', prompt: 'Extract the 3 most critical key points from the following text. Number them 1-3.' + NO_PREAMBLE },
+          { id: 'top5', label: 'Top 5', prompt: 'Extract the 5 most critical key points from the following text. Number them 1-5.' + NO_PREAMBLE },
+          { id: 'top10', label: 'Top 10', prompt: 'Extract the 10 most critical key points from the following text. Number them 1-10.' + NO_PREAMBLE }
+        ],
+        executive: [
+          { id: '1para', label: '1 Paragraph', prompt: 'Write a 1-paragraph executive summary of the following text. Focus on outcomes, decisions, and action items. Use professional business language.' + NO_PREAMBLE },
+          { id: 'bullets', label: 'Bullet Summary', prompt: 'Write an executive summary of the following text as bullet points. Focus on outcomes, decisions, key metrics, and action items. Use professional business language.' + NO_PREAMBLE }
+        ]
+      };
+
+      let selectedMode = 'brief';
+      let selectedLevel = '2sent';
+      let lastResult = '';
+
+      function renderLevels(mode) {
+        const levels = modeLevels[mode];
+        const menu = document.getElementById('levelMenu');
+        const label = document.getElementById('levelLabel');
+        const last = levels[levels.length - 1];
+        selectedLevel = last.id;
+        label.textContent = last.label;
+        menu.innerHTML = levels.map(l =>
+          `<button class="qb-dropdown-item ${l.id === last.id ? 'active' : ''}" data-level="${l.id}">${l.label}</button>`
+        ).join('');
+        menu.querySelectorAll('.qb-dropdown-item').forEach(btn => {
+          btn.addEventListener('click', () => {
+            menu.querySelectorAll('.qb-dropdown-item').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedLevel = btn.dataset.level;
+            label.textContent = btn.textContent;
+            document.getElementById('levelDropdown').classList.remove('open');
+          });
+        });
+      }
+
+      document.getElementById('levelTrigger').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dd = document.getElementById('levelDropdown');
+        const menu = document.getElementById('levelMenu');
+        const trigger = document.getElementById('levelTrigger');
+        const wasOpen = dd.classList.contains('open');
+        dd.classList.toggle('open');
+        if (!wasOpen) {
+          const rect = trigger.getBoundingClientRect();
+          menu.style.left = rect.left + 'px';
+          menu.style.top = (rect.bottom + 4) + 'px';
+          menu.style.width = Math.max(rect.width, 180) + 'px';
+        }
+      });
+      document.addEventListener('click', () => document.getElementById('levelDropdown').classList.remove('open'));
+
+      document.querySelectorAll('.qb-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.qb-mode-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedMode = btn.dataset.mode;
+          renderLevels(selectedMode);
+          const scroll = document.getElementById('modesScroll');
+          const btnRect = btn.getBoundingClientRect();
+          const scrollRect = scroll.getBoundingClientRect();
+          if (btnRect.right > scrollRect.right) btn.scrollIntoView({ inline: 'end', block: 'nearest' });
+          if (btnRect.left < scrollRect.left) btn.scrollIntoView({ inline: 'start', block: 'nearest' });
+          updateModeFades();
+        });
+      });
+      renderLevels('brief');
+
+      function updateModeFades() {
+        const scroll = document.getElementById('modesScroll');
+        const modes = document.getElementById('modesContainer');
+        if (!scroll || !modes) return;
+        const sl = modes.scrollLeft;
+        const maxScroll = modes.scrollWidth - scroll.clientWidth;
+        scroll.classList.toggle('show-left', sl > 4);
+        scroll.classList.toggle('show-right', maxScroll > 4 && sl < maxScroll - 4);
+      }
+      document.getElementById('modesContainer').addEventListener('scroll', updateModeFades);
+      window.addEventListener('resize', updateModeFades);
+      let lastSL = -1;
+      function pollFades() {
+        const m = document.getElementById('modesContainer');
+        if (m && m.scrollLeft !== lastSL) { lastSL = m.scrollLeft; updateModeFades(); }
+        requestAnimationFrame(pollFades);
+      }
+      requestAnimationFrame(pollFades);
+      document.getElementById('scrollLeftBtn').addEventListener('click', () => document.getElementById('modesContainer').scrollBy({ left: -180, behavior: 'smooth' }));
+      document.getElementById('scrollRightBtn').addEventListener('click', () => document.getElementById('modesContainer').scrollBy({ left: 180, behavior: 'smooth' }));
+
+      const textarea = document.getElementById('toolInput');
+      const wordCountEl = document.getElementById('wordCount');
+      textarea.addEventListener('input', () => {
+        const text = textarea.value;
+        const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+        wordCountEl.textContent = `${words} word${words !== 1 ? 's' : ''} · ${text.length} characters`;
+      });
+      document.getElementById('clearBtn').addEventListener('click', () => { textarea.value = ''; textarea.dispatchEvent(new Event('input')); textarea.focus(); });
+      document.getElementById('copyBtn').addEventListener('click', () => {
+        if (!lastResult) return;
+        navigator.clipboard.writeText(lastResult);
+        const btn = document.getElementById('copyBtn');
+        btn.classList.add('copied');
+        setTimeout(() => btn.classList.remove('copied'), 1500);
+      });
+      document.getElementById('sendChatBtn').addEventListener('click', () => {
+        if (!lastResult) return;
+        localStorage.setItem('dubu_tool_transfer', lastResult);
+        window.location.href = 'chat.html';
+      });
+
+      async function runSummarize() {
+        const text = textarea.value.trim();
+        if (!text) { showAlert('Please enter some text.', 'Summarizer'); return; }
+        const levels = modeLevels[selectedMode];
+        const level = levels.find(l => l.id === selectedLevel) || levels[levels.length - 1];
+        const outputBox = document.getElementById('outputBox');
+        const btn = document.getElementById('runBtn');
+        outputBox.classList.remove('empty');
+        outputBox.innerHTML = `<div class="qb-skeleton"><div class="qb-skeleton-line"></div><div class="qb-skeleton-line"></div><div class="qb-skeleton-line"></div></div>`;
+        btn.disabled = true;
+        try {
+          const result = await callNIM(level.prompt, text);
+          lastResult = result;
+          outputBox.innerHTML = mdToHtml(result);
+        } catch (e) {
+          outputBox.innerHTML = `<div class="qb-placeholder" style="color:#f87171">${e.message}</div>`;
+          lastResult = '';
+        } finally {
+          btn.disabled = false;
+        }
+      }
+    </script>
+  </body>
+</html>
