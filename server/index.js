@@ -17,7 +17,7 @@ const NIMClient = require("./nim");
 const { getTaskRoute, getModelInfo, getAllModels, initBenchmarks } = require("./models");
 const { detectIntent } = require("./router");
 const { listTools, getTool } = require("./tools/index");
-const { signUp, signIn, getSessionUser, authMiddleware, AUTH_ENABLED } = require("./auth");
+const { signIn, getSessionUser, authMiddleware, AUTH_ENABLED } = require("./auth");
 
 // Load all tools (they self-register)
 require("./tools/chat");
@@ -46,17 +46,6 @@ app.use(express.static(path.join(__dirname, "..", "public")));
 app.use("/api", authMiddleware);
 
 // ── API: Auth (Supabase) ──
-
-// POST /api/auth/signup — Create account
-app.post("/api/auth/signup", async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required." });
-  }
-  const result = await signUp(email, password);
-  if (result.error) return res.status(400).json({ error: result.error });
-  res.json(result);
-});
 
 // POST /api/auth/login — Sign in
 app.post("/api/auth/login", async (req, res) => {
