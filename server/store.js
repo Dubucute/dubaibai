@@ -60,11 +60,13 @@ class Store {
         );
         return { id, title, model, messages: [], created: Date.now(), updated: Date.now(), userId: userId || null };
       } catch (e) {
-        console.warn("DB createConversation failed, falling back:", e.message);
+        console.warn("DB createConversation failed:", e.message);
+        // On Vercel, in-memory fallback doesn't work across instances — throw so caller knows
+        if (process.env.VERCEL) throw new Error("Database unavailable: " + e.message);
       }
     }
 
-    // Fallback: in-memory
+    // Fallback: in-memory (local dev only — works because there's one instance)
     this._ensureLoaded();
     const convo = { id, title, model, messages: [], created: Date.now(), updated: Date.now() };
     this.conversations.set(id, convo);
@@ -84,7 +86,8 @@ class Store {
         if (userId && row.user_id && row.user_id !== userId) return null;
         return this._rowToConvo(row);
       } catch (e) {
-        console.warn("DB getConversation failed, falling back:", e.message);
+        console.warn("DB getConversation failed:", e.message);
+        if (process.env.VERCEL) throw new Error("Database unavailable: " + e.message);
       }
     }
 
@@ -118,6 +121,7 @@ class Store {
         }));
       } catch (e) {
         console.warn("DB listConversations failed, falling back:", e.message);
+        if (process.env.VERCEL) throw new Error("Database unavailable: " + e.message);
       }
     }
 
@@ -159,6 +163,7 @@ class Store {
         return await this.getConversation(convoId);
       } catch (e) {
         console.warn("DB addMessage failed, falling back:", e.message);
+        if (process.env.VERCEL) throw new Error("Database unavailable: " + e.message);
       }
     }
 
@@ -218,6 +223,7 @@ class Store {
         return { ...convo, title };
       } catch (e) {
         console.warn("DB updateConversationTitle failed, falling back:", e.message);
+        if (process.env.VERCEL) throw new Error("Database unavailable: " + e.message);
       }
     }
 
