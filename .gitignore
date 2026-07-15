@@ -6,4 +6,6 @@ data/
 *.log
 .DS_Store
 nul
-nul
+
+# Supabase CLI temp files
+supabase/.temp/

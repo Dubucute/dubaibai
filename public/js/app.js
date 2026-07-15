@@ -148,6 +148,77 @@ window.toggleDeepThink = function () {
 };
 
 // ── File Upload ──
+// ── Auth ──
+let currentUser = null;
+
+async function checkAuthStatus() {
+  const token = localStorage.getItem("dubu_session_token");
+  const email = localStorage.getItem("dubu_user_email");
+
+  if (token && email) {
+    // Verify the session with the server
+    try {
+      const resp = await fetch("/api/auth/session", {
+        headers: { "X-Session-Token": token },
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.authenticated) {
+          currentUser = data.user;
+          updateAuthUI();
+          return;
+        }
+      }
+      // Token invalid — clear it
+      localStorage.removeItem("dubu_session_token");
+      localStorage.removeItem("dubu_user_email");
+      localStorage.removeItem("dubu_user_id");
+    } catch (e) {
+      // Server might be down; keep cached info
+      currentUser = { email };
+      updateAuthUI();
+    }
+  }
+  updateAuthUI();
+}
+
+function updateAuthUI() {
+  const btnLabel = document.getElementById("authBtnLabel");
+  const userName = document.getElementById("sbUserName");
+  const userStatus = document.getElementById("sbUserStatus");
+  if (!btnLabel || !userName || !userStatus) return;
+
+  if (currentUser) {
+    btnLabel.textContent = "Account";
+    userName.textContent = currentUser.email || "User";
+    userStatus.textContent = "Signed in";
+  } else {
+    btnLabel.textContent = "Sign In";
+    userName.textContent = "Guest";
+    userStatus.textContent = "NVIDIA NIM";
+  }
+}
+
+window.handleAuthClick = function () {
+  if (currentUser) {
+    // Show a small account menu or sign out
+    if (confirm("Sign out from " + currentUser.email + "?")) {
+      signOut();
+    }
+  } else {
+    window.location.href = "auth.html";
+  }
+};
+
+function signOut() {
+  localStorage.removeItem("dubu_session_token");
+  localStorage.removeItem("dubu_user_email");
+  localStorage.removeItem("dubu_user_id");
+  currentUser = null;
+  updateAuthUI();
+  showToast("Signed out", "info", 2000);
+}
+
 window.attachFile = function () {
   document.getElementById("fileInput").click();
 };
@@ -1789,7 +1860,7 @@ window.filterConversations = function (query) {
   });
 };
 
-window.selectConversation = async function (id) {
+window.selectConversation = async function (id, silent = false) {
   if (id === currentConversationId) return;
 
   // Each conversation is its own independent session — don't abort anything.
@@ -1835,7 +1906,10 @@ window.selectConversation = async function (id) {
       showWelcomeMessage();
     }
   } catch (e) {
-    showToast("Failed to load conversation: " + e.message, "error");
+    if (!silent) {
+      showToast("Failed to load conversation: " + e.message, "error");
+    }
+    throw e; // Re-throw so callers (like autoRestoreConversation) can handle it
   }
 };
 
@@ -1843,10 +1917,10 @@ async function autoRestoreConversation() {
   const lastId = localStorage.getItem("dubu_last_convo_id");
   if (lastId) {
     try {
-      await window.selectConversation(lastId);
+      await window.selectConversation(lastId, true); // silent — no toast for expected 404
       return;
     } catch (e) {
-      // Conversation may have been deleted
+      // Conversation may have been deleted or server restarted
       localStorage.removeItem("dubu_last_convo_id");
     }
   }
@@ -1855,7 +1929,7 @@ async function autoRestoreConversation() {
   try {
     const list = await AgentAPI.listConversations();
     if (list.length > 0) {
-      await window.selectConversation(list[0].id);
+      await window.selectConversation(list[0].id, true); // silent
     }
   } catch (e) {
     /* start fresh */
@@ -2420,4 +2494,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Load models from server for the picker
   loadModelsFromServer();
+
+  // Check auth status on load
+  checkAuthStatus();
 });

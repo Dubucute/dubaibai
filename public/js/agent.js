@@ -2,6 +2,20 @@
 // Communicates with the orchestrator server using SSE streaming
 // With improved error handling, timeout protection, and connection management
 
+// ── Auth Helper: Get session token for API requests ──
+function getSessionToken() {
+  return localStorage.getItem("dubu_session_token") || "";
+}
+
+// ── Common headers helper ──
+function authHeaders(extra = {}) {
+  const token = getSessionToken();
+  if (token) {
+    return { ...extra, "X-Session-Token": token };
+  }
+  return extra;
+}
+
 window.AgentAPI = {
   /**
    * Send a request to the unified agent orchestrator.
@@ -40,6 +54,7 @@ window.AgentAPI = {
       headers: {
         "Content-Type": "application/json",
         ...(apiKey ? { "X-API-Key": apiKey } : {}),
+        ...authHeaders(),
       },
       body: JSON.stringify(body),
       signal: controller.signal,
@@ -146,6 +161,7 @@ window.AgentAPI = {
       headers: {
         "Content-Type": "application/json",
         ...(apiKey ? { "X-API-Key": apiKey } : {}),
+        ...authHeaders(),
       },
       body: JSON.stringify({ args }),
     });
@@ -167,6 +183,7 @@ window.AgentAPI = {
       headers: {
         "Content-Type": "application/json",
         ...(apiKey ? { "X-API-Key": apiKey } : {}),
+        ...authHeaders(),
       },
       body: JSON.stringify({
         model: model || undefined,
@@ -195,7 +212,7 @@ window.AgentAPI = {
     try {
       const resp = await fetch("/api/suggestions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ response: responseText }),
       });
       if (!resp.ok) return null;
@@ -213,7 +230,7 @@ window.AgentAPI = {
   async detectIntent(message, context = {}) {
     const resp = await fetch("/api/detect", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ message, context }),
     });
 
@@ -225,13 +242,17 @@ window.AgentAPI = {
 
   // ── Conversation CRUD ──
   async listConversations() {
-    const r = await fetch("/api/conversations");
+    const r = await fetch("/api/conversations", {
+      headers: authHeaders(),
+    });
     if (!r.ok) throw new Error("Failed to list conversations");
     return (await r.json()).conversations || [];
   },
 
   async getConversation(id) {
-    const r = await fetch(`/api/conversations/${id}`);
+    const r = await fetch(`/api/conversations/${id}`, {
+      headers: authHeaders(),
+    });
     if (!r.ok) throw new Error("Conversation not found");
     return (await r.json()).conversation;
   },
@@ -239,7 +260,7 @@ window.AgentAPI = {
   async createConversation(title, model) {
     const r = await fetch("/api/conversations", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ title, model }),
     });
     if (!r.ok) throw new Error("Failed to create conversation");
@@ -247,12 +268,18 @@ window.AgentAPI = {
   },
 
   async deleteConversation(id) {
-    const r = await fetch(`/api/conversations/${id}`, { method: "DELETE" });
+    const r = await fetch(`/api/conversations/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
     if (!r.ok) throw new Error("Failed to delete conversation");
   },
 
   async forkConversation(id) {
-    const r = await fetch(`/api/conversations/${id}/fork`, { method: "POST" });
+    const r = await fetch(`/api/conversations/${id}/fork`, {
+      method: "POST",
+      headers: authHeaders(),
+    });
     if (!r.ok) throw new Error("Failed to fork conversation");
     return (await r.json()).conversation;
   },
@@ -260,7 +287,7 @@ window.AgentAPI = {
   async conversationAddMessage(id, message) {
     const r = await fetch(`/api/conversations/${id}/messages`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({
         role: message.role,
         content: message.content,
@@ -279,7 +306,7 @@ window.AgentAPI = {
     try {
       const resp = await fetch(`/api/conversations/${conversationId}/generate-title`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
       });
       if (!resp.ok) {
         console.warn("Title generation endpoint returned", resp.status);
@@ -295,7 +322,9 @@ window.AgentAPI = {
 
   // ── Documents ──
   async listDocuments() {
-    const r = await fetch("/api/documents");
+    const r = await fetch("/api/documents", {
+      headers: authHeaders(),
+    });
     if (!r.ok) throw new Error("Failed to list documents");
     return (await r.json()).documents || [];
   },
@@ -303,7 +332,8 @@ window.AgentAPI = {
   async uploadDocument(file) {
     const fd = new FormData();
     fd.append("file", file);
-    const r = await fetch("/api/documents/upload", {
+    const token = getSessionToken();
+    const r = await fetch("/api/documents/upload" + (token ? `?token=${encodeURIComponent(token)}` : ""), {
       method: "POST",
       body: fd,
     });
@@ -314,7 +344,7 @@ window.AgentAPI = {
   async addTextDocument(name, content) {
     const r = await fetch("/api/documents/text", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ name, content }),
     });
     if (!r.ok) throw new Error("Failed to add document");
@@ -322,7 +352,10 @@ window.AgentAPI = {
   },
 
   async deleteDocument(id) {
-    const r = await fetch(`/api/documents/${id}`, { method: "DELETE" });
+    const r = await fetch(`/api/documents/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
     if (!r.ok) throw new Error("Failed to delete document");
   },
 
@@ -330,7 +363,7 @@ window.AgentAPI = {
   async writeFile(filepath, content, overwrite = false) {
     const r = await fetch("/api/filesystem/write", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ filepath, content, overwrite }),
     });
     const data = await r.json();
@@ -341,7 +374,7 @@ window.AgentAPI = {
   async createFolder(folderpath) {
     const r = await fetch("/api/filesystem/create-dir", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ folderpath }),
     });
     const data = await r.json();
@@ -352,7 +385,7 @@ window.AgentAPI = {
   async listFiles(dirpath = ".", maxDepth = 2) {
     const r = await fetch("/api/filesystem/list", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ dirpath, maxDepth }),
     });
     return await r.json();
@@ -361,7 +394,7 @@ window.AgentAPI = {
   async readFile(filepath) {
     const r = await fetch("/api/filesystem/read", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ filepath }),
     });
     const data = await r.json();

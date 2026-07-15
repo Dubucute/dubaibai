@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+    <title>Sign In — Dubu AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/themes.css" />
+    <!-- Import Supabase JS client from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+      /* ── Auth page layout ── */
+      html, body {
+        height: 100%;
+        margin: 0;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      .auth-page {
+        display: flex;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .auth-card {
+        width: 100%;
+        max-width: 420px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 40px 36px;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+        animation: auth-fade-in 0.35s ease;
+      }
+
+      @keyframes auth-fade-in {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .auth-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+
+      .auth-logo svg {
+        flex-shrink: 0;
+      }
+
+      .auth-logo-text {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+      }
+
+      .auth-subtitle {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 28px;
+        line-height: 1.5;
+      }
+
+      /* ── Tabs ── */
+      .auth-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 24px;
+        background: var(--bg-tertiary, rgba(128, 128, 128, 0.08));
+        border-radius: 10px;
+        padding: 4px;
+      }
+
+      .auth-tab {
+        flex: 1;
+        padding: 8px 16px;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+      }
+
+      .auth-tab.active {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .auth-tab:hover:not(.active) {
+        color: var(--text-primary);
+      }
+
+      /* ── Form ── */
+      .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .auth-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .auth-field label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+      }
+
+      .auth-field input {
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-size: 15px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .auth-field input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-transparent, rgba(99, 102, 241, 0.15));
+      }
+
+      .auth-field input::placeholder {
+        color: var(--text-muted);
+      }
+
+      .auth-field .field-error {
+        font-size: 12px;
+        color: var(--danger, #ef4444);
+        display: none;
+        margin-top: 2px;
+      }
+
+      .auth-field .field-error.visible {
+        display: block;
+      }
+
+      /* ── Submit button ── */
+      .auth-submit {
+        padding: 11px 20px;
+        border: none;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: opacity 0.2s ease, transform 0.1s ease;
+        margin-top: 4px;
+      }
+
+      .auth-submit:hover {
+        opacity: 0.9;
+      }
+
+      .auth-submit:active {
+        transform: scale(0.98);
+      }
+
+      .auth-submit:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* ── Messages ── */
+      .auth-message {
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        line-height: 1.5;
+        display: none;
+        margin-top: 4px;
+      }
+
+      .auth-message.success {
+        display: block;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.25);
+        color: #22c55e;
+      }
+
+      .auth-message.error {
+        display: block;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        color: #ef4444;
+      }
+
+      .auth-message.info {
+        display: block;
+        background: rgba(99, 102, 241, 0.1);
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        color: var(--accent);
+      }
+
+      /* ── Spinner ── */
+      .auth-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: auth-spin 0.6s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+
+      @keyframes auth-spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* ── Password strength ── */
+      .password-strength {
+        display: flex;
+        gap: 4px;
+        margin-top: 4px;
+      }
+
+      .password-strength .ps-bar {
+        flex: 1;
+        height: 3px;
+        border-radius: 2px;
+        background: var(--border);
+        transition: background 0.2s ease;
+      }
+
+      .password-strength .ps-bar.filled.weak { background: #ef4444; }
+      .password-strength .ps-bar.filled.medium { background: #f59e0b; }
+      .password-strength .ps-bar.filled.strong { background: #22c55e; }
+
+      .password-strength-text {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+
+      /* ── Divider ── */
+      .auth-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 8px 0;
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+
+      .auth-divider::before,
+      .auth-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      /* ── Back link ── */
+      .auth-back {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 20px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .auth-back:hover {
+        color: var(--text-primary);
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 480px) {
+        .auth-card {
+          padding: 28px 20px;
+          border-radius: 12px;
+        }
+      }
+
+      /* ── Password eye icon ── */
+      .password-wrap {
+        position: relative;
+      }
+
+      .password-wrap input {
+        width: 100%;
+        box-sizing: border-box;
+        padding-right: 40px;
+      }
+
+      .password-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease;
+      }
+
+      .password-toggle:hover {
+        color: var(--text-secondary);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auth-page">
+      <div class="auth-card">
+        <!-- Logo -->
+        <div class="auth-logo">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <rect width="32" height="32" rx="8" fill="var(--accent)" opacity="0.15"/>
+            <path d="M16 7L9 12v9l7 5 7-5v-9l-7-5z" fill="var(--accent)" opacity="0.4"/>
+            <circle cx="16" cy="16" r="4" fill="var(--accent)"/>
+          </svg>
+          <span class="auth-logo-text">Dubu AI</span>
+        </div>
+        <p class="auth-subtitle">Sign in to your account or create a new one.</p>
+
+        <!-- Tabs -->
+        <div class="auth-tabs" id="authTabs">
+          <button class="auth-tab active" data-tab="login" onclick="switchTab('login')">Sign In</button>
+          <button class="auth-tab" data-tab="signup" onclick="switchTab('signup')">Create Account</button>
+        </div>
+
+        <!-- Message area -->
+        <div class="auth-message" id="authMessage"></div>
+
+        <!-- Login Form -->
+        <form class="auth-form" id="loginForm" onsubmit="handleLogin(event)">
+          <div class="auth-field">
+            <label for="loginEmail">Email</label>
+            <input type="email" id="loginEmail" placeholder="you@example.com" required autocomplete="email" />
+          </div>
+          <div class="auth-field">
+            <label for="loginPassword">Password</label>
+            <div class="password-wrap">
+              <input type="password" id="loginPassword" placeholder="Enter your password" required autocomplete="current-password" />
+              <button type="button" class="password-toggle" onclick="togglePassword('loginPassword', this)" tabindex="-1">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 3C4 3 1.5 6 1.5 8s2.5 5 6.5 5 6.5-3 6.5-5-2.5-5-6.5-5z" stroke="currentColor" stroke-width="1.3"/>
+                  <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3"/>
+                  <path d="M2 2l12 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div class="field-error" id="loginPasswordError"></div>
+          </div>
+          <button type="submit" class="auth-submit" id="loginSubmit">Sign In</button>
+        </form>
+
+        <!-- Signup Form -->
+        <form class="auth-form" id="signupForm" style="display:none" onsubmit="handleSignup(event)">
+          <div class="auth-field">
+            <label for="signupEmail">Email</label>
+            <input type="email" id="signupEmail" placeholder="you@example.com" required autocomplete="email" />
+          </div>
+          <div class="auth-field">
+            <label for="signupPassword">Password</label>
+            <div class="password-wrap">
+              <input type="password" id="signupPassword" placeholder="At least 6 characters" required minlength="6" autocomplete="new-password" oninput="checkPasswordStrength(this.value)" />
+              <button type="button" class="password-toggle" onclick="togglePassword('signupPassword', this)" tabindex="-1">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 3C4 3 1.5 6 1.5 8s2.5 5 6.5 5 6.5-3 6.5-5-2.5-5-6.5-5z" stroke="currentColor" stroke-width="1.3"/>
+                  <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3"/>
+                  <path d="M2 2l12 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div class="password-strength" id="passwordStrength">
+              <div class="ps-bar" data-idx="0"></div>
+              <div class="ps-bar" data-idx="1"></div>
+              <div class="ps-bar" data-idx="2"></div>
+              <div class="ps-bar" data-idx="3"></div>
+            </div>
+            <div class="password-strength-text" id="passwordStrengthText"></div>
+            <div class="field-error" id="signupPasswordError"></div>
+          </div>
+          <button type="submit" class="auth-submit" id="signupSubmit">Create Account</button>
+        </form>
+
+        <!-- Back link -->
+        <a href="chat.html" class="auth-back">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M9 3L5 7l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Continue as guest
+        </a>
+      </div>
+    </div>
+
+    <script>
+      // ── Supabase client initialization (fetched from server so no hardcoded secrets) ──
+      let supabase = null;
+      let supabaseReady = false;
+
+      async function initSupabase() {
+        try {
+          const resp = await fetch("/api/auth/status");
+          const config = await resp.json();
+          if (config.enabled && config.supabaseUrl && config.supabasePublishableKey) {
+            supabase = window.supabase.createClient(
+              config.supabaseUrl,
+              config.supabasePublishableKey
+            );
+            supabaseReady = true;
+            // Re-enable any disabled submit buttons
+            document.querySelectorAll(".auth-submit").forEach(b => b.disabled = false);
+            return;
+          }
+        } catch (e) {
+          console.warn("Auth config unavailable:", e.message);
+        }
+        // Show a message if auth isn't configured
+        document.getElementById("authMessage").className = "auth-message error";
+        document.getElementById("authMessage").textContent =
+          "Authentication is not configured on this server.";
+        document.getElementById("authMessage").style.display = "block";
+        document.querySelectorAll(".auth-submit").forEach(b => b.disabled = true);
+      }
+
+      // Init on load
+      initSupabase();
+
+      // ── Tab switching ──
+      let activeTab = "login";
+
+      function switchTab(tab) {
+        activeTab = tab;
+        document.querySelectorAll(".auth-tab").forEach((t) => {
+          t.classList.toggle("active", t.dataset.tab === tab);
+        });
+        document.getElementById("loginForm").style.display = tab === "login" ? "flex" : "none";
+        document.getElementById("signupForm").style.display = tab === "signup" ? "flex" : "none";
+        clearMessage();
+        clearErrors();
+      }
+
+      // ── Password visibility toggle ──
+      function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+        btn.innerHTML = isPassword
+          ? `<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 3C4 3 1.5 6 1.5 8s2.5 5 6.5 5 6.5-3 6.5-5-2.5-5-6.5-5z" stroke="currentColor" stroke-width="1.3"/>
+              <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3"/>
+            </svg>`
+          : `<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 3C4 3 1.5 6 1.5 8s2.5 5 6.5 5 6.5-3 6.5-5-2.5-5-6.5-5z" stroke="currentColor" stroke-width="1.3"/>
+              <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3"/>
+              <path d="M2 2l12 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>`;
+      }
+
+      // ── Password strength indicator ──
+      function checkPasswordStrength(password) {
+        const bars = document.querySelectorAll(".ps-bar");
+        const textEl = document.getElementById("passwordStrengthText");
+        let score = 0;
+
+        if (password.length >= 6) score++;
+        if (password.length >= 10) score++;
+        if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
+        if (/\d/.test(password) && /[^A-Za-z0-9]/.test(password)) score++;
+
+        const levels = ["", "Weak", "Fair", "Good", "Strong"];
+        const classes = ["", "weak", "medium", "medium", "strong"];
+        textEl.textContent = password.length > 0 ? levels[score] : "";
+
+        bars.forEach((bar, i) => {
+          bar.className = "ps-bar";
+          if (i < score) {
+            bar.classList.add("filled", classes[score]);
+          }
+        });
+      }
+
+      // ── Message display ──
+      function showMessage(text, type = "info") {
+        const el = document.getElementById("authMessage");
+        el.className = "auth-message " + type;
+        el.textContent = text;
+        el.style.display = "block";
+      }
+
+      function clearMessage() {
+        const el = document.getElementById("authMessage");
+        el.className = "auth-message";
+        el.style.display = "none";
+      }
+
+      function clearErrors() {
+        document.querySelectorAll(".field-error").forEach((e) => e.classList.remove("visible"));
+      }
+
+      function showFieldError(id, text) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.textContent = text;
+          el.classList.add("visible");
+        }
+      }
+
+      function setLoading(formId, loading) {
+        const btn = document.getElementById(formId === "loginForm" ? "loginSubmit" : "signupSubmit");
+        if (!btn) return;
+        btn.disabled = loading;
+        btn.innerHTML = loading
+          ? `<span class="auth-spinner"></span> Processing...`
+          : formId === "loginForm"
+            ? "Sign In"
+            : "Create Account";
+      }
+
+      // ── Handle Login ──
+      async function handleLogin(e) {
+        e.preventDefault();
+        clearMessage();
+        clearErrors();
+
+        if (!supabaseReady) {
+          showMessage("Connecting to authentication server... Please wait.", "info");
+          return;
+        }
+
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value;
+
+        if (!email) return showFieldError("loginPasswordError", "Please enter your email.");
+        if (!password) return showFieldError("loginPasswordError", "Please enter your password.");
+
+        setLoading("loginForm", true);
+
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (error) {
+            setLoading("loginForm", false);
+            if (error.message.includes("Email not confirmed")) {
+              return showMessage(
+                "Email not confirmed yet. Please check your inbox and click the confirmation link.",
+                "error"
+              );
+            }
+            if (error.message.includes("Invalid login credentials")) {
+              return showMessage("Invalid email or password.", "error");
+            }
+            return showMessage(error.message, "error");
+          }
+
+          // Success! Store session info and redirect
+          localStorage.setItem("dubu_session_token", data.session.access_token);
+          localStorage.setItem("dubu_user_email", data.user.email);
+          localStorage.setItem("dubu_user_id", data.user.id);
+          showMessage("Signed in! Redirecting...", "success");
+
+          setTimeout(() => {
+            window.location.href = "chat.html";
+          }, 800);
+        } catch (err) {
+          setLoading("loginForm", false);
+          showMessage("Connection error: " + err.message, "error");
+        }
+      }
+
+      // ── Handle Signup ──
+      async function handleSignup(e) {
+        e.preventDefault();
+        clearMessage();
+        clearErrors();
+
+        if (!supabaseReady) {
+          showMessage("Connecting to authentication server... Please wait.", "info");
+          return;
+        }
+
+        const email = document.getElementById("signupEmail").value.trim();
+        const password = document.getElementById("signupPassword").value;
+
+        if (!email) return showFieldError("signupPasswordError", "Please enter your email.");
+        if (password.length < 6)
+          return showFieldError("signupPasswordError", "Password must be at least 6 characters.");
+
+        setLoading("signupForm", true);
+
+        try {
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+          });
+
+          if (error) {
+            setLoading("signupForm", false);
+            if (error.message.includes("already registered")) {
+              return showMessage(
+                "This email is already registered. Try signing in instead.",
+                "error"
+              );
+            }
+            return showMessage(error.message, "error");
+          }
+
+          setLoading("signupForm", false);
+
+          // Check if user was created (may need confirmation)
+          if (data?.user?.identities?.length === 0) {
+            showMessage("This email is already registered. Try signing in.", "error");
+            return;
+          }
+
+          showMessage(
+            "Account created! We've sent a confirmation email to " +
+              escHtml(email) +
+              ". Please check your inbox and click the link to verify your account.",
+            "success"
+          );
+
+          // Reset form
+          document.getElementById("signupForm").reset();
+          document.getElementById("passwordStrengthText").textContent = "";
+          document.querySelectorAll(".ps-bar").forEach((b) => (b.className = "ps-bar"));
+        } catch (err) {
+          setLoading("signupForm", false);
+          showMessage("Connection error: " + err.message, "error");
+        }
+      }
+
+      function escHtml(text) {
+        const d = document.createElement("div");
+        d.textContent = text;
+        return d.innerHTML;
+      }
+    </script>
+  </body>
+</html>

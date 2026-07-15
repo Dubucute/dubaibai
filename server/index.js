@@ -11,11 +11,13 @@ const path = require("path");
 const multer = require("multer");
 const CONFIG = require("./config");
 const store = require("./store");
+const db = require("./db");
 const Orchestrator = require("./orchestrator");
 const NIMClient = require("./nim");
 const { getTaskRoute, getModelInfo, getAllModels, initBenchmarks } = require("./models");
 const { detectIntent } = require("./router");
 const { listTools, getTool } = require("./tools/index");
+const { signUp, signIn, getSessionUser, authMiddleware, AUTH_ENABLED } = require("./auth");
 
 // Load all tools (they self-register)
 require("./tools/chat");
@@ -39,6 +41,69 @@ const upload = multer({
 // ── Middleware ──
 app.use(express.json({ limit: "50mb" }));
 app.use(express.static(path.join(__dirname, "..", "public")));
+
+// Apply auth middleware to all API routes (attaches req.user if authenticated)
+app.use("/api", authMiddleware);
+
+// ── API: Auth (Supabase) ──
+
+// POST /api/auth/signup — Create account
+app.post("/api/auth/signup", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required." });
+  }
+  const result = await signUp(email, password);
+  if (result.error) return res.status(400).json({ error: result.error });
+  res.json(result);
+});
+
+// POST /api/auth/login — Sign in
+app.post("/api/auth/login", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required." });
+  }
+  const result = await signIn(email, password);
+  if (result.error) return res.status(401).json({ error: result.error });
+  res.json(result);
+});
+
+// POST /api/auth/logout — Sign out (no-op on server, frontend just clears token)
+app.post("/api/auth/logout", (req, res) => {
+  res.json({ success: true });
+});
+
+// GET /api/auth/session — Check session from authorization header
+app.get("/api/auth/session", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token =
+    req.headers["x-session-token"] ||
+    (authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null);
+
+  if (!token) {
+    return res.json({ authenticated: false });
+  }
+
+  const user = await getSessionUser(token);
+  if (!user) {
+    return res.json({ authenticated: false });
+  }
+
+  res.json({
+    authenticated: true,
+    user,
+  });
+});
+
+// GET /api/auth/status — Check if auth is configured
+app.get("/api/auth/status", (req, res) => {
+  res.json({
+    enabled: AUTH_ENABLED,
+    supabaseUrl: AUTH_ENABLED ? process.env.SUPABASE_URL : null,
+    supabasePublishableKey: AUTH_ENABLED ? process.env.SUPABASE_PUBLISHABLE_KEY : null,
+  });
+});
 
 // ── API: Health ──
 app.get("/api/health", (req, res) => {
@@ -209,115 +274,174 @@ app.post("/api/chat/completions", async (req, res) => {
   }
 });
 
+// ── Helper: Get userId from authenticated request (or null for guests) ──
+function uid(req) {
+  return req.user?.id || null;
+}
+
 // ── API: Conversations ──
-app.get("/api/conversations", (req, res) => {
-  res.json({ conversations: store.listConversations() });
-});
-
-app.post("/api/conversations", (req, res) => {
-  const { title, model } = req.body;
-  const convo = store.createConversation(title, model);
-  res.json({ conversation: convo });
-});
-
-app.get("/api/conversations/:id", (req, res) => {
-  const convo = store.getConversation(req.params.id);
-  if (!convo) return res.status(404).json({ error: "Not found" });
-  res.json({ conversation: convo });
-});
-
-app.post("/api/conversations/:id/messages", async (req, res) => {
-  const convo = store.getConversation(req.params.id);
-  if (!convo) return res.status(404).json({ error: "Not found" });
-  // Support both { role, content } and { message: { role, content } } formats
-  const src = req.body.message || req.body;
-  const msg = {
-    role: src.role,
-    content: src.content,
-  };
-  if (src.tool_calls) msg.tool_calls = src.tool_calls;
-  if (src.tool_call_id) msg.tool_call_id = src.tool_call_id;
-  store.addMessage(convo.id, msg);
-  res.json({ success: true });
-});
-
-app.delete("/api/conversations/:id", (req, res) => {
-  store.deleteConversation(req.params.id);
-  res.json({ success: true });
-});
-
-app.post("/api/conversations/:id/generate-title", async (req, res) => {
-  const convo = store.getConversation(req.params.id);
-  if (!convo) return res.status(404).json({ error: "Not found" });
-
-  // Find the first user message to generate a title from
-  const firstUserMsg = convo.messages.find((m) => m.role === "user");
-  if (!firstUserMsg) return res.status(400).json({ error: "No user messages to generate title from" });
-
+app.get("/api/conversations", async (req, res) => {
   try {
-    const orchestrator = new Orchestrator({
-      apiKey: req.headers["x-api-key"] || CONFIG.apiKey,
-    });
-    const title = await orchestrator.generateTitle(firstUserMsg.content);
-
-    if (title) {
-      store.updateConversationTitle(convo.id, title);
-      res.json({ success: true, title });
-    } else {
-      // Fallback: use first 40 chars of the message
-      const fallbackTitle = firstUserMsg.content.slice(0, 40) + (firstUserMsg.content.length > 40 ? "..." : "");
-      store.updateConversationTitle(convo.id, fallbackTitle);
-      res.json({ success: true, title: fallbackTitle });
-    }
+    const conversations = await store.listConversations(uid(req));
+    res.json({ conversations });
   } catch (e) {
-    // Silent fallback
-    const fallbackTitle = firstUserMsg.content.slice(0, 40) + (firstUserMsg.content.length > 40 ? "..." : "");
-    store.updateConversationTitle(convo.id, fallbackTitle);
-    res.json({ success: true, title: fallbackTitle, note: "Used fallback" });
+    res.status(500).json({ error: e.message });
   }
 });
 
-app.post("/api/conversations/:id/fork", (req, res) => {
-  const fork = store.forkConversation(req.params.id);
-  if (!fork) return res.status(404).json({ error: "Not found" });
-  res.json({ conversation: fork });
+app.post("/api/conversations", async (req, res) => {
+  try {
+    const { title, model } = req.body;
+    const convo = await store.createConversation(title, model, uid(req));
+    res.json({ conversation: convo });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/conversations/:id", async (req, res) => {
+  try {
+    const convo = await store.getConversation(req.params.id, uid(req));
+    if (!convo) return res.status(404).json({ error: "Not found" });
+    res.json({ conversation: convo });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/conversations/:id/messages", async (req, res) => {
+  try {
+    const convo = await store.getConversation(req.params.id, uid(req));
+    if (!convo) return res.status(404).json({ error: "Not found" });
+    // Support both { role, content } and { message: { role, content } } formats
+    const src = req.body.message || req.body;
+    const msg = {
+      role: src.role,
+      content: src.content,
+    };
+    if (src.tool_calls) msg.tool_calls = src.tool_calls;
+    if (src.tool_call_id) msg.tool_call_id = src.tool_call_id;
+    await store.addMessage(convo.id, msg, uid(req));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete("/api/conversations/:id", async (req, res) => {
+  try {
+    await store.deleteConversation(req.params.id, uid(req));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/conversations/:id/generate-title", async (req, res) => {
+  try {
+    const convo = await store.getConversation(req.params.id, uid(req));
+    if (!convo) return res.status(404).json({ error: "Not found" });
+
+    // Find the first user message to generate a title from
+    const firstUserMsg = convo.messages.find((m) => m.role === "user");
+    if (!firstUserMsg) return res.status(400).json({ error: "No user messages to generate title from" });
+
+    try {
+      const orchestrator = new Orchestrator({
+        apiKey: req.headers["x-api-key"] || CONFIG.apiKey,
+      });
+      const title = await orchestrator.generateTitle(firstUserMsg.content);
+
+      if (title) {
+        await store.updateConversationTitle(convo.id, title, uid(req));
+        res.json({ success: true, title });
+      } else {
+        // Fallback: use first 40 chars of the message
+        const fallbackTitle = firstUserMsg.content.slice(0, 40) + (firstUserMsg.content.length > 40 ? "..." : "");
+        await store.updateConversationTitle(convo.id, fallbackTitle, uid(req));
+        res.json({ success: true, title: fallbackTitle });
+      }
+    } catch (e) {
+      // Silent fallback
+      const fallbackTitle = firstUserMsg.content.slice(0, 40) + (firstUserMsg.content.length > 40 ? "..." : "");
+      await store.updateConversationTitle(convo.id, fallbackTitle, uid(req));
+      res.json({ success: true, title: fallbackTitle, note: "Used fallback" });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/conversations/:id/fork", async (req, res) => {
+  try {
+    const fork = await store.forkConversation(req.params.id, uid(req));
+    if (!fork) return res.status(404).json({ error: "Not found" });
+    res.json({ conversation: fork });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── API: Documents ──
-app.get("/api/documents", (req, res) => {
-  res.json({ documents: store.listDocuments() });
+app.get("/api/documents", async (req, res) => {
+  try {
+    const documents = await store.listDocuments(uid(req));
+    res.json({ documents });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-app.post("/api/documents/upload", upload.single("file"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No file uploaded." });
-  const content = req.file.buffer.toString("utf-8");
-  const doc = store.addDocument(req.file.originalname, content, req.file.mimetype);
-  res.json({ document: doc });
+app.post("/api/documents/upload", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: "No file uploaded." });
+    const content = req.file.buffer.toString("utf-8");
+    const doc = await store.addDocument(req.file.originalname, content, req.file.mimetype, uid(req));
+    res.json({ document: doc });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-app.post("/api/documents/text", (req, res) => {
-  const { name, content } = req.body;
-  if (!name || !content) return res.status(400).json({ error: "Name and content required." });
-  const doc = store.addDocument(name, content, "text/plain");
-  res.json({ document: doc });
+app.post("/api/documents/text", async (req, res) => {
+  try {
+    const { name, content } = req.body;
+    if (!name || !content) return res.status(400).json({ error: "Name and content required." });
+    const doc = await store.addDocument(name, content, "text/plain", uid(req));
+    res.json({ document: doc });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-app.get("/api/documents/:id", (req, res) => {
-  const doc = store.getDocument(req.params.id);
-  if (!doc) return res.status(404).json({ error: "Not found" });
-  res.json({ document: doc });
+app.get("/api/documents/:id", async (req, res) => {
+  try {
+    const doc = await store.getDocument(req.params.id, uid(req));
+    if (!doc) return res.status(404).json({ error: "Not found" });
+    res.json({ document: doc });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-app.delete("/api/documents/:id", (req, res) => {
-  store.deleteDocument(req.params.id);
-  res.json({ success: true });
+app.delete("/api/documents/:id", async (req, res) => {
+  try {
+    await store.deleteDocument(req.params.id, uid(req));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-app.get("/api/documents/:id/search", (req, res) => {
-  const { q } = req.query;
-  if (!q) return res.status(400).json({ error: "Query required" });
-  const results = store.searchDocuments(q);
-  res.json({ results });
+app.get("/api/documents/:id/search", async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.status(400).json({ error: "Query required" });
+    const results = await store.searchDocuments(q, uid(req));
+    res.json({ results });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── API: Filesystem operations ──
@@ -427,11 +551,27 @@ module.exports = app;
 // ── Start (local development only) ──
 // Vercel handles this automatically; we only call listen() when running directly
 if (!process.env.VERCEL) {
-  // Load benchmark data from proxy before starting
-  initBenchmarks().then(() => {
+  // Initialize database + load benchmark data before starting
+  Promise.all([
+    db.initDatabase(),
+    initBenchmarks(),
+  ]).then(() => {
     app.listen(CONFIG.port, () => {
       console.log(`\n  🚀 Dubu AI v2.1.0 — Unified Agent Platform`);
       console.log(`  ⚡ Powered by NVIDIA NIM`);
+      console.log(`  🔐 Auth: ${AUTH_ENABLED ? "Supabase (enabled)" : "Disabled"}`);
+      console.log(`  🗄️  DB: ${db.DB_READY ? "PostgreSQL" : "In-memory (JSON file)"}`);
+      console.log(`  🤖 Auto model selection + fallback enabled`);
+      console.log(`  🌐 http://localhost:${CONFIG.port}`);
+      console.log(`  📚 API: http://localhost:${CONFIG.port}/api/health\n`);
+    });
+  }).catch(() => {
+    // Start even if one fails
+    app.listen(CONFIG.port, () => {
+      console.log(`\n  🚀 Dubu AI v2.1.0 — Unified Agent Platform`);
+      console.log(`  ⚡ Powered by NVIDIA NIM`);
+      console.log(`  🔐 Auth: ${AUTH_ENABLED ? "Supabase (enabled)" : "Disabled"}`);
+      console.log(`  🗄️  DB: ${db.DB_READY ? "PostgreSQL" : "In-memory (JSON file)"}`);
       console.log(`  🤖 Auto model selection + fallback enabled`);
       console.log(`  🌐 http://localhost:${CONFIG.port}`);
       console.log(`  📚 API: http://localhost:${CONFIG.port}/api/health\n`);
