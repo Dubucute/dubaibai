@@ -702,6 +702,7 @@ body {
 .streaming-text {
   white-space: pre-wrap;
   word-break: break-word;
+  will-change: content;
 }
 
 .streaming-cursor {
@@ -711,8 +712,9 @@ body {
   background: var(--accent);
   margin-left: 1px;
   vertical-align: text-bottom;
-  animation: cursor-blink 0.8s step-end infinite;
+  animation: cursor-blink 1s ease-in-out infinite;
   border-radius: 1px;
+  will-change: opacity;
 }
 
 .msg-content.streaming {

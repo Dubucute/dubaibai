@@ -9,6 +9,36 @@ let conversations = [];
 let webSearchEnabled = false;
 let deepThinkEnabled = false;
 let attachedFiles = [];
+
+// ── Streaming token buffer for smooth rendering ──
+// Batches tokens and flushes to DOM via requestAnimationFrame
+const _streamBuffer = {
+  text: "",
+  el: null,
+  rafId: null,
+  flush() {
+    if (this.el && this.text) {
+      this.el.textContent = this.text;
+      this.text = "";
+    }
+    this.rafId = null;
+  },
+  push(token, textEl) {
+    this.text += token;
+    this.el = textEl;
+    if (!this.rafId) {
+      this.rafId = requestAnimationFrame(() => this.flush());
+    }
+  },
+  cancel() {
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    this.text = "";
+    this.el = null;
+  }
+};
 let imageGallery = []; // { url, prompt, model, timestamp }
 let loadedModels = []; // Dynamically fetched from server /api/models
 
@@ -550,22 +580,25 @@ window.sendToAgent = async function () {
             break;
 
           case "token":
-            // Real-time token streaming
+            // Real-time token streaming with rAF batching
             if (!thinkingDiv.dataset.streaming) {
               // First token — replace thinking indicator with streaming content area
               thinkingDiv.dataset.streaming = "true";
               thinkingDiv.dataset.streamContent = "";
               bubble.innerHTML = `<div class="msg-name">${escHtml(modelName || "Dubu AI")}</div><div class="msg-content streaming"><span class="streaming-text"></span><span class="streaming-cursor">▊</span></div>`;
             }
-            // Append token to the streaming text (using textContent for security)
+            // Buffer tokens and flush to DOM on next animation frame (avoids O(n²) textContent +=)
             const streamTextEl = bubble.querySelector(".streaming-text");
             if (streamTextEl) {
-              streamTextEl.textContent += data.content || "";
-              thinkingDiv.dataset.streamContent = streamTextEl.textContent;
+              _streamBuffer.push(data.content || "", streamTextEl);
+              thinkingDiv.dataset.streamContent += data.content || "";
             }
             break;
 
           case "result":
+            // Flush any remaining buffered tokens immediately so user sees full text
+            _streamBuffer.flush();
+            _streamBuffer.cancel();
             const fullResponse = data.content || "No response generated.";
             const wasStreaming = thinkingDiv.dataset?.streaming === "true";
 
