@@ -81,12 +81,20 @@ class Store {
           `SELECT * FROM conversations WHERE id = $1`,
           [id]
         );
-        if (!row) return null;
+        if (!row) {
+          // Check if it exists at all (without user filter) for debugging
+          const anyRow = await db.queryOne(`SELECT id, user_id FROM conversations WHERE id = $1`, [id]);
+          console.log(`🔍 getConversation(${id}): not found. userId=${userId}, exists_in_db=${!!anyRow}, row_user_id=${anyRow?.user_id || "N/A"}`);
+          return null;
+        }
         // Verify ownership if userId provided
-        if (userId && row.user_id && row.user_id !== userId) return null;
+        if (userId && row.user_id && row.user_id !== userId) {
+          console.warn(`🔍 getConversation(${id}): ownership mismatch. req userId=${userId}, db user_id=${row.user_id}`);
+          return null;
+        }
         return this._rowToConvo(row);
       } catch (e) {
-        console.warn("DB getConversation failed:", e.message);
+        console.warn("DB getConversation failed:", e.message, e.code);
         if (process.env.VERCEL) throw new Error("Database unavailable: " + e.message);
       }
     }

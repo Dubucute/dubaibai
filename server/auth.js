@@ -110,10 +110,16 @@ function authMiddleware(req, res, next) {
   getSessionUser(sessionToken)
     .then((user) => {
       req.user = user;
+      if (user && req.path.includes("/messages")) {
+        console.log(`🔐 Auth OK for ${req.method} ${req.path}: userId=${user.id}`);
+      }
       next();
     })
     .catch(() => {
       req.user = null;
+      if (req.path.includes("/messages")) {
+        console.warn(`🔐 Auth FAILED for ${req.method} ${req.path}: token=${sessionToken.slice(0, 8)}...`);
+      }
       next();
     });
 }

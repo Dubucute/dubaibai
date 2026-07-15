@@ -37,16 +37,34 @@ async function initDatabase() {
 
       pool = new Pool({
         connectionString: DATABASE_URL,
-        max: 10,
-        idleTimeoutMillis: 30000,
+        max: 5,
+        idleTimeoutMillis: 10000,
         connectionTimeoutMillis: 10000,
+        allowExitOnIdle: true,
         ssl: sslConfig,
       });
 
-      // Test the connection
-      const client = await pool.connect();
-      await client.query("SELECT 1");
-      client.release();
+      // Handle pool-level errors (idle connection drops, etc.)
+      pool.on("error", (err) => {
+        console.warn("  ⚠️  Pool error:", err.message);
+        // Don't set pool=null here — pg will auto-replace broken connections
+      });
+
+      // Test the connection (with retry)
+      let connected = false;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const client = await pool.connect();
+          await client.query("SELECT 1");
+          client.release();
+          connected = true;
+          break;
+        } catch (e) {
+          console.warn(`  ⚠️  Connection attempt ${attempt}/3 failed:`, e.message);
+          if (attempt < 3) await new Promise((r) => setTimeout(r, 1000 * attempt));
+        }
+      }
+      if (!connected) throw new Error("Failed to connect after 3 attempts");
 
       // Create tables
       await createTables();
@@ -56,6 +74,8 @@ async function initDatabase() {
       console.warn("  ⚠️  PostgreSQL connection failed:", e.message);
       console.log("  📄 Falling back to in-memory store");
       pool = null;
+      DB_READY = false;
+      _initPromise = null; // Allow retry on next request
     }
   })();
 
@@ -148,8 +168,23 @@ async function createTables() {
  */
 async function query(text, params = []) {
   if (!pool) throw new Error("Database not available");
-  const result = await pool.query(text, params);
-  return result.rows;
+  try {
+    const result = await pool.query(text, params);
+    return result.rows;
+  } catch (e) {
+    // If connection was lost, try to re-init once
+    if (e.code === "ECONNRESET" || e.code === "57P01" || e.code === "57P03" || e.message.includes("connection terminated")) {
+      console.warn("  ⚠️  Connection lost, attempting reconnect...");
+      DB_READY = false;
+      _initPromise = null;
+      pool = null;
+      await initDatabase();
+      if (!pool) throw new Error("Database reconnection failed");
+      const result = await pool.query(text, params);
+      return result.rows;
+    }
+    throw e;
+  }
 }
 
 /**

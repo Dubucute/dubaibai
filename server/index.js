@@ -305,7 +305,9 @@ app.get("/api/conversations", async (req, res) => {
 app.post("/api/conversations", async (req, res) => {
   try {
     const { title, model } = req.body;
-    const convo = await store.createConversation(title, model, uid(req));
+    const userId = uid(req);
+    const convo = await store.createConversation(title, model, userId);
+    console.log(`✅ Created conversation ${convo.id} for userId=${userId}, dbReady=${db.DB_READY}`);
     res.json({ conversation: convo });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -324,8 +326,12 @@ app.get("/api/conversations/:id", async (req, res) => {
 
 app.post("/api/conversations/:id/messages", async (req, res) => {
   try {
-    const convo = await store.getConversation(req.params.id, uid(req));
-    if (!convo) return res.status(404).json({ error: "Not found" });
+    const userId = uid(req);
+    const convo = await store.getConversation(req.params.id, userId);
+    if (!convo) {
+      console.warn(`⚠️  POST /messages/${req.params.id} → 404 (userId=${userId}, dbReady=${db.DB_READY})`);
+      return res.status(404).json({ error: "Not found" });
+    }
     // Support both { role, content } and { message: { role, content } } formats
     const src = req.body.message || req.body;
     const msg = {
@@ -334,7 +340,7 @@ app.post("/api/conversations/:id/messages", async (req, res) => {
     };
     if (src.tool_calls) msg.tool_calls = src.tool_calls;
     if (src.tool_call_id) msg.tool_call_id = src.tool_call_id;
-    await store.addMessage(convo.id, msg, uid(req));
+    await store.addMessage(convo.id, msg, userId);
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

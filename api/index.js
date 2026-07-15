@@ -14,6 +14,7 @@ module.exports = async (req, res) => {
       await db.initDatabase();
     } catch {
       // DB not available — isDbReady() returns false, store falls back to in-memory
+      console.warn("⚠️  DB init failed in Vercel entry, falling back to in-memory");
     }
   }
   app(req, res);
