@@ -26,6 +26,7 @@ class Store {
     // In-memory fallback maps (used when DB is not enabled)
     this.conversations = new Map();
     this.documents = new Map();
+    this._profiles = new Map();
     this._loaded = false;
   }
 
@@ -34,6 +35,7 @@ class Store {
     if (isDbReady() || this._loaded) return;
     this._load();
     this._loaded = true;
+    if (!this._profiles) this._profiles = new Map();
   }
 
   // ── Build userId filter condition ──
@@ -567,6 +569,7 @@ class Store {
       const data = {
         conversations: Array.from(this.conversations.entries()),
         documents: Array.from(this.documents.entries()),
+        profiles: this._profiles ? Array.from(this._profiles.entries()) : [],
       };
       fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
     } catch (e) {
@@ -581,6 +584,8 @@ class Store {
         const data = JSON.parse(raw);
         if (data.conversations) this.conversations = new Map(data.conversations);
         if (data.documents) this.documents = new Map(data.documents);
+        if (data.profiles) this._profiles = new Map(data.profiles);
+        if (!this._profiles) this._profiles = new Map();
       }
     } catch (e) {
       /* start fresh */
