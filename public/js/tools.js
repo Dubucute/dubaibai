@@ -414,6 +414,11 @@ function clientSideDetect(text) {
   if (phraseDensity > 0.08) { totalScore += 30; signals.push('High AI phrasing density'); }
   else if (phraseDensity > 0.04) { totalScore += 15; }
 
+  // Em dash penalty — common AI writing marker
+  const emDashCount = (text.match(/\u2014/g)||[]).length;
+  if (emDashCount > 2) { totalScore += 15; signals.push('Excessive em dash usage'); }
+  else if (emDashCount > 0) { totalScore += 5; }
+
   // Vocabulary diversity
   const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
   const uniqueRatio = new Set(words).size / Math.max(words.length, 1);
