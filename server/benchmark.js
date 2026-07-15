@@ -42,11 +42,13 @@ function loadLocalRanked() {
 function fetchRanked(forceRefresh = false) {
   return new Promise((resolve, reject) => {
     if (!forceRefresh && _cache && Date.now() - _lastFetch < FETCH_INTERVAL) {
+      console.log(`  📦 Using cached benchmark data (${_cache.data?.length || 0} models)`);
       return resolve(_cache);
     }
 
     // Try proxy first, fall back to local file
     const url = `${PROXY_URL}/v1/models/ranked?limit=50`;
+    console.log(`  🔄 Fetching ranked models from ${url}`);
     https.get(url, { headers: { "Accept": "application/json" } }, (res) => {
       let body = "";
       res.on("data", (d) => (body += d));

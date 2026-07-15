@@ -966,11 +966,14 @@ const BENCHMARK_OVERRIDES = {};
 
 async function initBenchmarks() {
   try {
+    console.log("  🔄 initBenchmarks: Starting benchmark initialization...");
     await fetchRanked();
+    console.log("  🔄 initBenchmarks: fetchRanked completed");
 
     // Build rank-ordered chains for each task type
     const tasks = ["fast", "chat", "code", "reasoning", "websearch"];
     const registry = new Set(Object.keys(getAllModels()));
+    console.log(`  🔄 initBenchmarks: Registry has ${registry.size} models`);
 
     for (const task of tasks) {
       const chain = buildChain(task, { limit: 8 });
@@ -984,11 +987,14 @@ async function initBenchmarks() {
             .map((m) => m.split("/").pop())
             .join(" → ")}...`,
         );
+      } else {
+        console.warn(`  ⚠️ ${task}: Not enough valid models in chain (${validChain.length})`);
       }
     }
     console.log("  ✅ Rank-driven chains loaded from benchmark data");
   } catch (e) {
     console.warn(`  ⚠️ Benchmark init failed (using hardcoded chains): ${e.message}`);
+    console.error(e.stack);
   }
 }
 
