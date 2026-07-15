@@ -1945,6 +1945,24 @@ window.selectConversation = async function (id, silent = false) {
       showWelcomeMessage();
     }
   } catch (e) {
+    // Stale conversation (created before DB was connected) — auto-create fresh
+    if (e.message === "Conversation not found") {
+      // Create a new conversation to replace the stale one
+      try {
+        const newConvo = await AgentAPI.createConversation("New Chat");
+        currentConversationId = newConvo.id;
+        localStorage.setItem("dubu_last_convo_id", newConvo.id);
+        showWelcomeMessage();
+        agentHistory = [];
+        loadConversationList();
+        if (!silent) {
+          showToast("Started new conversation (previous one was lost)", "info", 3000);
+        }
+        return;
+      } catch (createErr) {
+        // Fall through to error
+      }
+    }
     if (!silent) {
       showToast("Failed to load conversation: " + e.message, "error");
     }

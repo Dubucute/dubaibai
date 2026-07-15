@@ -294,8 +294,30 @@ window.AgentAPI = {
         model: message.model,
       }),
     });
+    if (r.status === 404) {
+      // Conversation doesn't exist (stale ID from before DB was connected).
+      // Auto-create a new conversation, save message to it, and update
+      // currentConversationId so app.js doesn't keep using the stale ID.
+      const newConvo = await this.createConversation(message.role === "user" ? message.content.slice(0, 40) : "New Chat");
+      const r2 = await fetch(`/api/conversations/${newConvo.id}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({
+          role: message.role,
+          content: message.content,
+          model: message.model,
+        }),
+      });
+      if (!r2.ok) throw new Error("Failed to add message to new conversation");
+      // Update the global currentConversationId so app.js stays in sync
+      if (window.currentConversationId !== undefined) {
+        window.currentConversationId = newConvo.id;
+      }
+      localStorage.setItem("dubu_last_convo_id", newConvo.id);
+      return { ...newConvo, _newId: newConvo.id };
+    }
     if (!r.ok) throw new Error("Failed to add message");
-    return (await r.json()).conversation;
+    return {};
   },
 
   /**
