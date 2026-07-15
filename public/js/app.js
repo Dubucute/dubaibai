@@ -2023,14 +2023,6 @@ function showWelcomeMessage() {
 }
 
 // ── Custom Model Dropdown ──
-const QUICK_PRESETS = [
-  { id: "", label: "Auto", icon: "", name: "Auto-Select" },
-  { id: "deepseek-ai/deepseek-v4-flash", label: "DeepSeek Flash", icon: "", name: "DeepSeek V4 Flash" },
-  { id: "nvidia/llama-3.3-nemotron-super-49b-v1.5", label: "Nemotron 49B", icon: "", name: "Nemotron Super 49B" },
-  { id: "deepseek-ai/deepseek-v4-pro", label: "DeepSeek Pro", icon: "", name: "DeepSeek V4 Pro" },
-  { id: "microsoft/phi-4-mini-instruct", label: "Phi-4 Mini", icon: "", name: "Phi-4 Mini" },
-];
-
 function updateModelDropdownTrigger() {
   const currentId = state.get("agentModel") || "";
   const triggerIcon = document.getElementById("mdTriggerIcon");
@@ -2262,9 +2254,29 @@ function renderDropdownContent(filter = "") {
   
   const list = document.getElementById("mdList");
   let listHtml = "";
+  
+  // Render Auto-Select first, outside any group
+  const autoModel = filtered.find(m => m.id === "");
+  const otherModels = filtered.filter(m => m.id !== "");
+  
+  if (autoModel) {
+    const isActive = autoModel.id === currentId;
+    const checkHtml = `<div class="md-item-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+    listHtml += `<div class="md-item ${isActive ? "active" : ""}" data-model="${autoModel.id}" onclick="selectModelFromDropdown('${autoModel.id}')">
+      <span class="md-item-icon">${autoModel.icon || ""}</span>
+      <div class="md-item-info">
+        <div class="md-item-name">${escHtml(autoModel.name)}</div>
+      </div>
+      ${checkHtml}
+    </div>`;
+  }
+  
   sortedGroups.forEach(([groupName, models]) => {
+    // Skip models with empty id (already rendered as Auto-Select)
+    const groupModels = models.filter(m => m.id !== "");
+    if (groupModels.length === 0) return;
     listHtml += `<div class="md-group-label">${escHtml(groupName)}</div>`;
-    models.forEach(m => {
+    groupModels.forEach(m => {
       const isActive = m.id === currentId;
       const modelIdDisplay = m.id ? `<div class="md-item-id">${escHtml(m.id)}</div>` : "";
       const checkHtml = `<div class="md-item-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
