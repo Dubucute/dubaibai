@@ -1448,6 +1448,18 @@ function formatMessageHtml(content) {
       return `<img src="${src}" alt="${escHtml(alt)}" class="msg-image" loading="lazy">`;
     return m;
   });
+
+  // ── Markdown links [text](url) → <a> ──
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text, url) => {
+    // Strip any markdown bold/italic from the link text
+    const cleanText = text.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1");
+    if (url.startsWith("http") || url.startsWith("#")) {
+      return `<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">${cleanText}</a>`;
+    }
+    return m;
+  });
+
+  // ── Bare URLs → <a> ──
   html = html.replace(
     /(https?:\/\/[^\s<]+)/g,
     '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">$1</a>',
