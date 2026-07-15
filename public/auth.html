@@ -34,11 +34,11 @@
       .auth-card {
         width: 100%;
         max-width: 420px;
-        background: var(--bg-secondary);
-        border: 1px solid var(--border);
+        background: var(--surface-bg);
+        border: 1px solid var(--border-color);
         border-radius: 16px;
         padding: 40px 36px;
-        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+        box-shadow: var(--glass-shadow, 0 8px 40px rgba(0, 0, 0, 0.15));
         animation: auth-fade-in 0.35s ease;
       }
 
@@ -76,7 +76,7 @@
         display: flex;
         gap: 0;
         margin-bottom: 24px;
-        background: var(--bg-tertiary, rgba(128, 128, 128, 0.08));
+        background: var(--hover-bg);
         border-radius: 10px;
         padding: 4px;
       }
@@ -96,7 +96,7 @@
       }
 
       .auth-tab.active {
-        background: var(--bg-secondary);
+        background: var(--surface-bg);
         color: var(--text-primary);
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
       }
@@ -126,9 +126,9 @@
 
       .auth-field input {
         padding: 10px 14px;
-        border: 1px solid var(--border);
+        border: 1px solid var(--border-color);
         border-radius: 10px;
-        background: var(--bg-primary);
+        background: var(--input-bg, var(--bg-primary));
         color: var(--text-primary);
         font-size: 15px;
         font-family: inherit;
@@ -138,7 +138,7 @@
 
       .auth-field input:focus {
         border-color: var(--accent);
-        box-shadow: 0 0 0 3px var(--accent-transparent, rgba(99, 102, 241, 0.15));
+        box-shadow: 0 0 0 3px var(--accent-glow);
       }
 
       .auth-field input::placeholder {
@@ -196,22 +196,22 @@
 
       .auth-message.success {
         display: block;
-        background: rgba(34, 197, 94, 0.1);
-        border: 1px solid rgba(34, 197, 94, 0.25);
-        color: #22c55e;
+        background: var(--success-glow);
+        border: 1px solid rgba(var(--success-rgb, 34, 197, 94), 0.25);
+        color: var(--success);
       }
 
       .auth-message.error {
         display: block;
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.25);
-        color: #ef4444;
+        background: var(--danger-glow);
+        border: 1px solid rgba(var(--danger-rgb, 239, 68, 68), 0.25);
+        color: var(--danger);
       }
 
       .auth-message.info {
         display: block;
-        background: rgba(99, 102, 241, 0.1);
-        border: 1px solid rgba(99, 102, 241, 0.25);
+        background: var(--accent-muted);
+        border: 1px solid rgba(var(--accent-rgb, 99, 102, 241), 0.25);
         color: var(--accent);
       }
 
