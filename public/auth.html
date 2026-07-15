@@ -420,7 +420,7 @@
 
     <script>
       // ── Supabase client initialization (fetched from server so no hardcoded secrets) ──
-      let supabase = null;
+      let supabaseClient = null;
       let supabaseReady = false;
 
       async function initSupabase() {
@@ -428,7 +428,7 @@
           const resp = await fetch("/api/auth/status");
           const config = await resp.json();
           if (config.enabled && config.supabaseUrl && config.supabasePublishableKey) {
-            supabase = window.supabase.createClient(
+            supabaseClient = window.supabase.createClient(
               config.supabaseUrl,
               config.supabasePublishableKey
             );
@@ -563,7 +563,7 @@
         setLoading("loginForm", true);
 
         try {
-          const { data, error } = await supabase.auth.signInWithPassword({
+          const { data, error } = await supabaseClient.auth.signInWithPassword({
             email,
             password,
           });
@@ -618,7 +618,7 @@
         setLoading("signupForm", true);
 
         try {
-          const { data, error } = await supabase.auth.signUp({
+          const { data, error } = await supabaseClient.auth.signUp({
             email,
             password,
           });
