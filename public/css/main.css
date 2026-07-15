@@ -987,54 +987,6 @@ body {
   flex-shrink: 0;
 }
 
-/* ===== Quick Select Row ===== */
-.md-quick-section {
-  flex-shrink: 0;
-}
-
-.md-quick-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 2px 10px 6px;
-}
-
-.md-quick-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 4px 9px;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 10px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  font-family: inherit;
-  white-space: nowrap;
-  user-select: none;
-}
-
-.md-quick-btn:hover {
-  background: var(--hover-bg);
-  color: var(--text-secondary);
-  border-color: var(--border-color-strong);
-  transform: translateY(-1px);
-}
-
-.md-quick-btn:active {
-  transform: translateY(0) scale(0.96);
-}
-
-.md-quick-btn.active {
-  background: var(--accent-muted);
-  color: var(--accent);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent-glow);
-}
-
 /* ===== Model List ===== */
 .md-all-section {
   flex: 1;
@@ -1134,10 +1086,6 @@ body {
   color: var(--text-muted);
   padding: 10px 12px 3px;
   opacity: 0.5;
-  position: sticky;
-  top: 0;
-  background: var(--glass-bg);
-  z-index: 1;
 }
 
 /* Empty state */

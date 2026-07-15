@@ -2096,11 +2096,6 @@ window.selectModelFromDropdown = function (id) {
   updateModelDropdownTrigger();
   closeModelDropdown();
   
-  // Update quick presets active state
-  document.querySelectorAll(".md-quick-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.model === id);
-  });
-  
   // Update list items active state
   document.querySelectorAll(".md-item").forEach(item => {
     item.classList.toggle("active", item.dataset.model === id);
@@ -2218,20 +2213,8 @@ function renderDropdownContent(filter = "") {
   const currentId = state.get("agentModel") || "";
   const q = filter.toLowerCase().trim();
   
-  // Always show quick presets when not filtering
-  const quickList = document.getElementById("mdQuickList");
-  const quickSection = document.getElementById("mdQuickSection");
   const allSection = document.getElementById("mdAllSection");
   const emptyEl = document.getElementById("mdEmpty");
-  
-  if (!q) {
-    quickSection.style.display = "";
-    quickList.innerHTML = QUICK_PRESETS
-      .map(p => `<button class="md-quick-btn ${p.id === currentId ? "active" : ""}" data-model="${p.id}" onclick="selectModelFromDropdown('${p.id}')">${p.label}</button>`)
-      .join("");
-  } else {
-    quickSection.style.display = "none";
-  }
   
   // Render all models
   const models = loadedModels.length > 0 ? loadedModels : [
@@ -2246,9 +2229,6 @@ function renderDropdownContent(filter = "") {
         (m.group || "").toLowerCase().includes(q)
       )
     : models;
-  
-  // ── Setup quick preset tooltips ──
-  setupTooltipListeners(quickList.querySelectorAll(".md-quick-btn"));
   
   // Show empty state if no models match
   if (filtered.length === 0) {
