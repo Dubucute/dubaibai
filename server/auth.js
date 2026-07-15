@@ -28,30 +28,6 @@ const supabase = getSupabaseAdmin();
 const AUTH_ENABLED = !!supabase;
 
 /**
- * Sign up a new user with email + password.
- * Supabase sends a confirmation email automatically.
- */
-async function signUp(email, password) {
-  if (!AUTH_ENABLED) {
-    return { error: "Authentication is not configured on this server." };
-  }
-  const { data, error } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true, // Requires email confirmation
-  });
-  if (error) return { error: error.message };
-  return {
-    user: {
-      id: data.user.id,
-      email: data.user.email,
-      created_at: data.user.created_at,
-    },
-    message: "Account created! Check your email for the confirmation link.",
-  };
-}
-
-/**
  * Sign in with email + password.
  * Returns a session token if email is confirmed.
  */
@@ -156,7 +132,6 @@ function requireAuth(req, res, next) {
 module.exports = {
   supabase,
   AUTH_ENABLED,
-  signUp,
   signIn,
   getSessionUser,
   authMiddleware,
