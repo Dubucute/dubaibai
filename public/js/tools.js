@@ -239,153 +239,84 @@ window.updateResultWordCount = function(text) {
   }
 };
 
-// ── AI Content Detection (heuristic analysis) ──
-// Analyzes text patterns to estimate AI-generated content probability.
-// No external API calls — runs entirely client-side.
-window.analyzeAIContent = function(text) {
-  if (!text || text.trim().length < 20) {
-    return { aiScore: 0, refinedScore: 0, humanScore: 0, aiLevel: 'low', signals: [] };
-  }
-
-  const signals = [];
-  let totalScore = 0;
-
-  // Signal 1: Burstiness (sentence length variance)
-  // AI text tends to have more uniform sentence lengths
-  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 3);
-  if (sentences.length >= 3) {
-    const lengths = sentences.map(s => s.trim().split(/\s+/).length);
-    const avg = lengths.reduce((a, b) => a + b, 0) / lengths.length;
-    const variance = lengths.reduce((sum, l) => sum + Math.pow(l - avg, 2), 0) / lengths.length;
-    const stdDev = Math.sqrt(variance);
-    const burstiness = stdDev / avg; // lower = more uniform = more AI-like
-    if (burstiness < 0.35) {
-      totalScore += 25;
-      signals.push('Uniform sentence length (low burstiness)');
-    } else if (burstiness < 0.5) {
-      totalScore += 12;
-      signals.push('Moderately varied sentence length');
-    } else {
-      totalScore -= 10;
-      signals.push('Natural variation in sentence length');
-    }
-  }
-
-  // Signal 2: Common AI transition words & phrases
-  const aiPhrases = [
-    'delve', 'crucial', 'landscape', 'navigate', 'the realm of',
-    'aforementioned', 'paramount', 'quintessential', 'leverage',
-    'in summary', 'it is important to note', 'it is worth noting',
-    'overall,', 'in conclusion,', 'comprehensive', 'multifaceted',
-    'ever-evolving', 'dynamic landscape', 'cutting-edge',
-    'game-changer', 'groundbreaking', 'transformative',
-    'in today\'s digital', 'in the modern', 'robust', 'streamline',
-    'facilitate', 'underscores', 'in essence', 'as previously mentioned',
-    'it is crucial', 'it is essential', 'it is imperative',
-    'when it comes to', 'not only', 'but also', 'the importance of',
-    'a wide range of', 'a variety of', 'numerous', 'plethora',
-    'first and foremost', 'in order to', 'due to the fact that'
-  ];
-  const lowerText = text.toLowerCase();
-  let phraseHits = 0;
-  aiPhrases.forEach(p => {
-    const regex = new RegExp(p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    const matches = (lowerText.match(regex) || []).length;
-    phraseHits += matches;
-  });
-  const phraseDensity = phraseHits / Math.max(text.split(/\s+/).length, 1);
-  if (phraseDensity > 0.08) {
-    totalScore += 30;
-    signals.push('High density of AI-favored phrasing');
-  } else if (phraseDensity > 0.04) {
-    totalScore += 15;
-    signals.push('Moderate AI phrasing patterns');
-  } else {
-    totalScore -= 5;
-  }
-
-  // Signal 3: Repetition of words and bigrams
-  const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  const uniqueRatio = new Set(words).size / Math.max(words.length, 1);
-  if (uniqueRatio < 0.35) {
-    totalScore += 20;
-    signals.push('High word repetition');
-  } else if (uniqueRatio < 0.50) {
-    totalScore += 8;
-    signals.push('Moderate vocabulary diversity');
-  } else {
-    totalScore -= 8;
-    signals.push('Rich vocabulary diversity');
-  }
-
-  // Signal 4: Transition word frequency
-  const transitionWords = [
-    'however', 'therefore', 'furthermore', 'moreover', 'consequently',
-    'additionally', 'subsequently', 'nevertheless', 'nonetheless',
-    'meanwhile', 'accordingly', 'thus', 'hence', 'thereby',
-    'ultimately', 'specifically', 'particularly', 'notably', 'namely'
-  ];
-  let transCount = 0;
-  transitionWords.forEach(w => {
-    transCount += (lowerText.match(new RegExp('\\b' + w + '\\b', 'gi')) || []).length;
-  });
-  const transDensity = transCount / Math.max(text.split(/\s+/).length, 1);
-  if (transDensity > 0.06) {
-    totalScore += 15;
-    signals.push('High transition word usage');
-  } else if (transDensity > 0.03) {
-    totalScore += 5;
-  }
-
-  // Signal 5: Paragraph structure consistency
-  const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 10);
-  if (paragraphs.length >= 2) {
-    const paraLengths = paragraphs.map(p => p.split(/\s+/).length);
-    const paraAvg = paraLengths.reduce((a, b) => a + b, 0) / paraLengths.length;
-    const paraVariance = paraLengths.reduce((sum, l) => sum + Math.pow(l - paraAvg, 2), 0) / paraLengths.length;
-    const paraStdDev = Math.sqrt(paraVariance);
-    const paraBurstiness = paraStdDev / paraAvg;
-    if (paraBurstiness < 0.3) {
-      totalScore += 10;
-      signals.push('Uniform paragraph lengths');
-    } else {
-      totalScore -= 5;
-    }
-  }
-
-  // Normalize score to percentage (range -28 to 100 mapped to 0-100)
-  const rawScore = Math.max(0, Math.min(100, ((totalScore + 28) / 128) * 100));
-
-  // Split into AI-generated, AI-refined, human
-  let aiScore, refinedScore, humanScore, aiLevel;
-  if (rawScore > 65) {
-    aiScore = Math.round(rawScore);
-    refinedScore = Math.round((100 - rawScore) * 0.3);
-    humanScore = 100 - aiScore - refinedScore;
-    aiLevel = 'high';
-  } else if (rawScore > 35) {
-    aiScore = Math.round(rawScore * 0.6);
-    refinedScore = Math.round(rawScore * 0.3);
-    humanScore = 100 - aiScore - refinedScore;
-    aiLevel = 'medium';
-  } else {
-    aiScore = Math.round(rawScore * 0.15);
-    refinedScore = Math.round(rawScore * 0.1);
-    humanScore = 100 - aiScore - refinedScore;
-    aiLevel = 'low';
-  }
-
-  return { aiScore, refinedScore, humanScore, aiLevel, signals: signals.slice(0, 4) };
-};
-
-// ── Show AI Detection Modal ──
-window.showAIDetection = function(text) {
-  const result = analyzeAIContent(text);
-
+// ── AI Content Detection (server-side via HuggingFace / NIM fallback) ──
+window.analyzeAIContent = async function(text) {
   // Remove existing detection overlay
   const existing = document.querySelector('.ai-detection-overlay');
   if (existing) existing.remove();
 
+  // Show loading state
+  showAIDetectionModal({ loading: true, text });
+
+  try {
+    const resp = await fetch('/api/detect-ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text || '' }),
+    });
+    if (!resp.ok) throw new Error('Detection service unavailable');
+    const result = await resp.json();
+    // Update the modal with real results
+    showAIDetectionModal(result);
+  } catch (e) {
+    // Show error state in modal
+    showAIDetectionModal({ error: e.message, text });
+  }
+};
+
+// ── Show AI Detection Modal (handles loading/result/error states) ──
+window.showAIDetectionModal = function(state) {
+  // Remove existing detection overlay
+  const existing = document.querySelector('.ai-detection-overlay');
+  if (existing) existing.remove();
+
+  if (state.loading) {
+    // Loading state
+    const overlay = document.createElement('div');
+    overlay.className = 'ai-detection-overlay';
+    overlay.innerHTML = `
+      <div class="ai-detection-dialog">
+        <div class="ai-detection-header">
+          <span class="ai-detection-title">AI Content Detection</span>
+          <button class="ai-detection-close" onclick="closeAIDetection()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="ai-detection-body" style="text-align:center;padding:48px 20px">
+          <div style="margin-bottom:16px">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="animation:spin 1s linear infinite">
+              <circle cx="20" cy="20" r="16" stroke="rgba(255,255,255,0.06)" stroke-width="3"/>
+              <path d="M36 20a16 16 0 00-16-16" stroke="var(--accent,#818cf8)" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div style="font-size:14px;color:var(--text-secondary,#9494a3)">Analyzing text with AI detector...</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('open'));
+    // Hide loading after 30s timeout
+    setTimeout(() => {
+      const stillOpen = document.querySelector('.ai-detection-overlay');
+      if (stillOpen && stillOpen.querySelector('.ai-detection-body')?.textContent.includes('Analyzing')) {
+        closeAIDetection();
+      }
+    }, 30000);
+    return;
+  }
+
+  if (state.error) {
+    // Error state — fall back to client heuristic
+    const result = clientSideDetect(state.text);
+    renderAIDetectionModal(result);
+    return;
+  }
+
+  // Success state
+  renderAIDetectionModal(state);
+};
+
+function renderAIDetectionModal(result) {
   const overlay = document.createElement('div');
   overlay.className = 'ai-detection-overlay';
   overlay.innerHTML = `
@@ -393,9 +324,7 @@ window.showAIDetection = function(text) {
       <div class="ai-detection-header">
         <span class="ai-detection-title">AI Content Detection</span>
         <button class="ai-detection-close" onclick="closeAIDetection()">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
       </div>
       <div class="ai-detection-body">
@@ -407,22 +336,22 @@ window.showAIDetection = function(text) {
                 <circle cx="36" cy="36" r="31" fill="none" stroke="${result.aiScore > 70 ? '#ef4444' : result.aiScore > 40 ? '#f59e0b' : '#22c55e'}" stroke-width="6" stroke-linecap="round"
                   stroke-dasharray="${(result.aiScore / 100) * 194.78} 194.78" transform="rotate(-90 36 36)"/>
               </svg>
-              <span class="ai-score-value">${result.aiScore}%</span>
+              <span class="ai-score-value">${Math.round(result.aiScore)}%</span>
             </div>
             <div class="ai-score-label">AI-generated</div>
           </div>
           <div class="ai-sub-scores">
             <div class="ai-sub-score">
               <div class="ai-sub-bar">
-                <div class="ai-sub-fill" style="width:${result.refinedScore}%;background:#a78bfa"></div>
+                <div class="ai-sub-fill" style="width:${Math.round(result.refinedScore || 0)}%;background:#a78bfa"></div>
               </div>
-              <div class="ai-sub-label">${result.refinedScore}% Human-written & AI-refined</div>
+              <div class="ai-sub-label">${Math.round(result.refinedScore || 0)}% Human-written & AI-refined</div>
             </div>
             <div class="ai-sub-score">
               <div class="ai-sub-bar">
-                <div class="ai-sub-fill" style="width:${result.humanScore}%;background:#22c55e"></div>
+                <div class="ai-sub-fill" style="width:${Math.round(result.humanScore)}%;background:#22c55e"></div>
               </div>
-              <div class="ai-sub-label">${result.humanScore}% Human-written</div>
+              <div class="ai-sub-label">${Math.round(result.humanScore)}% Human-written</div>
             </div>
           </div>
         </div>
@@ -436,7 +365,75 @@ window.showAIDetection = function(text) {
           </span>
         </div>
 
-        ${result.aiLevel === 'high' ? '<div class="ai-detection-cta">Want your text to sound more authentic? Try the <a href="https://quillbot.com/paraphrasing-tool" target="_blank" rel="noopener" style="color:var(--accent,#818cf8);text-decoration:underline">Paraphraser tool</a>.</div>' : ''}
+        <div style="margin-bottom:12px;font-size:11px;color:var(--text-muted,#6b6b80)">
+          Detected via ${result.source === 'huggingface' ? 'RoBERTa OpenAI Detector' : result.source === 'nim-fallback' ? 'NVIDIA NIM LLM analysis' : result.source === 'estimated' ? 'Estimated (service unavailable)' : 'Client-side analysis'}
+        </div>
+
+        ${result.aiLevel === 'high' || result.aiScore > 60 ? '<div class="ai-detection-cta">Want your text to sound more authentic? Try the <a href="https://quillbot.com/paraphrasing-tool" target="_blank" rel="noopener" style="color:var(--accent,#818cf8);text-decoration:underline">Paraphraser tool</a>.</div>' : ''}
+
+        ${result.sample ? `
+        <div class="ai-detection-sample">
+          <div class="ai-sample-header" style="color:${result.aiLevel === 'high' ? '#ef4444' : result.aiLevel === 'medium' ? '#f59e0b' : '#22c55e'}">Analyzed text</div>
+          <div class="ai-sample-text">${escHtml(result.sample)}</div>
+        </div>` : ''}
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('open'));
+}
+
+// ── Client-side fallback (when server is unreachable) ──
+function clientSideDetect(text) {
+  if (!text || text.trim().length < 20) {
+    return { aiScore: 0, refinedScore: 0, humanScore: 100, aiLevel: 'low', signals: [], sample: text };
+  }
+
+  let totalScore = 0;
+  const signals = [];
+
+  // Burstiness
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 3);
+  if (sentences.length >= 3) {
+    const lengths = sentences.map(s => s.trim().split(/\s+/).length);
+    const avg = lengths.reduce((a, b) => a + b, 0) / lengths.length;
+    const variance = lengths.reduce((sum, l) => sum + Math.pow(l - avg, 2), 0) / lengths.length;
+    const burstiness = Math.sqrt(variance) / avg;
+    if (burstiness < 0.35) { totalScore += 25; signals.push('Uniform sentence length'); }
+    else if (burstiness < 0.5) { totalScore += 12; }
+    else { totalScore -= 10; signals.push('Natural sentence variation'); }
+  }
+
+  // AI phrasing
+  const aiPhrases = ['delve','crucial','landscape','navigate','paramount','leverage','ever-evolving','game-changer','groundbreaking','transformative','facilitate','underscores','plethora'];
+  const lower = text.toLowerCase();
+  let phraseHits = 0;
+  aiPhrases.forEach(p => { phraseHits += (lower.match(new RegExp(p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'))||[]).length; });
+  const phraseDensity = phraseHits / Math.max(text.split(/\s+/).length, 1);
+  if (phraseDensity > 0.08) { totalScore += 30; signals.push('High AI phrasing density'); }
+  else if (phraseDensity > 0.04) { totalScore += 15; }
+
+  // Vocabulary diversity
+  const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  const uniqueRatio = new Set(words).size / Math.max(words.length, 1);
+  if (uniqueRatio < 0.35) { totalScore += 20; signals.push('High word repetition'); }
+  else if (uniqueRatio < 0.50) { totalScore += 8; }
+  else { totalScore -= 8; }
+
+  const raw = Math.max(0, Math.min(100, ((totalScore + 28) / 128) * 100));
+  let aiScore, refinedScore, humanScore, aiLevel;
+  if (raw > 65) { aiScore = Math.round(raw); refinedScore = Math.round((100-raw)*0.3); humanScore = 100-aiScore-refinedScore; aiLevel = 'high'; }
+  else if (raw > 35) { aiScore = Math.round(raw*0.6); refinedScore = Math.round(raw*0.3); humanScore = 100-aiScore-refinedScore; aiLevel = 'medium'; }
+  else { aiScore = Math.round(raw*0.15); refinedScore = Math.round(raw*0.1); humanScore = 100-aiScore-refinedScore; aiLevel = 'low'; }
+
+  return { aiScore, refinedScore, humanScore, aiLevel, signals: signals.slice(0,4), source: 'client', sample: text.length > 200 ? text.slice(0,200)+'...' : text };
+}
+
+// ── Legacy wrapper (kept for backward compat, now async) ──
+window.showAIDetection = async function(text) {
+  await window.analyzeAIContent(text);
+};
 
         <div class="ai-detection-sample">
           <div class="ai-sample-header">AI-generated · ${result.aiLevel === 'high' ? 'High' : result.aiLevel === 'medium' ? 'Medium' : 'Low'}</div>

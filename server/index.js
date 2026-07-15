@@ -184,6 +184,21 @@ app.post("/api/detect", (req, res) => {
   res.json(intent);
 });
 
+// ── API: AI Content Detection ──
+const { detectAIContent } = require("./detect");
+app.post("/api/detect-ai", async (req, res) => {
+  const { text } = req.body;
+  if (!text || typeof text !== "string") {
+    return res.status(400).json({ error: "Text is required" });
+  }
+  try {
+    const result = await detectAIContent(text, req.headers["x-api-key"] || CONFIG.apiKey);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── API: List tools ──
 app.get("/api/tools", (req, res) => {
   res.json({ tools: listTools() });
