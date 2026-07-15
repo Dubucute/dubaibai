@@ -1428,6 +1428,36 @@ function formatMessageHtml(content) {
     return '<ol>' + items.map(content => '<li>' + content + '</li>').join('') + '</ol>';
   });
 
+  // ── Inline images ![](url) — before bold to avoid conflicts ──
+  html = html.replace(/!\[(.*?)\]\((.*?)\)/g, (m, alt, src) => {
+    if (src.startsWith("data:") || src.startsWith("http"))
+      return `<img src="${src}" alt="${escHtml(alt)}" class="msg-image" loading="lazy">`;
+    return m;
+  });
+
+  // ── Markdown links [text](url) → <a> (before bold so ** doesn't break them) ──
+  // Also handles inverted case [url](text) where AI puts URL in brackets
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, bracket, paren) => {
+    // Strip any markdown bold/italic from both parts
+    const cleanBracket = bracket.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1");
+    const cleanParen = paren.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1");
+    // Standard: [text](url) — paren has the URL
+    if (cleanParen.startsWith("http") || cleanParen.startsWith("#")) {
+      return `<a href="${cleanParen}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">${cleanBracket}</a>`;
+    }
+    // Inverted: [url](text) — bracket has the URL
+    if (cleanBracket.startsWith("http")) {
+      return `<a href="${cleanBracket}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">${cleanParen}</a>`;
+    }
+    return m;
+  });
+
+  // ── Bare URLs → <a> (exclude " and ' to avoid matching inside href/src attributes) ──
+  html = html.replace(
+    /(https?:\/\/[^\s<"'>]+)/g,
+    '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">$1</a>',
+  );
+
   // ── Bold ──
   html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 
@@ -1442,28 +1472,6 @@ function formatMessageHtml(content) {
   // ── Convert \n to <br> for ALL remaining text ──
   // This runs BEFORE restoring code blocks, so code blocks keep their \n
   html = html.replace(/\n/g, "<br>");
-
-  html = html.replace(/!\[(.*?)\]\((.*?)\)/g, (m, alt, src) => {
-    if (src.startsWith("data:") || src.startsWith("http"))
-      return `<img src="${src}" alt="${escHtml(alt)}" class="msg-image" loading="lazy">`;
-    return m;
-  });
-
-  // ── Markdown links [text](url) → <a> ──
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text, url) => {
-    // Strip any markdown bold/italic from the link text
-    const cleanText = text.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1");
-    if (url.startsWith("http") || url.startsWith("#")) {
-      return `<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">${cleanText}</a>`;
-    }
-    return m;
-  });
-
-  // ── Bare URLs → <a> (exclude " and ' to avoid matching inside href/src attributes) ──
-  html = html.replace(
-    /(https?:\/\/[^\s<"'>]+)/g,
-    '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">$1</a>',
-  );
 
   // ── Phase 4: Restore code & reasoning blocks ──
   // Code blocks are restored AFTER \n→<br>, so they keep their \n characters.
