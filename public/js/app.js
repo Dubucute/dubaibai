@@ -184,18 +184,20 @@ async function checkAuthStatus() {
 
 function updateAuthUI() {
   const btnLabel = document.getElementById("authBtnLabel");
+  const topbarLabel = document.getElementById("topbarAuthLabel");
   const userName = document.getElementById("sbUserName");
   const userStatus = document.getElementById("sbUserStatus");
-  if (!btnLabel || !userName || !userStatus) return;
 
   if (currentUser) {
-    btnLabel.textContent = "Account";
-    userName.textContent = currentUser.email || "User";
-    userStatus.textContent = "Signed in";
+    if (btnLabel) btnLabel.textContent = "Account";
+    if (topbarLabel) topbarLabel.textContent = "Account";
+    if (userName) userName.textContent = currentUser.email || "User";
+    if (userStatus) userStatus.textContent = "Signed in";
   } else {
-    btnLabel.textContent = "Sign In";
-    userName.textContent = "Guest";
-    userStatus.textContent = "NVIDIA NIM";
+    if (btnLabel) btnLabel.textContent = "Sign In";
+    if (topbarLabel) topbarLabel.textContent = "Sign In";
+    if (userName) userName.textContent = "Guest";
+    if (userStatus) userStatus.textContent = "NVIDIA NIM";
   }
 }
 
