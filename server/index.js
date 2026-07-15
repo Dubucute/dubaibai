@@ -569,36 +569,30 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "chat.html"));
 });
 
+// ── Initialize database (runs on Vercel AND local) ──
+// On Vercel serverless, init starts at module load time.
+// The isDbReady() guard in store methods ensures safe fallback to in-memory
+// if the DB connection hasn't completed yet.
+db.initDatabase().catch(() => {
+  /* DB not available — in-memory fallback will be used */
+});
+
 // ── Export for Vercel (serverless) ──
 module.exports = app;
 
 // ── Start (local development only) ──
 // Vercel handles this automatically; we only call listen() when running directly
 if (!process.env.VERCEL) {
-  // Initialize database + load benchmark data before starting
-  Promise.all([
-    db.initDatabase(),
-    initBenchmarks(),
-  ]).then(() => {
-    app.listen(CONFIG.port, () => {
-      console.log(`\n  🚀 Dubu AI v2.1.0 — Unified Agent Platform`);
-      console.log(`  ⚡ Powered by NVIDIA NIM`);
-      console.log(`  🔐 Auth: ${AUTH_ENABLED ? "Supabase (enabled)" : "Disabled"}`);
-      console.log(`  🗄️  DB: ${db.DB_READY ? "PostgreSQL" : "In-memory (JSON file)"}`);
-      console.log(`  🤖 Auto model selection + fallback enabled`);
-      console.log(`  🌐 http://localhost:${CONFIG.port}`);
-      console.log(`  📚 API: http://localhost:${CONFIG.port}/api/health\n`);
-    });
-  }).catch(() => {
-    // Start even if one fails
-    app.listen(CONFIG.port, () => {
-      console.log(`\n  🚀 Dubu AI v2.1.0 — Unified Agent Platform`);
-      console.log(`  ⚡ Powered by NVIDIA NIM`);
-      console.log(`  🔐 Auth: ${AUTH_ENABLED ? "Supabase (enabled)" : "Disabled"}`);
-      console.log(`  🗄️  DB: ${db.DB_READY ? "PostgreSQL" : "In-memory (JSON file)"}`);
-      console.log(`  🤖 Auto model selection + fallback enabled`);
-      console.log(`  🌐 http://localhost:${CONFIG.port}`);
-      console.log(`  📚 API: http://localhost:${CONFIG.port}/api/health\n`);
-    });
+  // Load benchmark data (only needed locally for model routing)
+  initBenchmarks().catch(() => {});
+
+  app.listen(CONFIG.port, () => {
+    console.log(`\n  🚀 Dubu AI v2.1.0 — Unified Agent Platform`);
+    console.log(`  ⚡ Powered by NVIDIA NIM`);
+    console.log(`  🔐 Auth: ${AUTH_ENABLED ? "Supabase (enabled)" : "Disabled"}`);
+    console.log(`  🗄️  DB: ${db.DB_READY ? "PostgreSQL" : "In-memory (JSON file)"}`);
+    console.log(`  🤖 Auto model selection + fallback enabled`);
+    console.log(`  🌐 http://localhost:${CONFIG.port}`);
+    console.log(`  📚 API: http://localhost:${CONFIG.port}/api/health\n`);
   });
 }
