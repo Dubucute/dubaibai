@@ -15,6 +15,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
       /* ── Auth page layout ── */
+      /* These theme CSS classes are set dynamically by the script at the bottom */
+      .theme-dark { --bg-primary: #0a0a0f; --surface-bg: #111118; --text-primary: #e8e8ed; --text-secondary: #9494a3; --text-muted: #5c5c6e; --border-color: rgba(255,255,255,0.06); --hover-bg: rgba(255,255,255,0.04); --input-bg: rgba(255,255,255,0.04); --accent: #6366f1; --accent-rgb: 99,102,241; --accent-glow: rgba(99,102,241,0.15); --accent-muted: rgba(99,102,241,0.1); --success: #22c55e; --success-rgb: 34,197,94; --success-glow: rgba(34,197,94,0.2); --danger: #ef4444; --danger-rgb: 239,68,68; --danger-glow: rgba(239,68,68,0.2); --glass-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+      .theme-light { --bg-primary: #f8f8fa; --surface-bg: #ffffff; --text-primary: #1a1a24; --text-secondary: #5c5c6e; --text-muted: #9494a3; --border-color: rgba(0,0,0,0.08); --hover-bg: rgba(0,0,0,0.03); --input-bg: rgba(0,0,0,0.02); --accent: #6366f1; --accent-rgb: 99,102,241; --accent-glow: rgba(99,102,241,0.12); --accent-muted: rgba(99,102,241,0.08); --success: #16a34a; --success-rgb: 22,163,74; --success-glow: rgba(22,163,74,0.15); --danger: #dc2626; --danger-rgb: 220,38,38; --danger-glow: rgba(220,38,38,0.15); --glass-shadow: 0 8px 32px rgba(0,0,0,0.06); }
       html, body {
         height: 100%;
         margin: 0;
@@ -332,7 +335,18 @@
       }
     </style>
   </head>
-  <body>
+  <body class="theme-dark">
+    <script>
+      // Apply saved theme immediately to prevent white flash
+      (function() {
+        try {
+          const saved = localStorage.getItem("dubu_theme");
+          if (saved && ["dark","light","midnight","slate","emerald","ruby"].includes(saved)) {
+            document.body.className = "theme-" + saved;
+          }
+        } catch(e) {}
+      })();
+    </script>
     <div class="auth-page">
       <div class="auth-card">
         <!-- Logo -->
