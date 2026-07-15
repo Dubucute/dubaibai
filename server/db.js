@@ -16,39 +16,47 @@ const DB_ENABLED = !!DATABASE_URL;
 
 let pool = null;
 let DB_READY = false;
+let _initPromise = null;
 
 /**
  * Initialize the database pool and create tables if they don't exist.
  * Sets DB_READY to true on success.
+ * Safe to call multiple times — returns the same promise if already running.
  */
 async function initDatabase() {
   if (!DB_ENABLED) {
     console.log("  📄 No DATABASE_URL set — using in-memory store");
     return;
   }
+  // Guard: return existing promise if already initializing
+  if (_initPromise) return _initPromise;
 
-  try {
-    pool = new Pool({
-      connectionString: DATABASE_URL,
-      max: 10,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
-    });
+  _initPromise = (async () => {
+    try {
+      pool = new Pool({
+        connectionString: DATABASE_URL,
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000,
+      });
 
-    // Test the connection
-    const client = await pool.connect();
-    await client.query("SELECT 1");
-    client.release();
+      // Test the connection
+      const client = await pool.connect();
+      await client.query("SELECT 1");
+      client.release();
 
-    // Create tables
-    await createTables();
-    DB_READY = true;
-    console.log("  🗄️  PostgreSQL connected — tables ready");
-  } catch (e) {
-    console.warn("  ⚠️  PostgreSQL connection failed:", e.message);
-    console.log("  📄 Falling back to in-memory store");
-    pool = null;
-  }
+      // Create tables
+      await createTables();
+      DB_READY = true;
+      console.log("  🗄️  PostgreSQL connected — tables ready");
+    } catch (e) {
+      console.warn("  ⚠️  PostgreSQL connection failed:", e.message);
+      console.log("  📄 Falling back to in-memory store");
+      pool = null;
+    }
+  })();
+
+  return _initPromise;
 }
 
 /**
