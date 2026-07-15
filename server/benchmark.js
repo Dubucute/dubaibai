@@ -6,20 +6,25 @@
 const https = require("https");
 const fs = require("fs");
 const path = require("path");
+const os = require("os"); // For a writable temp directory on read-only filesystems
 
 const PROXY_URL = process.env.BENCHMARK_PROXY_URL || "https://dubu.alwaysdata.net";
 const FETCH_INTERVAL = 60 * 60 * 1000; // 1 hour
-const LOCAL_RANKED_FILE = path.join(__dirname, "..", "ranked_models_clean.json");
+
+// Use a stable temp path for the canonical ranked models file (writable on Vercel)
+const STABLE_TEMP_PATH = path.join(os.tmpdir(), "ranked_models_clean.json");
+process.env.RANKED_CLEAN_PATH = STABLE_TEMP_PATH;
 
 let _cache = null;
 let _lastFetch = 0;
 
 /**
  * Load ranked models from the local JSON file (fallback).
+ * Uses the stable temp path (writable on Vercel) if available.
  */
 function loadLocalRanked() {
   try {
-    const raw = fs.readFileSync(LOCAL_RANKED_FILE, "utf-8");
+    const raw = fs.readFileSync(STABLE_TEMP_PATH, "utf-8");
     const parsed = JSON.parse(raw);
     console.log(`  📊 Loaded ${parsed.benchmarkedCount || parsed.data?.length || 0} ranked models from local file`);
     return parsed;
@@ -60,7 +65,7 @@ function fetchRanked(forceRefresh = false) {
 
           // Write the raw response to the cleaned JSON file for getAllModels
           const outPath = path.join(__dirname, "..", "ranked_models_clean.json");
-          fs.writeFileSync(outPath, JSON.stringify(_cache, null, 2), "utf-8");
+          fs.writeFileSync(STABLE_TEMP_PATH, JSON.stringify(_cache, null, 2), "utf-8");
           console.log(`  📊 Updated ${outPath} with ${parsed.benchmarkedCount || parsed.data?.length || 0} models`);
           return resolve(_cache);
         } catch (e) {
