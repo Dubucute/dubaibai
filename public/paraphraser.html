@@ -873,11 +873,17 @@
       }
 
       async function runParaphrase() {
-        const text = textarea.value.trim()
-          .replace(/\u2014/g, ', ')
+        // Normalize input spacing first so diff doesn't preserve double spaces
+        const rawText = textarea.value.trim();
+        const text = rawText
+          .replace(/\u2014/g, ',')
+          .replace(/\u2013/g, ',')
           .replace(/\s{2,}/g, ' ')
           .trim();
         if (!text) { showAlert('Please enter some text.', 'Paraphraser'); return; }
+
+        // Also update the textarea to show normalized version
+        if (rawText !== text) textarea.value = text;
 
         const levels = toneLevels[selectedTone];
         const level = levels.find(l => l.id === selectedLevel) || levels[levels.length - 1];
@@ -895,9 +901,13 @@
           lastResult = stripEmojis(cleaned)
             .replace(/\*\*/g, '')        // strip bold markers
             .replace(/\*/g, '')          // strip italic markers
-            .replace(/\u2014/g, ', ')    // replace em dashes with comma+space
+            .replace(/\u2014/g, ',')     // replace em dashes with comma (no trailing space!)
+            .replace(/\u2013/g, ',')     // en dashes too
+            .replace(/\s{2,}/g, ' ')     // collapse ALL double/triple spaces into one
             .replace(/,\s*,/g, ',')      // clean up double commas
-            .replace(/\s{2,}/g, ' ')     // collapse multiple spaces
+            .replace(/\s+,/g, ',')       // remove space before comma
+            .replace(/,\s+/g, ', ')      // ensure single space after comma
+            .replace(/\s{2,}/g, ' ')     // final collapse any remaining
             .trim();
           outputBox.innerHTML = renderDiff(text, lastResult);
           applyInitialDiffVisibility();
