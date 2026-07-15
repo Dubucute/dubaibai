@@ -893,6 +893,8 @@
           const result = await callNIM(level.prompt, text);
           const cleaned = stripPreamble(text, result);
           lastResult = stripEmojis(cleaned)
+            .replace(/\*\*/g, '')        // strip bold markers
+            .replace(/\*/g, '')          // strip italic markers
             .replace(/\u2014/g, ', ')    // replace em dashes with comma+space
             .replace(/,\s*,/g, ',')      // clean up double commas
             .replace(/\s{2,}/g, ' ')     // collapse multiple spaces

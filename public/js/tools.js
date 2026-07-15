@@ -696,8 +696,8 @@ window.mdToHtml = function(text) {
     .replace(/>/g, '&gt;');
   // Bold (**text**)
   s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  // Italic (*text* but not **)
-  s = s.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+  // Italic (*text*) — bold **text** already processed above, so single * pairs are italic
+  s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
   // Inline code
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
   // Links
