@@ -435,18 +435,6 @@ window.showAIDetection = async function(text) {
   await window.analyzeAIContent(text);
 };
 
-        <div class="ai-detection-sample">
-          <div class="ai-sample-header">AI-generated · ${result.aiLevel === 'high' ? 'High' : result.aiLevel === 'medium' ? 'Medium' : 'Low'}</div>
-          <div class="ai-sample-text">${text.length > 300 ? escHtml(text.slice(0, 300)) + '...' : escHtml(text)}</div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(overlay);
-  requestAnimationFrame(() => overlay.classList.add('open'));
-};
-
 window.closeAIDetection = function() {
   const overlay = document.querySelector('.ai-detection-overlay');
   if (overlay) {
