@@ -107,8 +107,19 @@ class NIMClient {
         let buffer = "";
         let hasTokens = false;
 
+        // Per-chunk read timeout: if no data arrives in 15s, abort and try next model
+        const READ_TIMEOUT_MS = 15000;
+        const readWithTimeout = () => {
+          return Promise.race([
+            reader.read(),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Stream stalled — no data for 15s")), READ_TIMEOUT_MS)
+            ),
+          ]);
+        };
+
         while (true) {
-          const { done, value } = await reader.read();
+          const { done, value } = await readWithTimeout();
           if (done) break;
 
           buffer += decoder.decode(value, { stream: true });
@@ -303,25 +314,33 @@ class NIMClient {
       stream: opts.stream || false,
     };
 
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout for initial response
 
-    if (!resp.ok) {
-      const err = await resp.text().catch(() => resp.statusText);
-      throw new Error(`NVIDIA NIM API error ${resp.status}: ${err.slice(0, 200)}`);
+    try {
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      if (!resp.ok) {
+        const err = await resp.text().catch(() => resp.statusText);
+        throw new Error(`NVIDIA NIM API error ${resp.status}: ${err.slice(0, 200)}`);
+      }
+
+      if (opts.stream) {
+        return resp.body;
+      }
+
+      return await resp.json();
+    } finally {
+      clearTimeout(timeout);
     }
-
-    if (opts.stream) {
-      return resp.body;
-    }
-
-    return await resp.json();
   }
 
   async _imageGeneration(model, prompt, opts = {}) {
