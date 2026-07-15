@@ -41,7 +41,7 @@ class Store {
   // ── Build userId filter condition ──
   _userClause(userId) {
     if (userId) {
-      return { text: "user_id = $1", params: [userId] };
+      return { text: "(user_id = $1 OR user_id IS NULL)", params: [userId] };
     }
     return { text: "user_id IS NULL", params: [] };
   }
@@ -135,7 +135,10 @@ class Store {
 
     this._ensureLoaded();
     return Array.from(this.conversations.values())
-      .filter(c => !userId || !c.userId || c.userId === userId)
+      .filter(c => {
+        if (userId) return !c.userId || c.userId === userId;
+        return !c.userId;
+      })
       .sort((a, b) => b.updated - a.updated)
       .map(({ id, title, model, created, updated, messages }) => ({
         id,
