@@ -228,6 +228,7 @@
             html += '<div style="color:var(--text-secondary,#9494a3);font-size:13px;padding:12px 0;margin-top:8px">No issues found — your text looks great!</div>';
           }
           outputBox.innerHTML = html;
+          updateResultWordCount(lastCorrected);
         } catch (e) {
           outputBox.innerHTML = `<div class="qb-placeholder" style="color:#f87171">${e.message}</div>`;
           lastCorrected = '';

@@ -898,6 +898,7 @@
             </button>
           `;
           outputBox.parentElement.appendChild(legend);
+          updateResultWordCount(lastResult);
         } catch (e) {
           outputBox.innerHTML = `<div class="qb-placeholder" style="color:#f87171">${e.message}</div>`;
           lastResult = '';

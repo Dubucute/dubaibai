@@ -217,6 +217,26 @@ window.showResult = function(text) {
     box.innerHTML = renderMarkdown(text);
   }
   document.querySelector('.tool-result')?.classList.add('visible');
+  updateResultWordCount(text);
+};
+
+// ── Update word count to reflect result text instead of user input ──
+window.updateResultWordCount = function(text) {
+  const wc = document.getElementById('wordCount');
+  if (!wc) return;
+  const trimmed = (text || '').trim();
+  if (wc.textContent.includes('cards')) {
+    const qMatch = trimmed.match(/\*\*Card \d+/gi);
+    const qCount = qMatch ? qMatch.length : (trimmed ? 1 : 0);
+    wc.textContent = qCount + ' card' + (qCount !== 1 ? 's' : '');
+  } else if (wc.textContent.includes('questions')) {
+    const qMatch = trimmed.match(/\*\*Question \d+/gi);
+    const qCount = qMatch ? qMatch.length : (trimmed ? 1 : 0);
+    wc.textContent = qCount + ' question' + (qCount !== 1 ? 's' : '');
+  } else {
+    const words = trimmed ? trimmed.split(/\s+/).length : 0;
+    wc.textContent = words + ' word' + (words !== 1 ? 's' : '') + ' · ' + trimmed.length + ' characters';
+  }
 };
 
 window.showError = function(msg) {
