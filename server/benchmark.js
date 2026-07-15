@@ -47,38 +47,30 @@ function fetchRanked(forceRefresh = false) {
       res.on("data", (d) => (body += d));
       res.on("end", () => {
         try {
+          // Parse the response
           const parsed = JSON.parse(body);
-          _cache = parsed;
+          
+          // Save fresh data to cache
+          _cache = {
+            data: parsed.data,
+            benchmarkedCount: parsed.benchmarkedCount,
+            total: parsed.total,
+          };
           _lastFetch = Date.now();
-          console.log(`  📊 Benchmark: fetched ${parsed.benchmarkedCount} ranked models (${parsed.total} total)`);
-          resolve(parsed);
+
+          // Write the raw response to the cleaned JSON file for getAllModels
+          const outPath = path.join(__dirname, "..", "ranked_models_clean.json");
+          fs.writeFileSync(outPath, JSON.stringify(_cache, null, 2), "utf-8");
+          console.log(`  📊 Updated ${outPath} with ${parsed.benchmarkedCount || parsed.data?.length || 0} models`);
+          return resolve(_cache);
         } catch (e) {
-          // Proxy returned bad data — try local
-          const local = loadLocalRanked();
-          if (local) {
-            _cache = local;
-            _lastFetch = Date.now();
-            resolve(local);
-          } else {
-            reject(new Error(`Failed to parse benchmark data: ${e.message}`));
-          }
+          console.warn(`  ⚠️ Could not parse proxy response: ${e.message}`);
         }
       });
     }).on("error", (e) => {
-      // Proxy failed — try local file
-      console.warn(`  ⚠️ Proxy fetch failed: ${e.message}, trying local file...`);
-      const local = loadLocalRanked();
-      if (local) {
-        _cache = local;
-        _lastFetch = Date.now();
-        resolve(local);
-      } else if (_cache) {
-        // Use stale cache
-        console.warn(`  ⚠️ Using stale cached benchmark data`);
-        resolve(_cache);
-      } else {
-        reject(e);
-      }
+      console.warn(`  ⚠️ Proxy request failed (${e.message}), falling back to local file`);
+      // Fall back to local file (if it exists)
+      return resolve(loadLocalRanked());
     });
   });
 }
