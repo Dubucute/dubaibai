@@ -315,7 +315,7 @@ class NIMClient {
     };
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout for initial response
+    const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout for initial response
 
     try {
       const resp = await fetch(url, {
