@@ -96,6 +96,30 @@ app.get("/api/auth/session", async (req, res) => {
   });
 });
 
+// GET /api/auth/profile — Get user profile (requires auth)
+app.get("/api/auth/profile", async (req, res) => {
+  const userId = uid(req);
+  if (!userId) return res.status(401).json({ error: "Not authenticated" });
+  try {
+    const profile = await store.getProfile(userId);
+    res.json({ profile });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/auth/profile — Update user profile (requires auth)
+app.post("/api/auth/profile", async (req, res) => {
+  const userId = uid(req);
+  if (!userId) return res.status(401).json({ error: "Not authenticated" });
+  try {
+    const profile = await store.updateProfile(userId, req.body);
+    res.json({ profile });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // GET /api/auth/status — Check if auth is configured
 app.get("/api/auth/status", (req, res) => {
   res.json({

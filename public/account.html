@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+    <title>Account — Dubu AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/themes.css" />
+    <style>
+      body {
+        overflow: auto !important;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+      .account-page {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 32px 24px 80px;
+        animation: fade-up 0.3s ease;
+      }
+      @keyframes fade-up {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .account-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+      .account-back {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.2s;
+      }
+      .account-back:hover {
+        background: var(--hover-bg);
+        color: var(--text-primary);
+      }
+      .account-title {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .account-avatar-section {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 32px;
+        padding: 20px;
+        background: var(--surface-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+      }
+      .account-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--accent-muted);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        font-weight: 700;
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+      .account-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .account-avatar-info h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+      .account-avatar-info p {
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+      .account-section {
+        margin-bottom: 28px;
+      }
+      .account-section-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 12px;
+      }
+      .account-field {
+        margin-bottom: 16px;
+      }
+      .account-field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+      }
+      .account-field input,
+      .account-field textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        background: var(--input-bg, var(--bg-primary));
+        color: var(--text-primary);
+        font-size: 14px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        box-sizing: border-box;
+      }
+      .account-field input:focus,
+      .account-field textarea:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-glow);
+      }
+      .account-field textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+      .account-field .field-hint {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+      .account-save-btn {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+      .account-save-btn:hover { opacity: 0.9; }
+      .account-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      .account-message {
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        margin-bottom: 16px;
+        display: none;
+      }
+      .account-message.success {
+        display: block;
+        background: var(--success-glow);
+        border: 1px solid rgba(var(--success-rgb), 0.25);
+        color: var(--success);
+      }
+      .account-message.error {
+        display: block;
+        background: var(--danger-glow);
+        border: 1px solid rgba(var(--danger-rgb), 0.25);
+        color: var(--danger);
+      }
+      .account-message.info {
+        display: block;
+        background: var(--accent-muted);
+        border: 1px solid rgba(var(--accent-rgb), 0.25);
+        color: var(--accent);
+      }
+      .account-signout {
+        margin-top: 24px;
+        text-align: center;
+      }
+      .account-signout button {
+        padding: 8px 20px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .account-signout button:hover {
+        color: var(--danger);
+        border-color: var(--danger-glow);
+      }
+      @media (max-width: 480px) {
+        .account-page { padding: 20px 16px 60px; }
+        .account-avatar-section { padding: 16px; }
+      }
+    </style>
+  </head>
+  <body class="theme-dark">
+    <script>
+      (function() {
+        try {
+          const saved = localStorage.getItem("dubu_theme");
+          if (saved && ["dark","light","midnight","slate","emerald","ruby"].includes(saved)) {
+            document.body.className = "theme-" + saved;
+          }
+        } catch(e) {}
+      })();
+    </script>
+
+    <div class="account-page">
+      <!-- Header -->
+      <div class="account-header">
+        <a href="chat.html" class="account-back">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M11 4L6 9l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <h1 class="account-title">Account</h1>
+      </div>
+
+      <!-- Message -->
+      <div class="account-message" id="accountMessage"></div>
+
+      <!-- Avatar Preview -->
+      <div class="account-avatar-section" id="avatarSection">
+        <div class="account-avatar" id="avatarPreview">
+          <span id="avatarLetter">?</span>
+        </div>
+        <div class="account-avatar-info">
+          <h3 id="displayNamePreview">Your Name</h3>
+          <p id="emailPreview">email@example.com</p>
+        </div>
+      </div>
+
+      <!-- Profile Fields -->
+      <div class="account-section">
+        <div class="account-section-title">Profile</div>
+        <div class="account-field">
+          <label for="fieldUsername">Username</label>
+          <input type="text" id="fieldUsername" placeholder="Choose a username" maxlength="30" autocomplete="username" />
+          <div class="field-hint">Letters, numbers, and underscores only. Unique across all users.</div>
+        </div>
+        <div class="account-field">
+          <label for="fieldDisplayName">Display Name</label>
+          <input type="text" id="fieldDisplayName" placeholder="Your display name" maxlength="50" />
+        </div>
+        <div class="account-field">
+          <label for="fieldAvatarUrl">Avatar URL</label>
+          <input type="url" id="fieldAvatarUrl" placeholder="https://example.com/avatar.jpg" />
+          <div class="field-hint">Link to a square image (will be cropped to a circle).</div>
+        </div>
+        <div class="account-field">
+          <label for="fieldBio">Bio</label>
+          <textarea id="fieldBio" placeholder="Tell us about yourself..." maxlength="300"></textarea>
+          <div class="field-hint" id="bioCount">0 / 300</div>
+        </div>
+      </div>
+
+      <!-- Account Info -->
+      <div class="account-section">
+        <div class="account-section-title">Account</div>
+        <div class="account-field" style="padding:10px 14px;background:var(--surface-bg);border-radius:10px;border:1px solid var(--border-color);">
+          <div style="font-size:13px;color:var(--text-secondary);">Email</div>
+          <div style="font-size:14px;font-weight:500;margin-top:2px;" id="accountEmail">Loading...</div>
+        </div>
+        <div class="account-field" style="padding:10px 14px;background:var(--surface-bg);border-radius:10px;border:1px solid var(--border-color);">
+          <div style="font-size:13px;color:var(--text-secondary);">User ID</div>
+          <div style="font-size:12px;font-weight:400;margin-top:2px;color:var(--text-muted);font-family:monospace;" id="accountUserId">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Save -->
+      <button class="account-save-btn" id="saveBtn" onclick="saveProfile()">Save Changes</button>
+
+      <!-- Sign Out -->
+      <div class="account-signout">
+        <button onclick="signOut()">Sign Out</button>
+      </div>
+    </div>
+
+    <script>
+      // ── Load profile ──
+      let currentProfile = null;
+      let currentUserEmail = localStorage.getItem("dubu_user_email") || "";
+      let currentUserId = localStorage.getItem("dubu_user_id") || "";
+
+      async function loadProfile() {
+        const token = localStorage.getItem("dubu_session_token");
+        if (!token) {
+          window.location.href = "auth.html";
+          return;
+        }
+
+        try {
+          const resp = await fetch("/api/auth/profile", {
+            headers: { "X-Session-Token": token },
+          });
+          if (!resp.ok) throw new Error("Failed to load profile");
+
+          const data = await resp.json();
+          currentProfile = data.profile;
+          populateForm(currentProfile);
+        } catch (e) {
+          showMessage("Could not load profile: " + e.message, "error");
+        }
+      }
+
+      function populateForm(profile) {
+        document.getElementById("fieldUsername").value = profile.username || "";
+        document.getElementById("fieldDisplayName").value = profile.displayName || "";
+        document.getElementById("fieldAvatarUrl").value = profile.avatarUrl || "";
+        document.getElementById("fieldBio").value = profile.bio || "";
+        document.getElementById("accountEmail").textContent = currentUserEmail || "Unknown";
+        document.getElementById("accountUserId").textContent = currentUserId || "Unknown";
+        updatePreview();
+      }
+
+      function updatePreview() {
+        const displayName = document.getElementById("fieldDisplayName").value.trim();
+        const avatarUrl = document.getElementById("fieldAvatarUrl").value.trim();
+        const username = document.getElementById("fieldUsername").value.trim();
+
+        document.getElementById("displayNamePreview").textContent = displayName || "Your Name";
+        document.getElementById("emailPreview").textContent = username ? "@" + username : (currentUserEmail || "email@example.com");
+
+        const letterEl = document.getElementById("avatarLetter");
+        const avatarEl = document.querySelector(".account-avatar");
+
+        if (avatarUrl) {
+          avatarEl.innerHTML = '<img src="' + escHtml(avatarUrl) + '" alt="" onerror="this.parentElement.innerHTML=\'<span id=avatarLetter>\'+(this.alt.charAt(0)||\'?\').toUpperCase()+\'</span>\'">';
+        } else {
+          const initial = (displayName || currentUserEmail || "?").charAt(0).toUpperCase();
+          letterEl.textContent = initial;
+          avatarEl.innerHTML = '<span id="avatarLetter">' + initial + '</span>';
+        }
+
+        // Bio counter
+        const bio = document.getElementById("fieldBio").value;
+        document.getElementById("bioCount").textContent = bio.length + " / 300";
+      }
+
+      // ── Live preview on input ──
+      document.getElementById("fieldDisplayName").addEventListener("input", updatePreview);
+      document.getElementById("fieldAvatarUrl").addEventListener("input", updatePreview);
+      document.getElementById("fieldUsername").addEventListener("input", updatePreview);
+      document.getElementById("fieldBio").addEventListener("input", updatePreview);
+
+      // ── Save ──
+      async function saveProfile() {
+        const token = localStorage.getItem("dubu_session_token");
+        if (!token) return;
+
+        const btn = document.getElementById("saveBtn");
+        btn.disabled = true;
+        btn.textContent = "Saving...";
+
+        try {
+          const resp = await fetch("/api/auth/profile", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Session-Token": token,
+            },
+            body: JSON.stringify({
+              username: document.getElementById("fieldUsername").value.trim() || null,
+              displayName: document.getElementById("fieldDisplayName").value.trim() || null,
+              avatarUrl: document.getElementById("fieldAvatarUrl").value.trim() || null,
+              bio: document.getElementById("fieldBio").value.trim() || null,
+            }),
+          });
+
+          const data = await resp.json();
+          if (!resp.ok) throw new Error(data.error || "Save failed");
+
+          currentProfile = data.profile;
+          showMessage("Profile saved!", "success");
+        } catch (e) {
+          showMessage(e.message, "error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Save Changes";
+        }
+      }
+
+      // ── Sign Out ──
+      function signOut() {
+        localStorage.removeItem("dubu_session_token");
+        localStorage.removeItem("dubu_user_email");
+        localStorage.removeItem("dubu_user_id");
+        window.location.href = "auth.html";
+      }
+
+      // ── Helpers ──
+      function showMessage(text, type) {
+        const el = document.getElementById("accountMessage");
+        el.className = "account-message " + type;
+        el.textContent = text;
+        el.style.display = "block";
+        if (type === "success") {
+          setTimeout(() => { el.style.display = "none"; }, 3000);
+        }
+      }
+
+      function escHtml(text) {
+        const d = document.createElement("div");
+        d.textContent = text;
+        return d.innerHTML;
+      }
+
+      // ── Init ──
+      loadProfile();
+    </script>
+  </body>
+</html>

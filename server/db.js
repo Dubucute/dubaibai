@@ -101,15 +101,25 @@ async function createTables() {
       ON documents (user_id)
     `);
 
-    // ── User settings table ──
+    // ── User profiles / settings table ──
     await client.query(`
       CREATE TABLE IF NOT EXISTS user_settings (
         user_id UUID PRIMARY KEY,
+        username TEXT,
+        display_name TEXT,
+        avatar_url TEXT,
+        bio TEXT,
         theme TEXT NOT NULL DEFAULT 'dark',
         temperature REAL NOT NULL DEFAULT 0.7,
         settings JSONB NOT NULL DEFAULT '{}',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
+    `);
+
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_user_settings_username
+      ON user_settings (username) WHERE username IS NOT NULL
     `);
 
     await client.query("COMMIT");

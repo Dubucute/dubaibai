@@ -201,10 +201,7 @@ function updateAuthUI() {
 
 window.handleAuthClick = function () {
   if (currentUser) {
-    // Show a small account menu or sign out
-    if (confirm("Sign out from " + currentUser.email + "?")) {
-      signOut();
-    }
+    window.location.href = "account.html";
   } else {
     window.location.href = "auth.html";
   }

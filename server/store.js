@@ -396,6 +396,137 @@ class Store {
     return this._searchInDocs(Array.from(this.documents.values()), q);
   }
 
+  // ── User Profiles ──
+
+  async getProfile(userId) {
+    if (!userId) return null;
+
+    if (isDbReady()) {
+      try {
+        const row = await db.queryOne(
+          `SELECT user_id, username, display_name, avatar_url, bio, settings, created_at, updated_at
+           FROM user_settings WHERE user_id = $1`,
+          [userId]
+        );
+        if (!row) {
+          // Create default profile
+          await this.createProfile(userId);
+          return await this.getProfile(userId);
+        }
+        return {
+          userId: row.user_id,
+          username: row.username || null,
+          displayName: row.display_name || null,
+          avatarUrl: row.avatar_url || null,
+          bio: row.bio || null,
+          settings: row.settings || {},
+          createdAt: new Date(row.created_at).getTime(),
+          updatedAt: new Date(row.updated_at).getTime(),
+        };
+      } catch (e) {
+        console.warn("DB getProfile failed:", e.message);
+      }
+    }
+
+    // In-memory fallback
+    this._ensureLoaded();
+    if (!this._profiles) this._profiles = new Map();
+    if (!this._profiles.has(userId)) {
+      this._profiles.set(userId, this._defaultProfile(userId));
+    }
+    return this._profiles.get(userId) || null;
+  }
+
+  async createProfile(userId) {
+    if (isDbReady()) {
+      try {
+        await db.query(
+          `INSERT INTO user_settings (user_id, settings, created_at, updated_at)
+           VALUES ($1, '{}'::jsonb, NOW(), NOW())
+           ON CONFLICT (user_id) DO NOTHING`,
+          [userId]
+        );
+        return;
+      } catch (e) {
+        console.warn("DB createProfile failed:", e.message);
+      }
+    }
+    if (!this._profiles) this._profiles = new Map();
+    if (!this._profiles.has(userId)) {
+      this._profiles.set(userId, this._defaultProfile(userId));
+    }
+  }
+
+  async updateProfile(userId, updates) {
+    if (!userId) return null;
+    const allowed = ["username", "displayName", "avatarUrl", "bio"];
+    const safe = {};
+    for (const key of allowed) {
+      if (updates[key] !== undefined) safe[key] = updates[key];
+    }
+
+    if (isDbReady()) {
+      try {
+        const setClauses = [];
+        const params = [userId];
+        let idx = 2;
+        if (safe.username !== undefined) {
+          setClauses.push(`username = $${idx++}`);
+          params.push(safe.username);
+        }
+        if (safe.displayName !== undefined) {
+          setClauses.push(`display_name = $${idx++}`);
+          params.push(safe.displayName);
+        }
+        if (safe.avatarUrl !== undefined) {
+          setClauses.push(`avatar_url = $${idx++}`);
+          params.push(safe.avatarUrl);
+        }
+        if (safe.bio !== undefined) {
+          setClauses.push(`bio = $${idx++}`);
+          params.push(safe.bio);
+        }
+
+        if (setClauses.length > 0) {
+          setClauses.push(`updated_at = NOW()`);
+          await db.query(
+            `UPDATE user_settings SET ${setClauses.join(", ")} WHERE user_id = $1`,
+            params
+          );
+        }
+        return await this.getProfile(userId);
+      } catch (e) {
+        console.warn("DB updateProfile failed:", e.message);
+      }
+    }
+
+    // In-memory fallback
+    this._ensureLoaded();
+    if (!this._profiles) this._profiles = new Map();
+    const profile = this._profiles.get(userId) || this._defaultProfile(userId);
+    if (safe.username !== undefined) profile.username = safe.username;
+    if (safe.displayName !== undefined) profile.displayName = safe.displayName;
+    if (safe.avatarUrl !== undefined) profile.avatarUrl = safe.avatarUrl;
+    if (safe.bio !== undefined) profile.bio = safe.bio;
+    profile.updatedAt = Date.now();
+    this._profiles.set(userId, profile);
+    this._save();
+    return profile;
+  }
+
+  _defaultProfile(userId) {
+    return {
+      userId,
+      username: null,
+      displayName: null,
+      avatarUrl: null,
+      bio: null,
+      settings: {},
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+  }
+
   _searchInDocs(docs, q) {
     const results = [];
     for (const doc of docs) {
