@@ -68,7 +68,7 @@ class Store {
 
     // Fallback: in-memory (local dev only — works because there's one instance)
     this._ensureLoaded();
-    const convo = { id, title, model, messages: [], created: Date.now(), updated: Date.now() };
+    const convo = { id, title, model, messages: [], created: Date.now(), updated: Date.now(), userId: userId || null };
     this.conversations.set(id, convo);
     this._save();
     return convo;
@@ -135,6 +135,7 @@ class Store {
 
     this._ensureLoaded();
     return Array.from(this.conversations.values())
+      .filter(c => !userId || !c.userId || c.userId === userId)
       .sort((a, b) => b.updated - a.updated)
       .map(({ id, title, model, created, updated, messages }) => ({
         id,
@@ -158,6 +159,10 @@ class Store {
         if (!convo) return null;
 
         const msgWithTimestamp = { ...message, timestamp: Date.now() };
+        // Claim conversation if authenticated user messages an unowned conversation
+        const claimSql = userId ? `, user_id = COALESCE(user_id, $5)` : "";
+        const params = [JSON.stringify([msgWithTimestamp]), message.role === "user", message.content || "", convoId];
+        if (userId) params.push(userId);
         await db.query(
           `UPDATE conversations
            SET messages = messages || $1::jsonb, updated_at = NOW(),
@@ -165,8 +170,9 @@ class Store {
                  WHEN jsonb_array_length(messages) = 0 AND $2 THEN LEFT($3, 50) || CASE WHEN LENGTH($3) > 50 THEN '...' ELSE '' END
                  ELSE title
                END
+               ${claimSql}
            WHERE id = $4`,
-          [JSON.stringify([msgWithTimestamp]), message.role === "user", message.content || "", convoId]
+          params
         );
         return await this.getConversation(convoId);
       } catch (e) {
@@ -178,6 +184,9 @@ class Store {
     this._ensureLoaded();
     const convo = this.conversations.get(convoId);
     if (!convo) return null;
+    if (userId && !convo.userId) {
+      convo.userId = userId;
+    }
     convo.messages.push({ ...message, timestamp: Date.now() });
     convo.updated = Date.now();
     if (convo.messages.length === 1 && message.role === "user") {
