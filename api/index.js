@@ -2,6 +2,9 @@
 // This file is the entry point for Vercel deployments.
 // It exports a serverless function that waits for DB init before handling requests.
 
+// Suppress deprecation warnings from upstream dependencies (e.g., url.parse())
+process.noDeprecation = true;
+
 const app = require("../server/index");
 const db = require("../server/db");
 const { initBenchmarks } = require("../server/models");

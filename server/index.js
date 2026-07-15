@@ -6,6 +6,9 @@
 // - Conversation management
 // - Direct tool execution
 
+// Suppress deprecation warnings from upstream dependencies (e.g., url.parse())
+process.noDeprecation = true;
+
 const express = require("express");
 const path = require("path");
 const multer = require("multer");
