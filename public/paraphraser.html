@@ -757,8 +757,11 @@
 
       /* ── Word Diff Algorithm ── */
       function wordDiff(input, output) {
-        const inputWords = input.split(/(\s+)/);
-        const outputWords = output.split(/(\s+)/);
+        // Strip all whitespace and split into word-only tokens for comparison.
+        // This prevents the diff algorithm from creating spacing artifacts
+        // when whitespace tokens get hidden/display:none.
+        const inputWords = input.split(/\s+/).filter(Boolean);
+        const outputWords = output.split(/\s+/).filter(Boolean);
         const inputNorm = inputWords.map(w => w.toLowerCase().replace(/[^a-z0-9]/g, ''));
         const outputNorm = outputWords.map(w => w.toLowerCase().replace(/[^a-z0-9]/g, ''));
 
@@ -783,12 +786,7 @@
             result.unshift({ type: 'kept', word: outputWords[j-1] });
             i--; j--;
           } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
-            // Check if this is a changed word (replacing an input word) or truly added
-            if (i > 0 && dp[i-1][j] < dp[i][j-1]) {
-              result.unshift({ type: 'added', word: outputWords[j-1] });
-            } else {
-              result.unshift({ type: 'added', word: outputWords[j-1] });
-            }
+            result.unshift({ type: 'added', word: outputWords[j-1] });
             j--;
           } else {
             result.unshift({ type: 'removed', word: inputWords[i-1] });
@@ -796,7 +794,6 @@
           }
         }
 
-        // Merge adjacent same-type non-space tokens
         return result;
       }
 
