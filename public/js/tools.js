@@ -690,6 +690,7 @@ function escHtmlSafe(s) {
 // ── Convert markdown to HTML for safe innerHTML rendering ──
 window.mdToHtml = function(text) {
   let s = String(text)
+    .replace(/\u2014/g, ', ')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
