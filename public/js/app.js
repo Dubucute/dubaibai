@@ -10,35 +10,10 @@ let webSearchEnabled = false;
 let deepThinkEnabled = false;
 let attachedFiles = [];
 
-// ── Streaming token buffer for smooth rendering ──
-// Batches tokens and flushes to DOM via requestAnimationFrame
-const _streamBuffer = {
-  text: "",
-  el: null,
-  rafId: null,
-  flush() {
-    if (this.el && this.text) {
-      this.el.textContent = this.text;
-      this.text = "";
-    }
-    this.rafId = null;
-  },
-  push(token, textEl) {
-    this.text += token;
-    this.el = textEl;
-    if (!this.rafId) {
-      this.rafId = requestAnimationFrame(() => this.flush());
-    }
-  },
-  cancel() {
-    if (this.rafId) {
-      cancelAnimationFrame(this.rafId);
-      this.rafId = null;
-    }
-    this.text = "";
-    this.el = null;
-  }
-};
+// ── Streaming text accumulator ──
+// Accumulates tokens in a string and sets textContent directly (avoids O(n²) +=).
+// DOM updates happen on every token for smooth ChatGPT-style character-by-character typing.
+let _streamText = "";
 let imageGallery = []; // { url, prompt, model, timestamp }
 let loadedModels = []; // Dynamically fetched from server /api/models
 
@@ -580,25 +555,22 @@ window.sendToAgent = async function () {
             break;
 
           case "token":
-            // Real-time token streaming with rAF batching
+            // Real-time token streaming — character-by-character like ChatGPT
             if (!thinkingDiv.dataset.streaming) {
               // First token — replace thinking indicator with streaming content area
               thinkingDiv.dataset.streaming = "true";
-              thinkingDiv.dataset.streamContent = "";
+              _streamText = "";
               bubble.innerHTML = `<div class="msg-name">${escHtml(modelName || "Dubu AI")}</div><div class="msg-content streaming"><span class="streaming-text"></span><span class="streaming-cursor">▊</span></div>`;
             }
-            // Buffer tokens and flush to DOM on next animation frame (avoids O(n²) textContent +=)
+            // Accumulate in string, set textContent directly (O(n) per token, no string concat)
+            _streamText += data.content || "";
             const streamTextEl = bubble.querySelector(".streaming-text");
             if (streamTextEl) {
-              _streamBuffer.push(data.content || "", streamTextEl);
-              thinkingDiv.dataset.streamContent += data.content || "";
+              streamTextEl.textContent = _streamText;
             }
             break;
 
           case "result":
-            // Flush any remaining buffered tokens immediately so user sees full text
-            _streamBuffer.flush();
-            _streamBuffer.cancel();
             const fullResponse = data.content || "No response generated.";
             const wasStreaming = thinkingDiv.dataset?.streaming === "true";
 
@@ -643,7 +615,7 @@ window.sendToAgent = async function () {
               const cursor = bubble.querySelector(".streaming-cursor");
               if (cursor) cursor.remove();
               // Get the accumulated text and format as HTML
-              const streamText = thinkingDiv.dataset.streamContent || fullResponse;
+              const streamText = _streamText || fullResponse;
               const formattedHtml = formatMessageHtml(streamText);
               const contentEl = bubble.querySelector(".msg-content");
               if (contentEl) {
@@ -780,7 +752,7 @@ window.stopGeneration = function () {
   const bubble = lastAgent.querySelector(".msg-body");
   if (!bubble) return;
 
-  const streamContent = lastAgent.dataset?.streamContent;
+  const streamContent = _streamText || lastAgent.dataset?.streamContent;
   const wasStreaming = lastAgent.dataset?.streaming === "true";
 
   if (wasStreaming && streamContent && streamContent.trim()) {
