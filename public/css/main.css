@@ -226,6 +226,7 @@ body {
   background: var(--accent-muted);
   color: var(--accent);
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .sb-user-info {

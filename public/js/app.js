@@ -191,10 +191,53 @@ function updateAuthUI() {
     if (btnLabel) btnLabel.textContent = "Account";
     if (userName) userName.textContent = currentUser.email || "User";
     if (userStatus) userStatus.textContent = "Signed in";
+    // Load profile avatar + display name
+    loadSidebarProfile();
   } else {
     if (btnLabel) btnLabel.textContent = "Sign In";
     if (userName) userName.textContent = "Guest";
     if (userStatus) userStatus.textContent = "NVIDIA NIM";
+    // Reset avatar to default icon
+    resetSidebarAvatar();
+  }
+}
+
+async function loadSidebarProfile() {
+  const token = localStorage.getItem("dubu_session_token");
+  if (!token) return;
+  try {
+    const resp = await fetch("/api/auth/profile", {
+      headers: { "X-Session-Token": token },
+    });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const profile = data.profile;
+    
+    // Update display name if available
+    const displayName = profile.displayName || profile.username;
+    const userName = document.getElementById("sbUserName");
+    if (userName && displayName) {
+      userName.textContent = displayName;
+    }
+    
+    // Update avatar if available
+    const avatarEl = document.querySelector(".sb-avatar");
+    if (avatarEl && profile.avatarUrl) {
+      avatarEl.innerHTML = '<img src="' + escHtml(profile.avatarUrl) + '" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+    } else if (avatarEl) {
+      // Show initial letter
+      const initial = (displayName || currentUser?.email || "?").charAt(0).toUpperCase();
+      avatarEl.innerHTML = '<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;color:var(--accent)">' + initial + '</span>';
+    }
+  } catch (e) {
+    // Silent — keep default avatar
+  }
+}
+
+function resetSidebarAvatar() {
+  const avatarEl = document.querySelector(".sb-avatar");
+  if (avatarEl) {
+    avatarEl.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="8" stroke="currentColor" stroke-width="1.3"/><circle cx="9" cy="7" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M4 15c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
   }
 }
 
