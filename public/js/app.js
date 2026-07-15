@@ -371,6 +371,25 @@ window.sendToAgent = async function () {
     stopBtn.style.display = "flex";
   }
 
+  // ── Auto-create conversation if none exists (like ChatGPT/DeepSeek) ──
+  if (!currentConversationId) {
+    try {
+      const convo = await AgentAPI.createConversation("New Chat");
+      currentConversationId = convo.id;
+      localStorage.setItem("dubu_last_convo_id", convo.id);
+      loadConversationList();
+    } catch (e) {
+      console.warn("Failed to create conversation:", e.message);
+      btn.disabled = false;
+      if (stopBtn) {
+        stopBtn.style.display = "none";
+        btn.style.display = "flex";
+      }
+      showToast("Failed to start conversation: " + e.message, "error");
+      return;
+    }
+  }
+
   // ── Context object ──
   // Define BEFORE /imagine parsing so the /imagine block can write to it
   const context = { hasImage: false, hasDocuments: false };
@@ -447,13 +466,11 @@ window.sendToAgent = async function () {
   addMessage("user", isImagineCommand ? `/imagine ${imaginePrompt}` : msg, "You");
   agentHistory.push({ role: "user", content: userMessage });
 
-  // Save user message to server conversation
-  if (currentConversationId) {
-    AgentAPI.conversationAddMessage(currentConversationId, {
-      role: "user",
-      content: userMessage,
-    }).catch(() => {});
-  }
+  // Save user message to server conversation (auto-created above if needed)
+  AgentAPI.conversationAddMessage(currentConversationId, {
+    role: "user",
+    content: userMessage,
+  }).catch(() => {});
 
   // For /imagine command, force the context to indicate image generation
   if (isImagineCommand) {
@@ -545,6 +562,26 @@ window.sendToAgent = async function () {
             if (streamTextEl) {
               streamTextEl.textContent += data.content || "";
               thinkingDiv.dataset.streamContent = streamTextEl.textContent;
+              // Incrementally save partial response every ~50 tokens (like ChatGPT)
+              if (!thinkingDiv.dataset._saveTimer) {
+                thinkingDiv.dataset._saveTimer = "1";
+                setTimeout(() => {
+                  delete thinkingDiv.dataset._saveTimer;
+                  const partial = thinkingDiv.dataset.streamContent;
+                  if (partial && partial.length > 10 && currentConversationId) {
+                    // Update the last assistant message in the DB with partial content
+                    fetch(`/api/conversations/${currentConversationId}/messages`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", ...(localStorage.getItem("dubu_session_token") ? { "X-Session-Token": localStorage.getItem("dubu_session_token") } : {}) },
+                      body: JSON.stringify({
+                        role: "assistant",
+                        content: partial,
+                        model: modelName,
+                      }),
+                    }).catch(() => {});
+                  }
+                }, 2000);
+              }
             }
             break;
 
@@ -577,37 +614,16 @@ window.sendToAgent = async function () {
                 content: `[Generated image: ${data.prompt || imaginePrompt || msg}]`,
               });
 
-              if (currentConversationId) {
-                AgentAPI.conversationAddMessage(currentConversationId, {
-                  role: "assistant",
-                  content: `[Generated image: ${data.prompt || imaginePrompt || msg}]`,
-                  model: data.model || modelName,
+              AgentAPI.conversationAddMessage(currentConversationId, {
+                role: "assistant",
+                content: `[Generated image: ${data.prompt || imaginePrompt || msg}]`,
+                model: data.model || modelName,
+              })
+                .then(() => {
+                  loadConversationList();
+                  autoGenerateTitle();
                 })
-                  .then(() => {
-                    loadConversationList();
-                    autoGenerateTitle();
-                  })
-                  .catch(() => {});
-              } else {
-                createNewConversation().then((convo) => {
-                  if (convo) {
-                    currentConversationId = convo.id;
-                    AgentAPI.conversationAddMessage(convo.id, {
-                      role: "user",
-                      content: userMessage,
-                    }).catch(() => {});
-                    AgentAPI.conversationAddMessage(convo.id, {
-                      role: "assistant",
-                      content: `[Generated image: ${data.prompt || imaginePrompt || msg}]`,
-                      model: data.model,
-                    }).catch(() => {
-                      autoGenerateTitle();
-                    });
-                    loadConversationList();
-                    autoGenerateTitle();
-                  }
-                });
-              }
+                .catch(() => {});
             } else if (wasStreaming) {
               // ── Streamed text response — finalize the streaming bubble ──
               // Remove the streaming cursor
@@ -642,35 +658,16 @@ window.sendToAgent = async function () {
               const suggestions = generateFollowUpSuggestions(streamText);
               addSuggestedQuestions(suggestions);
 
-              if (currentConversationId) {
-                AgentAPI.conversationAddMessage(currentConversationId, {
-                  role: "assistant",
-                  content: streamText,
-                  model: data.model || modelName,
+              AgentAPI.conversationAddMessage(currentConversationId, {
+                role: "assistant",
+                content: streamText,
+                model: data.model || modelName,
+              })
+                .then(() => {
+                  loadConversationList();
+                  autoGenerateTitle();
                 })
-                  .then(() => {
-                    loadConversationList();
-                    autoGenerateTitle();
-                  })
-                  .catch(() => {});
-              } else {
-                createNewConversation().then((convo) => {
-                  if (convo) {
-                    currentConversationId = convo.id;
-                    AgentAPI.conversationAddMessage(convo.id, {
-                      role: "user",
-                      content: userMessage,
-                    }).catch(() => {});
-                    AgentAPI.conversationAddMessage(convo.id, {
-                      role: "assistant",
-                      content: streamText,
-                      model: data.model,
-                    }).catch(() => {});
-                    loadConversationList();
-                    autoGenerateTitle();
-                  }
-                });
-              }
+                .catch(() => {});
             } else {
               // ── Non-streamed text response (fallback or no tokens received) ──
               thinkingDiv.remove();
@@ -684,35 +681,16 @@ window.sendToAgent = async function () {
               const suggestions = generateFollowUpSuggestions(fullResponse);
               addSuggestedQuestions(suggestions);
 
-              if (currentConversationId) {
-                AgentAPI.conversationAddMessage(currentConversationId, {
-                  role: "assistant",
-                  content: fullResponse,
-                  model: data.model || modelName,
+              AgentAPI.conversationAddMessage(currentConversationId, {
+                role: "assistant",
+                content: fullResponse,
+                model: data.model || modelName,
+              })
+                .then(() => {
+                  loadConversationList();
+                  autoGenerateTitle();
                 })
-                  .then(() => {
-                    loadConversationList();
-                    autoGenerateTitle();
-                  })
-                  .catch(() => {});
-              } else {
-                createNewConversation().then((convo) => {
-                  if (convo) {
-                    currentConversationId = convo.id;
-                    AgentAPI.conversationAddMessage(convo.id, {
-                      role: "user",
-                      content: userMessage,
-                    }).catch(() => {});
-                    AgentAPI.conversationAddMessage(convo.id, {
-                      role: "assistant",
-                      content: fullResponse,
-                      model: data.model,
-                    }).catch(() => {});
-                    loadConversationList();
-                    autoGenerateTitle();
-                  }
-                });
-              }
+                .catch(() => {});
             }
 
             document.getElementById("tsDot").className = "ts-dot connected";
@@ -822,6 +800,13 @@ window.stopGeneration = function () {
 
     // Save partial to history
     agentHistory.push({ role: "assistant", content: streamContent });
+    // Save partial response to server (like ChatGPT saves mid-stream)
+    if (currentConversationId) {
+      AgentAPI.conversationAddMessage(currentConversationId, {
+        role: "assistant",
+        content: streamContent,
+      }).catch(() => {});
+    }
     scrollToBottom();
   } else {
     // ── No content yet — just remove the thinking indicator ──
