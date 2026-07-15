@@ -825,10 +825,9 @@ const TASK_ROUTES = {
     task: "code",
     description: "Code generation, debugging, and analysis",
     chain: [
-      "deepseek-ai/deepseek-v4-pro",
+      "nvidia/llama-3.3-nemotron-super-49b-v1",
       "nvidia/nemotron-3-super-120b-a12b",
       "mistralai/mistral-large-3-675b-instruct-2512",
-      "nvidia/llama-3.3-nemotron-super-49b-v1",
       "nvidia/nemotron-3-ultra-550b-a55b",
       "deepseek-ai/deepseek-v4-flash",
     ],

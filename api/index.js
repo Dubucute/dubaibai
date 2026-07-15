@@ -4,6 +4,9 @@
 
 const app = require("../server/index");
 const db = require("../server/db");
+const { initBenchmarks } = require("../server/models");
+
+let benchmarksReady = false;
 
 module.exports = async (req, res) => {
   // On Vercel cold starts, db.initDatabase() from server/index.js starts at module load
@@ -15,6 +18,15 @@ module.exports = async (req, res) => {
     } catch {
       // DB not available — isDbReady() returns false, store falls back to in-memory
       console.warn("⚠️  DB init failed in Vercel entry, falling back to in-memory");
+    }
+  }
+  // Ensure benchmark-driven model chains are loaded (uses local file if proxy is down)
+  if (!benchmarksReady) {
+    try {
+      await initBenchmarks();
+      benchmarksReady = true;
+    } catch {
+      // Benchmarks not available — hardcoded chains will be used
     }
   }
   app(req, res);

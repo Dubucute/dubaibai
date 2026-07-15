@@ -1,17 +1,37 @@
 // ===== NVIDIA NIM Benchmark Data =====
 // Fetches real benchmark scores from the Dubu proxy at dubu.alwaysdata.net
 // and uses them to rank models for each task type.
+// Falls back to local ranked_models_clean.json if the proxy is unavailable.
 
 const https = require("https");
+const fs = require("fs");
+const path = require("path");
 
 const PROXY_URL = process.env.BENCHMARK_PROXY_URL || "https://dubu.alwaysdata.net";
 const FETCH_INTERVAL = 60 * 60 * 1000; // 1 hour
+const LOCAL_RANKED_FILE = path.join(__dirname, "..", "ranked_models_clean.json");
 
 let _cache = null;
 let _lastFetch = 0;
 
 /**
+ * Load ranked models from the local JSON file (fallback).
+ */
+function loadLocalRanked() {
+  try {
+    const raw = fs.readFileSync(LOCAL_RANKED_FILE, "utf-8");
+    const parsed = JSON.parse(raw);
+    console.log(`  📊 Loaded ${parsed.benchmarkedCount || parsed.data?.length || 0} ranked models from local file`);
+    return parsed;
+  } catch (e) {
+    console.warn(`  ⚠️ Could not load local ranked models: ${e.message}`);
+    return null;
+  }
+}
+
+/**
  * Fetch ranked models from the proxy endpoint.
+ * Falls back to local file if proxy is unavailable.
  * Returns { data: [...], benchmarkedCount, total }
  */
 function fetchRanked(forceRefresh = false) {
@@ -20,6 +40,7 @@ function fetchRanked(forceRefresh = false) {
       return resolve(_cache);
     }
 
+    // Try proxy first, fall back to local file
     const url = `${PROXY_URL}/v1/models/ranked?limit=50`;
     https.get(url, { headers: { "Accept": "application/json" } }, (res) => {
       let body = "";
@@ -32,13 +53,28 @@ function fetchRanked(forceRefresh = false) {
           console.log(`  📊 Benchmark: fetched ${parsed.benchmarkedCount} ranked models (${parsed.total} total)`);
           resolve(parsed);
         } catch (e) {
-          reject(new Error(`Failed to parse benchmark data: ${e.message}`));
+          // Proxy returned bad data — try local
+          const local = loadLocalRanked();
+          if (local) {
+            _cache = local;
+            _lastFetch = Date.now();
+            resolve(local);
+          } else {
+            reject(new Error(`Failed to parse benchmark data: ${e.message}`));
+          }
         }
       });
     }).on("error", (e) => {
-      // If cache exists, use stale data
-      if (_cache) {
-        console.warn(`  ⚠️ Benchmark fetch failed, using cached data: ${e.message}`);
+      // Proxy failed — try local file
+      console.warn(`  ⚠️ Proxy fetch failed: ${e.message}, trying local file...`);
+      const local = loadLocalRanked();
+      if (local) {
+        _cache = local;
+        _lastFetch = Date.now();
+        resolve(local);
+      } else if (_cache) {
+        // Use stale cache
+        console.warn(`  ⚠️ Using stale cached benchmark data`);
         resolve(_cache);
       } else {
         reject(e);
