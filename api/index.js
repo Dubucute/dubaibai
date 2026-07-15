@@ -33,6 +33,7 @@ module.exports = async (req, res) => {
     } catch (e) {
       // Benchmarks not available — hardcoded chains will be used
       console.warn(`  ⚠️ Benchmark init failed: ${e.message}`);
+      console.error(e.stack);
     }
   }
   app(req, res);
