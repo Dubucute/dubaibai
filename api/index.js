@@ -26,10 +26,13 @@ module.exports = async (req, res) => {
   // Ensure benchmark-driven model chains are loaded (uses local file if proxy is down)
   if (!benchmarksReady) {
     try {
+      console.log("  🔄 Initializing benchmarks...");
       await initBenchmarks();
       benchmarksReady = true;
-    } catch {
+      console.log("  ✅ Benchmarks initialized");
+    } catch (e) {
       // Benchmarks not available — hardcoded chains will be used
+      console.warn(`  ⚠️ Benchmark init failed: ${e.message}`);
     }
   }
   app(req, res);
