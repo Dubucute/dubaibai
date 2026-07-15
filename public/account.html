@@ -376,7 +376,7 @@
           <div class="upload-hint">PNG, JPG, WEBP · Max 2MB · Will be cropped to a circle</div>
         </div>
         <input type="file" id="avatarFileInput" accept="image/png,image/jpeg,image/webp" style="display:none" />
-        <div style="text-align:center;margin-top:-8px;margin-bottom:16px;" id="avatarRemoveContainer">
+        <div style="text-align:center;margin-top:-8px;margin-bottom:16px;display:none" id="avatarRemoveContainer">
           <button class="avatar-remove-btn" id="avatarRemoveBtn" onclick="removeAvatar()" style="display:none">Remove photo</button>
         </div>
         <div class="account-field">
@@ -486,9 +486,9 @@
       function updateUploadArea() {
         const area = document.getElementById("avatarUploadArea");
         const removeBtn = document.getElementById("avatarRemoveBtn");
+        const container = document.getElementById("avatarRemoveContainer");
 
         if (uploadedAvatarData && uploadedAvatarData.dataUrl) {
-          const isDataUrl = uploadedAvatarData.dataUrl.startsWith("data:");
           const name = uploadedAvatarData.name || "Photo";
           const size = uploadedAvatarData.size ? formatSize(uploadedAvatarData.size) : "";
 
@@ -498,12 +498,14 @@
             + (size ? '<div class="file-size">' + size + '</div>' : '')
             + '</div>'
             + '<div class="upload-actions"><button class="avatar-upload-btn" onclick="event.stopPropagation();document.getElementById(\'avatarFileInput\').click()">Change</button></div>';
+          if (container) container.style.display = "";
           removeBtn.style.display = "inline-block";
         } else {
           area.className = "avatar-upload-area";
           area.innerHTML = '<div class="upload-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2v14M2 9h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>'
             + '<div class="upload-text">Click to upload a photo</div>'
             + '<div class="upload-hint">PNG, JPG, WEBP · Max 2MB · Will be cropped to a circle</div>';
+          if (container) container.style.display = "none";
           removeBtn.style.display = "none";
         }
       }
@@ -561,7 +563,7 @@
         e.preventDefault();
         this.classList.remove("dragover");
         const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith("image/")) {
+        if (file && ["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
           document.getElementById("avatarFileInput").files = e.dataTransfer.files;
           document.getElementById("avatarFileInput").dispatchEvent(new Event("change"));
         }
