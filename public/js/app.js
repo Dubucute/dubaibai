@@ -562,26 +562,6 @@ window.sendToAgent = async function () {
             if (streamTextEl) {
               streamTextEl.textContent += data.content || "";
               thinkingDiv.dataset.streamContent = streamTextEl.textContent;
-              // Incrementally save partial response every ~50 tokens (like ChatGPT)
-              if (!thinkingDiv.dataset._saveTimer) {
-                thinkingDiv.dataset._saveTimer = "1";
-                setTimeout(() => {
-                  delete thinkingDiv.dataset._saveTimer;
-                  const partial = thinkingDiv.dataset.streamContent;
-                  if (partial && partial.length > 10 && currentConversationId) {
-                    // Update the last assistant message in the DB with partial content
-                    fetch(`/api/conversations/${currentConversationId}/messages`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json", ...(localStorage.getItem("dubu_session_token") ? { "X-Session-Token": localStorage.getItem("dubu_session_token") } : {}) },
-                      body: JSON.stringify({
-                        role: "assistant",
-                        content: partial,
-                        model: modelName,
-                      }),
-                    }).catch(() => {});
-                  }
-                }, 2000);
-              }
             }
             break;
 
