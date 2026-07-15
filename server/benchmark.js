@@ -139,12 +139,17 @@ function buildChain(taskType, opts = {}) {
   // ── Task-specific model selection strategies ──
   switch (taskType) {
     case "fast": {
-      // Fast: speed-optimized models, rank-ordered
+      // Fast: prioritize speed — sort by speed, prefer fast/very_fast/medium
       models = models
-        .filter((m) => m.benchmark.speedRank === "fast" || m.benchmark.speedRank === "very_fast")
+        .filter((m) => m.benchmark.speedRank !== "very_slow") // exclude very_slow
         .filter((m) => !/[-_]1b[-_]|[-_]2b[-_]/i.test(m.id)) // exclude 1-2B
         .filter((m) => m.capabilities?.chat === true)
-        .sort((a, b) => (a.benchmark.rank || 999) - (b.benchmark.rank || 999));
+        .sort((a, b) => {
+          // Speed-first: faster models win
+          const speedDiff = (a.benchmark.speed || 99) - (b.benchmark.speed || 99);
+          if (speedDiff !== 0) return speedDiff;
+          return (a.benchmark.rank || 999) - (b.benchmark.rank || 999);
+        });
       break;
     }
 
