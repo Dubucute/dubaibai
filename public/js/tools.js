@@ -70,7 +70,138 @@ window.callNIM = async function(systemPrompt, userMessage, options = {}) {
   }
 };
 
-// ── Show/hide helpers ──
+// ── Markdown renderer for tool results ──
+window.renderMarkdown = function(text) {
+  let html = text;
+
+  // Phase 1: Extract code/reasoning blocks BEFORE HTML escaping
+  const blocks = [];
+  html = html.replace(/```reasoning\s*\n([\s\S]*?)```/g, (m, r) => {
+    const idx = blocks.length;
+    blocks.push({ type: 'collapsible', title: 'Show reasoning', content: r.trim() });
+    return `%%BLOCK_${idx}%%`;
+  });
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (m, lang, code) => {
+    const idx = blocks.length;
+    blocks.push({ type: 'code', lang: lang || 'code', code: code });
+    return `%%BLOCK_${idx}%%`;
+  });
+
+  // Phase 2: HTML-escape remaining text (blocks are safe placeholders)
+  html = escHtml(html);
+
+  // Phase 3: Markdown processing on non-block text
+  // Blockquotes — use &gt; since text is HTML-escaped
+  html = html.replace(/((?:^|\n)(?:&gt;\s?[^\n]*)+)/g, (m) => {
+    const lines = m.trim().split('\n');
+    const inner = lines.map(l => l.replace(/^&gt;\s?/, '').trim()).join('<br>');
+    return '\n<blockquote>' + inner + '</blockquote>\n';
+  });
+
+  // Tables
+  html = html.replace(/((?:^|\n)(?:\s*\|[^\n]*\|[\s]*\n?)+)/g, (m, tableBlock) => {
+    const rows = tableBlock.trim().split('\n').filter(r => r.trim().startsWith('|'));
+    if (rows.length < 2) return m;
+    const parsed = rows.map(row => row.trim().split('|').filter(c => c.trim() !== '').map(c => c.trim()));
+    const sepRow = parsed[1];
+    if (!sepRow || sepRow.length < 2 || !sepRow.every(c => /^-+\s*$/.test(c))) return m;
+    let tbl = '<table><thead><tr>';
+    parsed[0].forEach(c => { tbl += '<th>' + c + '</th>'; });
+    tbl += '</tr></thead><tbody>';
+    for (let i = 2; i < parsed.length; i++) {
+      tbl += '<tr>'; parsed[i].forEach(c => { tbl += '<td>' + c + '</td>'; }); tbl += '</tr>';
+    }
+    tbl += '</tbody></table>';
+    return '\n' + tbl + '\n';
+  });
+
+  // Task lists
+  html = html.replace(/^- \[([ x])\] ([^\n]*)/gm, (m, checked, text) => {
+    const done = checked === 'x';
+    return '<div class="task-item' + (done ? ' done' : '') + '">' +
+      '<input type="checkbox"' + (done ? ' checked' : '') + ' disabled>' +
+      '<span>' + text.trim() + '</span></div>';
+  });
+
+  // Headers
+  html = html.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>');
+  html = html.replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>');
+  html = html.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+
+  // Horizontal rules
+  html = html.replace(/^(?:[-*_=]){3,}\s*$/gm, '<hr>');
+
+  // Unordered lists
+  html = html.replace(/(?:^|\n)([*-])\s+([^\n]+)((?:\n\1\s+[^\n]+)*)/g, (match, marker, first, rest) => {
+    const items = [first, ...rest.split('\n').filter(Boolean).map(l => l.replace(/^[*-]\s+/, ''))];
+    return '<ul>' + items.map(c => '<li>' + c + '</li>').join('') + '</ul>';
+  });
+
+  // Ordered lists
+  html = html.replace(/(?:^|\n)\d+\.\s+([^\n]+)((?:\n\d+\.\s+[^\n]+)*)/g, (match, first, rest) => {
+    const items = [first, ...rest.split('\n').filter(Boolean).map(l => l.replace(/^\d+\.\s+/, ''))];
+    return '<ol>' + items.map(c => '<li>' + c + '</li>').join('') + '</ol>';
+  });
+
+  // Inline images
+  html = html.replace(/!\[(.*?)\]\((.*?)\)/g, (m, alt, src) => {
+    if (src.startsWith('data:') || src.startsWith('http'))
+      return '<img src="' + src + '" alt="' + alt + '" style="max-width:100%;border-radius:8px;margin:8px 0">';
+    return m;
+  });
+
+  // Markdown links (before bold so ** doesn't break them)
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, bracket, paren) => {
+    const cleanB = bracket.replace(/\*\*/g, '').replace(/\*/g, '');
+    const cleanP = paren.replace(/\*\*/g, '').replace(/\*/g, '');
+    if (cleanP.startsWith('http') || cleanP.startsWith('#'))
+      return '<a href="' + cleanP + '" target="_blank" rel="noopener" style="color:var(--accent,#818cf8);text-decoration:underline">' + cleanB + '</a>';
+    if (cleanB.startsWith('http'))
+      return '<a href="' + cleanB + '" target="_blank" rel="noopener" style="color:var(--accent,#818cf8);text-decoration:underline">' + cleanP + '</a>';
+    return m;
+  });
+
+  // Bare URLs
+  html = html.replace(/(https?:\/\/[^\s<"'>]+)/g,
+    '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent,#818cf8);text-decoration:underline">$1</a>');
+
+  // Bold/Italic/Inline code
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Newlines to <br>
+  html = html.replace(/\n/g, '<br>');
+
+  // Phase 4: Restore blocks (content already raw, needs HTML-escaping)
+  html = html.replace(/%%BLOCK_(\d+)%%/g, (m, idx) => {
+    const block = blocks[parseInt(idx)];
+    if (!block) return m;
+    if (block.type === 'collapsible') {
+      return '<details style="margin:12px 0;background:var(--surface-bg,rgba(15,15,20,0.4));border-radius:8px;border:1px solid var(--border-color,rgba(255,255,255,0.06));padding:8px 12px">' +
+        '<summary style="cursor:pointer;font-weight:600;color:var(--accent,#818cf8)">' + block.title + '</summary>' +
+        '<div style="margin-top:8px;white-space:pre-wrap">' + escHtml(block.content) + '</div></details>';
+    }
+    if (block.type === 'code') {
+      return '<pre style="background:rgba(0,0,0,0.3);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;line-height:1.5;border:1px solid var(--border-color,rgba(255,255,255,0.06))"><code>' +
+        escHtml(block.code) + '</code></pre>';
+    }
+    return m;
+  });
+
+  return html;
+};
+
+function escHtml(text) {
+  const d = document.createElement('div');
+  d.textContent = text;
+  return d.innerHTML;
+}
+
 window.showLoading = function() {
   document.querySelector('.tool-loading')?.classList.add('visible');
   document.querySelector('.tool-result')?.classList.remove('visible');
@@ -82,7 +213,9 @@ window.hideLoading = function() {
 
 window.showResult = function(text) {
   const box = document.querySelector('.result-box');
-  if (box) box.textContent = text;
+  if (box) {
+    box.innerHTML = renderMarkdown(text);
+  }
   document.querySelector('.tool-result')?.classList.add('visible');
 };
 
