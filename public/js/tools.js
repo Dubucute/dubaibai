@@ -366,10 +366,10 @@ function renderAIDetectionModal(result) {
         </div>
 
         <div style="margin-bottom:12px;font-size:11px;color:var(--text-muted,#6b6b80)">
-          Detected via ${result.source === 'huggingface' ? 'RoBERTa OpenAI Detector' : result.source === 'nim-fallback' ? 'NVIDIA NIM LLM analysis' : result.source === 'estimated' ? 'Estimated (service unavailable)' : 'Client-side analysis'}
+          Detected via ${result.source === 'huggingface' ? 'RoBERTa OpenAI Detector' : result.source === 'pollinations' ? 'AI Detection API' : result.source === 'nim-fallback' ? 'NVIDIA NIM LLM analysis' : result.source === 'estimated' ? 'Estimated (service unavailable)' : 'Client-side analysis'}
         </div>
 
-        ${result.aiLevel === 'high' || result.aiScore > 60 ? '<div class="ai-detection-cta">Want your text to sound more authentic? Try the <a href="https://quillbot.com/paraphrasing-tool" target="_blank" rel="noopener" style="color:var(--accent,#818cf8);text-decoration:underline">Paraphraser tool</a>.</div>' : ''}
+        ${result.aiLevel === 'high' || result.aiScore > 60 ? '<div class="ai-detection-cta">Want your text to sound more authentic? Try the <a href="/paraphraser.html" target="_blank" rel="noopener" style="color:var(--accent,#818cf8);text-decoration:underline">Paraphraser tool</a> to humanize it.</div>' : ''}
 
         ${result.sample ? `
         <div class="ai-detection-sample">
