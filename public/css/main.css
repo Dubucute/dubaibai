@@ -2831,6 +2831,12 @@ blockquote p:last-child {
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
   .sidebar {
     position: fixed;
     top: 0;

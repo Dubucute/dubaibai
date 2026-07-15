@@ -809,11 +809,12 @@ const TASK_ROUTES = {
     task: "chat",
     description: "General conversation and Q&A",
     chain: [
-      "nvidia/llama-3.3-nemotron-super-49b-v1.5",
       "nvidia/llama-3.3-nemotron-super-49b-v1",
-      "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+      "mistralai/mistral-large-3-675b-instruct-2512",
+      "nvidia/nemotron-3-super-120b-a12b",
+      "nvidia/nemotron-3-ultra-550b-a55b",
       "meta/llama-3.3-70b-instruct",
-      "qwen/qwen3.5-122b-a10b",
+      "deepseek-ai/deepseek-v4-pro",
       "deepseek-ai/deepseek-v4-flash",
     ],
     endpoint: "chat",
@@ -825,11 +826,11 @@ const TASK_ROUTES = {
     description: "Code generation, debugging, and analysis",
     chain: [
       "deepseek-ai/deepseek-v4-pro",
+      "nvidia/nemotron-3-super-120b-a12b",
+      "mistralai/mistral-large-3-675b-instruct-2512",
+      "nvidia/llama-3.3-nemotron-super-49b-v1",
+      "nvidia/nemotron-3-ultra-550b-a55b",
       "deepseek-ai/deepseek-v4-flash",
-      "nvidia/llama-3.3-nemotron-super-49b-v1.5",
-      "moonshotai/kimi-k2.6",
-      "qwen/qwen3.5-122b-a10b",
-      "mistralai/codestral-22b-instruct-v0.1",
     ],
     endpoint: "chat",
   },
@@ -839,11 +840,12 @@ const TASK_ROUTES = {
     task: "reasoning",
     description: "Complex reasoning, math, logic puzzles",
     chain: [
-      "qwen/qwq-32b",
-      "nvidia/llama-3.1-nemotron-ultra-253b-v1",
       "nvidia/nemotron-3-super-120b-a12b",
-      "nvidia/llama-3.3-nemotron-super-49b-v1.5",
-      "qwen/qwen3.5-122b-a10b",
+      "mistralai/mistral-large-3-675b-instruct-2512",
+      "nvidia/nemotron-3-ultra-550b-a55b",
+      "nvidia/llama-3.3-nemotron-super-49b-v1",
+      "deepseek-ai/deepseek-v4-pro",
+      "meta/llama-3.3-70b-instruct",
     ],
     endpoint: "chat",
   },
@@ -853,12 +855,11 @@ const TASK_ROUTES = {
     task: "fast",
     description: "Quick responses for simple queries",
     chain: [
-      "deepseek-ai/deepseek-v4-flash",
-      "stepfun-ai/step-3.5-flash",
-      "nvidia/llama-3.3-nemotron-super-49b-v1.5",
-      "microsoft/phi-4-mini-instruct",
-      "google/gemma-3-4b-it",
+      "nvidia/llama-3.3-nemotron-super-49b-v1",
+      "mistralai/mistral-nemotron",
       "mistralai/ministral-14b-instruct-2512",
+      "deepseek-ai/deepseek-v4-flash",
+      "nvidia/nemotron-3-nano-30b-a3b",
     ],
     endpoint: "chat",
   },
@@ -868,10 +869,11 @@ const TASK_ROUTES = {
     task: "websearch",
     description: "Web search synthesis — fetch + answer from real results",
     chain: [
-      "nvidia/llama-3.3-nemotron-super-49b-v1.5",
       "nvidia/llama-3.3-nemotron-super-49b-v1",
-      "qwen/qwen3.5-122b-a10b",
+      "nvidia/nemotron-3-super-120b-a12b",
+      "mistralai/mistral-large-3-675b-instruct-2512",
       "meta/llama-3.3-70b-instruct",
+      "deepseek-ai/deepseek-v4-pro",
       "deepseek-ai/deepseek-v4-flash",
     ],
     endpoint: "chat",
@@ -911,10 +913,10 @@ const TASK_ROUTES = {
     description: "Text translation between languages",
     chain: [
       "nvidia/llama-3.3-nemotron-super-49b-v1",
-      "qwen/qwen3.5-122b-a10b",
-      "meta/llama-3.3-70b-instruct",
       "mistralai/mistral-large-3-675b-instruct-2512",
       "mistralai/mistral-nemotron",
+      "meta/llama-3.3-70b-instruct",
+      "deepseek-ai/deepseek-v4-pro",
     ],
     endpoint: "chat",
   },
@@ -955,40 +957,50 @@ function getModelInfo(modelId) {
   return null;
 }
 
-// ── Benchmark-enhanced chain builder ──
-// Overrides hardcoded chains with real benchmark data when available.
-const BENCHMARK_OVERRIDES = {};
-
 /**
  * Initialize benchmark data by fetching from the proxy.
  * Called once at server startup.
+ * Builds rank-driven chains and stores them in BENCHMARK_OVERRIDES.
+ * Only includes models that are in our MODELS registry (verified to exist).
  */
+const BENCHMARK_OVERRIDES = {};
+
 async function initBenchmarks() {
   try {
     await fetchRanked();
 
-    // Build benchmark-driven chains for each task type
+    // Build rank-ordered chains for each task type
     const tasks = ["fast", "chat", "code", "reasoning", "websearch"];
+    const registry = new Set(Object.keys(getAllModels()));
+
     for (const task of tasks) {
       const chain = buildChain(task, { limit: 8 });
-      if (chain.length >= 3) {
-        BENCHMARK_OVERRIDES[task] = chain;
-        console.log(`  🏆 ${task}: ${chain.slice(0, 3).map((m) => m.split("/").pop()).join(" → ")}...`);
+      // Only keep models that are in our registry
+      const validChain = chain.filter((id) => registry.has(id));
+      if (validChain.length >= 3) {
+        BENCHMARK_OVERRIDES[task] = validChain;
+        console.log(
+          `  🏆 ${task}: ${validChain
+            .slice(0, 3)
+            .map((m) => m.split("/").pop())
+            .join(" → ")}...`,
+        );
       }
     }
-    console.log("  ✅ Benchmark chains loaded");
+    console.log("  ✅ Rank-driven chains loaded from benchmark data");
   } catch (e) {
     console.warn(`  ⚠️ Benchmark init failed (using hardcoded chains): ${e.message}`);
   }
 }
 
 function getTaskRoute(task) {
-  // Use benchmark-driven chain if available, else hardcoded
+  // Use rank-driven chain from benchmark if available
   const benchmarkChain = BENCHMARK_OVERRIDES[task];
   if (benchmarkChain && benchmarkChain.length > 0) {
     const base = TASK_ROUTES[task] || TASK_ROUTES.chat;
     return { ...base, chain: benchmarkChain };
   }
+  // Fallback to hardcoded chain
   return TASK_ROUTES[task] || TASK_ROUTES.chat;
 }
 

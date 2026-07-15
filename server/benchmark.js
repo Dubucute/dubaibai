@@ -91,9 +91,9 @@ function getRankedModels(opts = {}) {
 
 /**
  * Build an optimized model chain for a specific task type.
- * Returns an array of model IDs sorted by benchmark score.
- * Uses task-specific strategies: fast tasks prefer small+fast models,
- * complex tasks prefer large+smart models.
+ * Returns an array of model IDs sorted by benchmark RANK.
+ * All tasks use rank as the primary sort (the ranked endpoint
+ * already combines quality + speed into the ranking formula).
  */
 function buildChain(taskType, opts = {}) {
   if (!_cache?.data) return [];
@@ -103,27 +103,27 @@ function buildChain(taskType, opts = {}) {
   // ── Task-specific model selection strategies ──
   switch (taskType) {
     case "fast": {
-      // Fast: small, quick models with good scores — exclude tiny models that can't follow system prompts
+      // Fast: speed-optimized models, rank-ordered
       models = models
-        .filter((m) => m.benchmark.tags?.includes("fast"))
-        .filter((m) => m.benchmark.combinedScore >= 7500)
-        .filter((m) => !/[-_]1b[-_]|[-_]2b[-_]/i.test(m.id)) // exclude 1-2B models
-        .sort((a, b) => a.benchmark.speed - b.benchmark.speed); // fastest first
+        .filter((m) => m.benchmark.speedRank === "fast" || m.benchmark.speedRank === "very_fast")
+        .filter((m) => !/[-_]1b[-_]|[-_]2b[-_]/i.test(m.id)) // exclude 1-2B
+        .filter((m) => m.capabilities?.chat === true)
+        .sort((a, b) => (a.benchmark.rank || 999) - (b.benchmark.rank || 999));
       break;
     }
 
     case "code": {
-      // Code: coding experts, sorted by score
+      // Code: chat-capable models, rank-ordered
       models = models
-        .filter((m) => m.benchmark.tags?.includes("coding_expert"))
-        .filter((m) => m.benchmark.combinedScore >= 7000)
-        .sort((a, b) => b.benchmark.combinedScore - a.benchmark.combinedScore);
+        .filter((m) => !/[-_]1b[-_]|[-_]2b[-_]|[-_]3b[-_]/i.test(m.id)) // exclude <8B
+        .filter((m) => m.capabilities?.chat === true)
+        .sort((a, b) => (a.benchmark.rank || 999) - (b.benchmark.rank || 999));
       break;
     }
 
     case "reasoning":
     case "websearch": {
-      // Reasoning/websearch: prefer large, smart models — boost score by model size
+      // Reasoning/websearch: rank-order with size boost for tie-breaking
       const sizeBoost = (id) => {
         if (/550b|397b|675b/i.test(id)) return 3000;
         if (/120b|119b|100b|90b|70b/i.test(id)) return 2000;
@@ -131,20 +131,22 @@ function buildChain(taskType, opts = {}) {
         return 0;
       };
       models = models
-        .filter((m) => m.benchmark.tags?.includes("smart"))
-        .filter((m) => m.benchmark.combinedScore >= 5000)
-        .map((m) => ({ ...m, _adjustedScore: m.benchmark.combinedScore + sizeBoost(m.id) }))
-        .sort((a, b) => b._adjustedScore - a._adjustedScore);
+        .filter((m) => !/[-_]1b[-_]|[-_]2b[-_]|[-_]3b[-_]|[-_]4b[-_]/i.test(m.id))
+        .filter((m) => m.capabilities?.chat === true)
+        .sort((a, b) => {
+          const rankDiff = (a.benchmark.rank || 999) - (b.benchmark.rank || 999);
+          if (rankDiff !== 0) return rankDiff; // rank first
+          return (sizeBoost(b.id) || 0) - (sizeBoost(a.id) || 0); // bigger model wins ties
+        });
       break;
     }
 
     default: {
-      // Chat / general: top smart models by score — exclude tiny models
+      // Chat / general: rank-ordered, exclude tiny models (<8B) and vision-only
       models = models
-        .filter((m) => m.benchmark.tags?.includes("smart"))
-        .filter((m) => m.benchmark.combinedScore >= 6000)
-        .filter((m) => !/[-_]1b[-_]|[-_]2b[-_]/i.test(m.id)) // exclude 1-2B models
-        .sort((a, b) => b.benchmark.combinedScore - a.benchmark.combinedScore);
+        .filter((m) => !/[-_]1b[-_]|[-_]2b[-_]|[-_]3b[-_]|[-_]4b[-_]/i.test(m.id))
+        .filter((m) => m.capabilities?.chat === true)
+        .sort((a, b) => (a.benchmark.rank || 999) - (b.benchmark.rank || 999));
       break;
     }
   }

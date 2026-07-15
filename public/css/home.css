@@ -376,6 +376,13 @@ html {
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+
   .home-nav { display: none; }
   .home-hamburger { display: flex; }
   .home-header-inner { padding: 0 12px; }

@@ -505,6 +505,13 @@ html {
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+
   .tool-topbar {
     padding: 0 12px;
     height: 52px;
