@@ -73,7 +73,7 @@ class Store {
   }
 
   async getConversation(id, userId = null) {
-    if (DB_ENABLED) {
+    if (isDbReady()) {
       try {
         const row = await db.queryOne(
           `SELECT * FROM conversations WHERE id = $1`,
@@ -93,7 +93,7 @@ class Store {
   }
 
   async listConversations(userId = null) {
-    if (DB_ENABLED) {
+    if (isDbReady()) {
       try {
         const clause = this._userClause(userId);
         const rows = await db.query(
@@ -139,7 +139,7 @@ class Store {
   }
 
   async addMessage(convoId, message, userId = null) {
-    if (DB_ENABLED) {
+    if (isDbReady()) {
       try {
         // Check ownership
         const convo = await this.getConversation(convoId, userId);
@@ -175,7 +175,7 @@ class Store {
   }
 
   async updateMessage(convoId, msgIndex, updates, userId = null) {
-    if (DB_ENABLED) {
+    if (isDbReady()) {
       try {
         const convo = await this.getConversation(convoId, userId);
         if (!convo) return null;
@@ -207,7 +207,7 @@ class Store {
   }
 
   async updateConversationTitle(id, title, userId = null) {
-    if (DB_ENABLED) {
+    if (isDbReady()) {
       try {
         const convo = await this.getConversation(id, userId);
         if (!convo) return null;
@@ -231,7 +231,7 @@ class Store {
   }
 
   async deleteConversation(id, userId = null) {
-    if (DB_ENABLED) {
+    if (isDbReady()) {
       try {
         const clause = userId ? "id = $1 AND user_id = $2" : "id = $1 AND user_id IS NULL";
         const params = userId ? [id, userId] : [id];
@@ -248,7 +248,7 @@ class Store {
   }
 
   async forkConversation(id, userId = null) {
-    if (DB_ENABLED) {
+    if (isDbReady()) {
       try {
         const orig = await this.getConversation(id, userId);
         if (!orig) return null;
@@ -307,7 +307,7 @@ class Store {
   }
 
   async getDocument(id, userId = null) {
-    if (DB_ENABLED) {
+    if (isDbReady()) {
       try {
         const row = await db.queryOne(`SELECT * FROM documents WHERE id = $1`, [id]);
         if (!row) return null;
@@ -329,7 +329,7 @@ class Store {
   }
 
   async listDocuments(userId = null) {
-    if (DB_ENABLED) {
+    if (isDbReady()) {
       try {
         const clause = this._userClause(userId);
         const rows = await db.query(
@@ -362,7 +362,7 @@ class Store {
   }
 
   async deleteDocument(id, userId = null) {
-    if (DB_ENABLED) {
+    if (isDbReady()) {
       try {
         const clause = userId ? "id = $1 AND user_id = $2" : "id = $1 AND user_id IS NULL";
         const params = userId ? [id, userId] : [id];
@@ -381,7 +381,7 @@ class Store {
   async searchDocuments(query, userId = null) {
     const q = query.toLowerCase();
 
-    if (DB_ENABLED) {
+    if (isDbReady()) {
       try {
         const clause = this._userClause(userId);
         const rows = await db.query(
