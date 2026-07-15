@@ -1414,7 +1414,7 @@ function formatMessageHtml(content) {
   html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
 
   // ── Horizontal Rules ──
-  html = html.replace(/^(?:[-*_]){3,}\s*$/gm, '<hr>');
+  html = html.replace(/^(?:[-*_=]){3,}\s*$/gm, '<hr>');
 
   // ── Unordered Lists ──
   html = html.replace(/(?:^|\n)([*-])\s+([^\n]+)((?:\n\1\s+[^\n]+)*)/g, (match, marker, firstItem, rest) => {
