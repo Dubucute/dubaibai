@@ -164,9 +164,12 @@ window.renderMarkdown = function(text) {
     return m;
   });
 
-  // Bare URLs
-  html = html.replace(/(https?:\/\/[^\s<"'>]+)/g,
-    '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent,#818cf8);text-decoration:underline">$1</a>');
+  // Bare URLs (skip URLs already inside href/src attributes)
+  html = html.replace(/(https?:\/\/[^\s<"'>]+)/g, function(match, url, offset) {
+    var before = html.slice(Math.max(0, offset - 30), offset).trim();
+    if (/[=]\s*["']$/i.test(before) || /href\s*=\s*["']?$/i.test(before) || /src\s*=\s*["']?$/i.test(before)) return match;
+    return '<a href="' + url + '" target="_blank" rel="noopener" style="color:var(--accent,#818cf8);text-decoration:underline">' + url + '</a>';
+  });
 
   // Bold/Italic/Inline code
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
