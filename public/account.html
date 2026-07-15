@@ -178,6 +178,118 @@
         border: 1px solid rgba(var(--accent-rgb), 0.25);
         color: var(--accent);
       }
+      .avatar-upload-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 24px;
+        background: var(--surface-bg);
+        border: 1px dashed var(--border-color);
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 16px;
+      }
+      .avatar-upload-area:hover {
+        border-color: var(--accent);
+        background: var(--hover-bg);
+      }
+      .avatar-upload-area.dragover {
+        border-color: var(--accent);
+        background: var(--accent-muted);
+      }
+      .avatar-upload-area .upload-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--accent-muted);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .avatar-upload-area .upload-text {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-align: center;
+      }
+      .avatar-upload-area .upload-hint {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-align: center;
+      }
+      .avatar-upload-area.has-avatar {
+        border-style: solid;
+        flex-direction: row;
+        padding: 12px 16px;
+      }
+      .avatar-upload-area.has-avatar .upload-preview {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: var(--accent-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .avatar-upload-area.has-avatar .upload-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .avatar-upload-area.has-avatar .upload-info {
+        flex: 1;
+      }
+      .avatar-upload-area.has-avatar .upload-info .file-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+      .avatar-upload-area.has-avatar .upload-info .file-size {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+      .avatar-upload-area.has-avatar .upload-actions {
+        display: flex;
+        gap: 6px;
+      }
+      .avatar-upload-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 11px;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .avatar-upload-btn:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+      .avatar-remove-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 11px;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .avatar-remove-btn:hover {
+        color: var(--danger);
+        border-color: var(--danger-glow);
+      }
       .account-signout {
         margin-top: 24px;
         text-align: center;
@@ -252,10 +364,20 @@
           <label for="fieldDisplayName">Display Name</label>
           <input type="text" id="fieldDisplayName" placeholder="Your display name" maxlength="50" />
         </div>
-        <div class="account-field">
-          <label for="fieldAvatarUrl">Avatar URL</label>
-          <input type="url" id="fieldAvatarUrl" placeholder="https://example.com/avatar.jpg" />
-          <div class="field-hint">Link to a square image (will be cropped to a circle).</div>
+        <!-- Avatar Upload (replaces URL input) -->
+        <label style="font-size:13px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:8px;">Avatar Photo</label>
+        <div class="avatar-upload-area" id="avatarUploadArea" onclick="document.getElementById('avatarFileInput').click()">
+          <div class="upload-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M9 2v14M2 9h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="upload-text">Click to upload a photo</div>
+          <div class="upload-hint">PNG, JPG, WEBP · Max 2MB · Will be cropped to a circle</div>
+        </div>
+        <input type="file" id="avatarFileInput" accept="image/png,image/jpeg,image/webp" style="display:none" />
+        <div style="text-align:center;margin-top:-8px;margin-bottom:16px;" id="avatarRemoveContainer">
+          <button class="avatar-remove-btn" id="avatarRemoveBtn" onclick="removeAvatar()" style="display:none">Remove photo</button>
         </div>
         <div class="account-field">
           <label for="fieldBio">Bio</label>
@@ -313,19 +435,31 @@
         }
       }
 
+      // ── Uploaded avatar data (base64 or null) ──
+      let uploadedAvatarData = null; // { dataUrl, name, size }
+
       function populateForm(profile) {
         document.getElementById("fieldUsername").value = profile.username || "";
         document.getElementById("fieldDisplayName").value = profile.displayName || "";
-        document.getElementById("fieldAvatarUrl").value = profile.avatarUrl || "";
         document.getElementById("fieldBio").value = profile.bio || "";
         document.getElementById("accountEmail").textContent = currentUserEmail || "Unknown";
         document.getElementById("accountUserId").textContent = currentUserId || "Unknown";
+
+        // Restore avatar from saved profile
+        if (profile.avatarUrl && profile.avatarUrl.startsWith("data:")) {
+          uploadedAvatarData = { dataUrl: profile.avatarUrl, name: "Uploaded photo", size: 0 };
+        } else if (profile.avatarUrl) {
+          // External URL — store it as a reference
+          uploadedAvatarData = { dataUrl: profile.avatarUrl, name: "", size: 0 };
+        } else {
+          uploadedAvatarData = null;
+        }
+
         updatePreview();
       }
 
       function updatePreview() {
         const displayName = document.getElementById("fieldDisplayName").value.trim();
-        const avatarUrl = document.getElementById("fieldAvatarUrl").value.trim();
         const username = document.getElementById("fieldUsername").value.trim();
 
         document.getElementById("displayNamePreview").textContent = displayName || "Your Name";
@@ -334,22 +468,113 @@
         const letterEl = document.getElementById("avatarLetter");
         const avatarEl = document.querySelector(".account-avatar");
 
-        if (avatarUrl) {
-          avatarEl.innerHTML = '<img src="' + escHtml(avatarUrl) + '" alt="" onerror="this.parentElement.innerHTML=\'<span id=avatarLetter>\'+(this.alt.charAt(0)||\'?\').toUpperCase()+\'</span>\'">';
+        if (uploadedAvatarData && uploadedAvatarData.dataUrl) {
+          avatarEl.innerHTML = '<img src="' + escHtml(uploadedAvatarData.dataUrl) + '" alt="Avatar" onerror="this.parentElement.innerHTML=\'<span id=avatarLetter>\'+(this.alt.charAt(0)||\'?\').toUpperCase()+\'</span>\'">';
         } else {
           const initial = (displayName || currentUserEmail || "?").charAt(0).toUpperCase();
-          letterEl.textContent = initial;
           avatarEl.innerHTML = '<span id="avatarLetter">' + initial + '</span>';
         }
+
+        // Update upload area
+        updateUploadArea();
 
         // Bio counter
         const bio = document.getElementById("fieldBio").value;
         document.getElementById("bioCount").textContent = bio.length + " / 300";
       }
 
+      function updateUploadArea() {
+        const area = document.getElementById("avatarUploadArea");
+        const removeBtn = document.getElementById("avatarRemoveBtn");
+
+        if (uploadedAvatarData && uploadedAvatarData.dataUrl) {
+          const isDataUrl = uploadedAvatarData.dataUrl.startsWith("data:");
+          const name = uploadedAvatarData.name || "Photo";
+          const size = uploadedAvatarData.size ? formatSize(uploadedAvatarData.size) : "";
+
+          area.className = "avatar-upload-area has-avatar";
+          area.innerHTML = '<div class="upload-preview"><img src="' + escHtml(uploadedAvatarData.dataUrl) + '" alt=""></div>'
+            + '<div class="upload-info"><div class="file-name">' + escHtml(name) + '</div>'
+            + (size ? '<div class="file-size">' + size + '</div>' : '')
+            + '</div>'
+            + '<div class="upload-actions"><button class="avatar-upload-btn" onclick="event.stopPropagation();document.getElementById(\'avatarFileInput\').click()">Change</button></div>';
+          removeBtn.style.display = "inline-block";
+        } else {
+          area.className = "avatar-upload-area";
+          area.innerHTML = '<div class="upload-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2v14M2 9h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>'
+            + '<div class="upload-text">Click to upload a photo</div>'
+            + '<div class="upload-hint">PNG, JPG, WEBP · Max 2MB · Will be cropped to a circle</div>';
+          removeBtn.style.display = "none";
+        }
+      }
+
+      function removeAvatar() {
+        uploadedAvatarData = null;
+        document.getElementById("avatarFileInput").value = "";
+        updatePreview();
+      }
+
+      // ── File input handler ──
+      document.getElementById("avatarFileInput").addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate type
+        if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+          showMessage("Please upload a PNG, JPG, or WEBP image.", "error");
+          this.value = "";
+          return;
+        }
+
+        // Validate size
+        if (file.size > 2 * 1024 * 1024) {
+          showMessage("Image is too large. Maximum 2MB.", "error");
+          this.value = "";
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          uploadedAvatarData = {
+            dataUrl: ev.target.result,
+            name: file.name,
+            size: file.size,
+          };
+          updatePreview();
+        };
+        reader.onerror = function() {
+          showMessage("Failed to read the image file.", "error");
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // ── Drag & drop support ──
+      const uploadArea = document.getElementById("avatarUploadArea");
+      uploadArea.addEventListener("dragover", function(e) {
+        e.preventDefault();
+        this.classList.add("dragover");
+      });
+      uploadArea.addEventListener("dragleave", function() {
+        this.classList.remove("dragover");
+      });
+      uploadArea.addEventListener("drop", function(e) {
+        e.preventDefault();
+        this.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith("image/")) {
+          document.getElementById("avatarFileInput").files = e.dataTransfer.files;
+          document.getElementById("avatarFileInput").dispatchEvent(new Event("change"));
+        }
+      });
+
+      function formatSize(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+      }
+
       // ── Live preview on input ──
       document.getElementById("fieldDisplayName").addEventListener("input", updatePreview);
-      document.getElementById("fieldAvatarUrl").addEventListener("input", updatePreview);
       document.getElementById("fieldUsername").addEventListener("input", updatePreview);
       document.getElementById("fieldBio").addEventListener("input", updatePreview);
 
@@ -372,7 +597,7 @@
             body: JSON.stringify({
               username: document.getElementById("fieldUsername").value.trim() || null,
               displayName: document.getElementById("fieldDisplayName").value.trim() || null,
-              avatarUrl: document.getElementById("fieldAvatarUrl").value.trim() || null,
+              avatarUrl: uploadedAvatarData ? uploadedAvatarData.dataUrl : null,
               bio: document.getElementById("fieldBio").value.trim() || null,
             }),
           });
