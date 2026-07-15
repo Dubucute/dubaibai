@@ -802,23 +802,22 @@
 
       function renderDiff(input, output) {
         const diffs = wordDiff(input, output);
-        // Group: attach trailing whitespace to the preceding token
-        const merged = [];
-        for (let i = 0; i < diffs.length; i++) {
-          const d = diffs[i];
-          if (/^\s+$/.test(d.word) && merged.length > 0) {
-            // Attach whitespace to previous token's word
-            merged[merged.length - 1].word += d.word;
-          } else {
-            merged.push({ ...d });
-          }
+        // Build HTML: skip pure-whitespace tokens, just use a plain space separator
+        // between word tokens to avoid double-space artifacts from the diff algorithm.
+        let html = '';
+        let prevHadWord = false;
+        for (const d of diffs) {
+          const word = d.word;
+          // Skip pure whitespace tokens
+          if (/^\s+$/.test(word)) continue;
+          // Add space separator between word tokens
+          if (prevHadWord) html += ' ';
+          if (d.type === 'kept') html += `<span class="diff-kept">${escHtml(word)}</span>`;
+          else if (d.type === 'added') html += `<span class="diff-added">${escHtml(word)}</span>`;
+          else if (d.type === 'removed') html += `<span class="diff-removed">${escHtml(word)}</span>`;
+          else html += escHtml(word);
+          prevHadWord = true;
         }
-        const html = merged.map(d => {
-          if (d.type === 'kept') return `<span class="diff-kept">${escHtml(d.word)}</span>`;
-          if (d.type === 'added') return `<span class="diff-added">${escHtml(d.word)}</span>`;
-          if (d.type === 'removed') return `<span class="diff-removed">${escHtml(d.word)}</span>`;
-          return escHtml(d.word);
-        }).join('');
         return html;
       }
 
