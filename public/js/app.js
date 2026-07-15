@@ -1459,9 +1459,9 @@ function formatMessageHtml(content) {
     return m;
   });
 
-  // ── Bare URLs → <a> ──
+  // ── Bare URLs → <a> (exclude " and ' to avoid matching inside href/src attributes) ──
   html = html.replace(
-    /(https?:\/\/[^\s<]+)/g,
+    /(https?:\/\/[^\s<"'>]+)/g,
     '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">$1</a>',
   );
 
