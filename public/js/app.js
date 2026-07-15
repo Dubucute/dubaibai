@@ -1864,17 +1864,11 @@ window.deleteConversation = async function (id) {
   try {
     await AgentAPI.deleteConversation(id);
     if (id === currentConversationId) {
-      // If deleting current conversation, create a new one
+      // If deleting current conversation, clear state and show welcome
       currentConversationId = null;
       localStorage.removeItem("dubu_last_convo_id");
-      showWelcomeMessage();
       agentHistory = [];
-      createNewConversation().then((convo) => {
-        if (convo) {
-          currentConversationId = convo.id;
-          loadConversationList();
-        }
-      });
+      showWelcomeMessage();
     }
     loadConversationList();
     showToast("Conversation deleted", "info", 2000);
@@ -1943,23 +1937,17 @@ window.selectConversation = async function (id, silent = false) {
       showWelcomeMessage();
     }
   } catch (e) {
-    // Stale conversation (created before DB was connected) — auto-create fresh
+    // Stale conversation — clear it and start fresh (don't auto-create)
     if (e.message === "Conversation not found") {
-      // Create a new conversation to replace the stale one
-      try {
-        const newConvo = await AgentAPI.createConversation("New Chat");
-        currentConversationId = newConvo.id;
-        localStorage.setItem("dubu_last_convo_id", newConvo.id);
-        showWelcomeMessage();
-        agentHistory = [];
-        loadConversationList();
-        if (!silent) {
-          showToast("Started new conversation (previous one was lost)", "info", 3000);
-        }
-        return;
-      } catch (createErr) {
-        // Fall through to error
+      currentConversationId = null;
+      localStorage.removeItem("dubu_last_convo_id");
+      showWelcomeMessage();
+      agentHistory = [];
+      loadConversationList();
+      if (!silent) {
+        showToast("Previous conversation was removed", "info", 2500);
       }
+      return;
     }
     if (!silent) {
       showToast("Failed to load conversation: " + e.message, "error");

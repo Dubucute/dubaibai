@@ -247,9 +247,12 @@ class Store {
   async deleteConversation(id, userId = null) {
     if (isDbReady()) {
       try {
-        const clause = userId ? "id = $1 AND user_id = $2" : "id = $1 AND user_id IS NULL";
-        const params = userId ? [id, userId] : [id];
-        await db.query(`DELETE FROM conversations WHERE ${clause}`, params);
+        // First verify the conversation exists and user owns it
+        const row = await db.queryOne(`SELECT id, user_id FROM conversations WHERE id = $1`, [id]);
+        if (!row) return; // Already gone — not an error
+        if (userId && row.user_id && row.user_id !== userId) return; // Not owner — silently skip
+        await db.query(`DELETE FROM conversations WHERE id = $1`, [id]);
+        console.log(`🗑️ Deleted conversation ${id}`);
         return;
       } catch (e) {
         console.warn("DB deleteConversation failed, falling back:", e.message);
