@@ -148,6 +148,31 @@ async function createTables() {
       )
     `);
 
+    // ── Ranked models table (benchmark data from proxy) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ranked_models (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        model_id TEXT NOT NULL UNIQUE,
+        name TEXT,
+        owned_by TEXT,
+        type TEXT,
+        capabilities JSONB NOT NULL DEFAULT '{}',
+        benchmark JSONB,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_ranked_models_benchmark_rank
+      ON ranked_models ((benchmark->>'rank'))
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_ranked_models_benchmark_speed
+      ON ranked_models ((benchmark->>'speedRank'))
+    `);
+
     await client.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS idx_user_settings_username
       ON user_settings (username) WHERE username IS NOT NULL
@@ -196,6 +221,74 @@ async function queryOne(text, params = []) {
 }
 
 /**
+ * Save ranked models to the database (upsert).
+ * @param {Array} models - Array of model objects from the proxy
+ */
+async function saveRankedModels(models) {
+  if (!pool) throw new Error("Database not available");
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    for (const model of models) {
+      await client.query(
+        `INSERT INTO ranked_models (model_id, name, owned_by, type, capabilities, benchmark, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW())
+         ON CONFLICT (model_id) DO UPDATE SET
+           name = EXCLUDED.name,
+           owned_by = EXCLUDED.owned_by,
+           type = EXCLUDED.type,
+           capabilities = EXCLUDED.capabilities,
+           benchmark = EXCLUDED.benchmark,
+           updated_at = NOW()`,
+        [
+          model.id,
+          model.name || null,
+          model.owned_by || null,
+          model.type || null,
+          JSON.stringify(model.capabilities || {}),
+          JSON.stringify(model.benchmark || null),
+        ]
+      );
+    }
+    await client.query("COMMIT");
+    console.log(`  💾 Saved ${models.length} ranked models to database`);
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Load ranked models from the database (async version).
+ * @returns {Object} { data: [...], benchmarkedCount, total }
+ */
+async function loadRankedModels() {
+  if (!pool) throw new Error("Database not available");
+  const rows = await pool.query(
+    `SELECT model_id, name, owned_by, type, capabilities, benchmark
+     FROM ranked_models
+     ORDER BY 
+       CASE WHEN benchmark->>'rank' IS NOT NULL THEN (benchmark->>'rank')::int ELSE 999 END ASC,
+       model_id ASC`
+  );
+  const data = rows.rows.map((r) => ({
+    id: r.model_id,
+    name: r.name,
+    owned_by: r.owned_by,
+    type: r.type,
+    capabilities: r.capabilities || {},
+    benchmark: r.benchmark,
+  }));
+  return {
+    data,
+    benchmarkedCount: data.filter((m) => m.benchmark).length,
+    total: data.length,
+  };
+}
+
+/**
  * Gracefully close the pool (for shutdown).
  */
 async function closePool() {
@@ -213,4 +306,6 @@ module.exports = {
   closePool,
   DB_ENABLED,
   get DB_READY() { return DB_READY; },
+  saveRankedModels,
+  loadRankedModels,
 };

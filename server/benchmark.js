@@ -2,11 +2,13 @@
 // Fetches real benchmark scores from the Dubu proxy at dubu.alwaysdata.net
 // and uses them to rank models for each task type.
 // Falls back to local ranked_models_clean.json if the proxy is unavailable.
+// Also persists to PostgreSQL database for Vercel persistence.
 
 const https = require("https");
 const fs = require("fs");
 const path = require("path");
 const os = require("os"); // For a writable temp directory on read-only filesystems
+const db = require("./db");
 
 const PROXY_URL = process.env.BENCHMARK_PROXY_URL || "https://dubu.alwaysdata.net";
 const FETCH_INTERVAL = 60 * 60 * 1000; // 1 hour
@@ -35,24 +37,40 @@ function loadLocalRanked() {
 }
 
 /**
+ * Load ranked models from the database.
+ */
+async function loadFromDatabase() {
+  if (!db.DB_ENABLED || !db.DB_READY) return null;
+  try {
+    const result = await db.loadRankedModels();
+    console.log(`  📊 Loaded ${result.benchmarkedCount || result.data?.length || 0} ranked models from database`);
+    return result;
+  } catch (e) {
+    console.warn(`  ⚠️ Could not load ranked models from database: ${e.message}`);
+    return null;
+  }
+}
+
+/**
  * Fetch ranked models from the proxy endpoint.
  * Falls back to local file if proxy is unavailable.
  * Returns { data: [...], benchmarkedCount, total }
  */
-function fetchRanked(forceRefresh = false) {
-  return new Promise((resolve, reject) => {
-    if (!forceRefresh && _cache && Date.now() - _lastFetch < FETCH_INTERVAL) {
-      console.log(`  📦 Using cached benchmark data (${_cache.data?.length || 0} models)`);
-      return resolve(_cache);
-    }
+async function fetchRanked(forceRefresh = false) {
+  if (!forceRefresh && _cache && Date.now() - _lastFetch < FETCH_INTERVAL) {
+    console.log(`  📦 Using cached benchmark data (${_cache.data?.length || 0} models)`);
+    return _cache;
+  }
 
-    // Try proxy first, fall back to local file
-    const url = `${PROXY_URL}/v1/models/ranked?limit=50`;
-    console.log(`  🔄 Fetching ranked models from ${url}`);
+  // Try proxy first, fall back to local file, then database
+  const url = `${PROXY_URL}/v1/models/ranked?limit=50`;
+  console.log(`  🔄 Fetching ranked models from ${url}`);
+  
+  return new Promise((resolve, reject) => {
     https.get(url, { headers: { "Accept": "application/json" } }, (res) => {
       let body = "";
       res.on("data", (d) => (body += d));
-      res.on("end", () => {
+      res.on("end", async () => {
         try {
           // Parse the response
           const parsed = JSON.parse(body);
@@ -65,19 +83,47 @@ function fetchRanked(forceRefresh = false) {
           };
           _lastFetch = Date.now();
 
-          // Write the raw response to the cleaned JSON file for getAllModels
-          const outPath = path.join(__dirname, "..", "ranked_models_clean.json");
+          // Write to temp path (works on Vercel's writable /tmp)
           fs.writeFileSync(STABLE_TEMP_PATH, JSON.stringify(_cache, null, 2), "utf-8");
-          console.log(`  📊 Updated ${outPath} with ${parsed.benchmarkedCount || parsed.data?.length || 0} models`);
+          // Also write to project root for local development persistence
+          const projectPath = path.join(__dirname, "..", "ranked_models_clean.json");
+          try {
+            fs.writeFileSync(projectPath, JSON.stringify(_cache, null, 2), "utf-8");
+          } catch (e) {
+            // Ignore write errors on read-only filesystems (Vercel)
+          }
+          
+          // Save to database for persistent storage across Vercel cold starts
+          if (db.DB_ENABLED && db.DB_READY) {
+            try {
+              await db.saveRankedModels(parsed.data);
+            } catch (e) {
+              console.warn(`  ⚠️ Failed to save ranked models to database: ${e.message}`);
+            }
+          }
+          
+          console.log(`  📊 Updated ranked models cache (${parsed.benchmarkedCount || parsed.data?.length || 0} models)`);
           return resolve(_cache);
         } catch (e) {
           console.warn(`  ⚠️ Could not parse proxy response: ${e.message}`);
+          // Fall back to local file
+          const local = loadLocalRanked();
+          if (local) return resolve(local);
+          // Fall back to database
+          const fromDb = await loadFromDatabase();
+          if (fromDb) return resolve(fromDb);
+          return reject(new Error("All fallback sources failed"));
         }
       });
-    }).on("error", (e) => {
+    }).on("error", async (e) => {
       console.warn(`  ⚠️ Proxy request failed (${e.message}), falling back to local file`);
       // Fall back to local file (if it exists)
-      return resolve(loadLocalRanked());
+      const local = loadLocalRanked();
+      if (local) return resolve(local);
+      // Fall back to database
+      const fromDb = await loadFromDatabase();
+      if (fromDb) return resolve(fromDb);
+      return reject(new Error("All fallback sources failed"));
     });
   });
 }
@@ -209,10 +255,18 @@ function getSummary() {
   };
 }
 
+/**
+ * Get the cached ranked data (synchronous, returns null if not fetched yet).
+ */
+function getRankedData() {
+  return _cache;
+}
+
 module.exports = {
   fetchRanked,
   getModelBenchmark,
   getRankedModels,
   buildChain,
   getSummary,
+  getRankedData,
 };
