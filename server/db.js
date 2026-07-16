@@ -39,7 +39,7 @@ async function initDatabase() {
         connectionString: DATABASE_URL,
         max: 5,
         idleTimeoutMillis: 10000,
-        connectionTimeoutMillis: 10000,
+        connectionTimeoutMillis: 5000,
         allowExitOnIdle: true,
         ssl: sslConfig,
       });
@@ -50,9 +50,9 @@ async function initDatabase() {
         // Don't set pool=null here — pg will auto-replace broken connections
       });
 
-      // Test the connection (with retry)
+      // Test the connection (with retry) — fast fail on serverless cold starts
       let connected = false;
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      for (let attempt = 1; attempt <= 2; attempt++) {
         try {
           const client = await pool.connect();
           await client.query("SELECT 1");
@@ -60,8 +60,8 @@ async function initDatabase() {
           connected = true;
           break;
         } catch (e) {
-          console.warn(`  ⚠️  Connection attempt ${attempt}/3 failed:`, e.message);
-          if (attempt < 3) await new Promise((r) => setTimeout(r, 1000 * attempt));
+          console.warn(`  ⚠️  Connection attempt ${attempt}/2 failed:`, e.message);
+          if (attempt < 2) await new Promise((r) => setTimeout(r, 500));
         }
       }
       if (!connected) throw new Error("Failed to connect after 3 attempts");

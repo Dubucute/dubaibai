@@ -62,7 +62,28 @@ async function fetchRanked(forceRefresh = false) {
     return _cache;
   }
 
-  // Try proxy first, fall back to local file, then database
+  // ── Cold start: try database first (persisted from previous run) ──
+  if (!forceRefresh && !_cache) {
+    const fromDb = await loadFromDatabase();
+    if (fromDb && fromDb.data?.length > 0) {
+      _cache = fromDb;
+      _lastFetch = Date.now();
+      console.log(`  📦 Loaded ${fromDb.data.length} ranked models from database (cold start)`);
+      // Refresh from proxy in the background (don't await)
+      refreshFromProxy();
+      return _cache;
+    }
+  }
+
+  // ── Fetch from proxy ──
+  return refreshFromProxy(forceRefresh);
+}
+
+/**
+ * Fetch ranked models from the proxy endpoint.
+ * Falls back to local file if proxy is unavailable.
+ */
+async function refreshFromProxy(forceRefresh = false) {
   const url = `${PROXY_URL}/v1/models/ranked?limit=50`;
   console.log(`  🔄 Fetching ranked models from ${url}`);
   
@@ -72,10 +93,8 @@ async function fetchRanked(forceRefresh = false) {
       res.on("data", (d) => (body += d));
       res.on("end", async () => {
         try {
-          // Parse the response
           const parsed = JSON.parse(body);
           
-          // Save fresh data to cache
           _cache = {
             data: parsed.data,
             benchmarkedCount: parsed.benchmarkedCount,
@@ -85,7 +104,6 @@ async function fetchRanked(forceRefresh = false) {
 
           // Write to temp path (works on Vercel's writable /tmp)
           fs.writeFileSync(STABLE_TEMP_PATH, JSON.stringify(_cache, null, 2), "utf-8");
-          // Also write to project root for local development persistence
           const projectPath = path.join(__dirname, "..", "ranked_models_clean.json");
           try {
             fs.writeFileSync(projectPath, JSON.stringify(_cache, null, 2), "utf-8");
@@ -93,7 +111,7 @@ async function fetchRanked(forceRefresh = false) {
             // Ignore write errors on read-only filesystems (Vercel)
           }
           
-          // Save to database for persistent storage across Vercel cold starts
+          // Save to database for next cold start
           if (db.DB_ENABLED && db.DB_READY) {
             try {
               await db.saveRankedModels(parsed.data);
@@ -106,10 +124,8 @@ async function fetchRanked(forceRefresh = false) {
           return resolve(_cache);
         } catch (e) {
           console.warn(`  ⚠️ Could not parse proxy response: ${e.message}`);
-          // Fall back to local file
           const local = loadLocalRanked();
           if (local) return resolve(local);
-          // Fall back to database
           const fromDb = await loadFromDatabase();
           if (fromDb) return resolve(fromDb);
           return reject(new Error("All fallback sources failed"));
@@ -117,10 +133,8 @@ async function fetchRanked(forceRefresh = false) {
       });
     }).on("error", async (e) => {
       console.warn(`  ⚠️ Proxy request failed (${e.message}), falling back to local file`);
-      // Fall back to local file (if it exists)
       const local = loadLocalRanked();
       if (local) return resolve(local);
-      // Fall back to database
       const fromDb = await loadFromDatabase();
       if (fromDb) return resolve(fromDb);
       return reject(new Error("All fallback sources failed"));
