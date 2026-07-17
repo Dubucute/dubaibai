@@ -555,19 +555,20 @@ window.sendToAgent = async function () {
             break;
 
           case "token":
-            // Real-time token streaming — character-by-character like ChatGPT
+            // Real-time token streaming — live markdown rendering
             if (!thinkingDiv.dataset.streaming) {
               // First token — replace thinking indicator with streaming content area
               thinkingDiv.dataset.streaming = "true";
               _streamText = "";
-              bubble.innerHTML = `<div class="msg-name">${escHtml(modelName || "Dubu AI")}</div><div class="msg-content streaming"><span class="streaming-text"></span><span class="streaming-cursor">▊</span></div>`;
+              bubble.innerHTML = `<div class="msg-name">${escHtml(modelName || "Dubu AI")}</div><div class="msg-content streaming"><div class="streaming-text"></div><span class="streaming-cursor">▊</span></div>`;
             }
-            // Accumulate in string, set textContent directly (O(n) per token, no string concat)
+            // Accumulate text and render markdown live
             _streamText += data.content || "";
             const streamTextEl = bubble.querySelector(".streaming-text");
             if (streamTextEl) {
-              streamTextEl.textContent = _streamText;
+              streamTextEl.innerHTML = formatMessageHtml(_streamText);
             }
+            scrollToBottom();
             break;
 
           case "result":
