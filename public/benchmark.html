@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="theme-dark">
+<html lang="en" class="theme-dark benchmark-page">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,15 +21,22 @@
       --bench-orange: #f97316;
     }
 
-    body {
-      overflow-y: auto;
-      overflow-x: hidden;
-    }
-
-    .bench-container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 24px 32px 64px;
+html.benchmark-page body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  background: var(--bg-primary, #0a0a0f) !important;
+}
+html.benchmark-page #app {
+  display: block !important;
+  height: auto !important;
+  overflow: visible !important;
+  flex: none !important;
+  background: transparent !important;
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+  padding: 24px 32px 64px !important;
     }
 
     /* ── Header ── */
@@ -674,9 +681,12 @@
     let BENCHMARK_DATA = [];
     async function loadBenchmarkData() {
       try {
+        console.log('Loading benchmark data...');
         const response = await fetch('/api/benchmark');
-        if (!response.ok) throw new Error('Failed to load benchmark data');
+        console.log('Response status:', response.status);
+        if (!response.ok) throw new Error('Failed to load benchmark data: ' + response.status);
         const json = await response.json();
+        console.log('Loaded data:', json.data?.length || 0, 'models');
         // json is { data: [...], total, benchmarkedCount, ... }
         const list = json.data || json;
         // Transform the JSON data to match the expected format
