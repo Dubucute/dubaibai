@@ -676,21 +676,26 @@
       try {
         const response = await fetch('ranked_models_clean.json');
         if (!response.ok) throw new Error('Failed to load benchmark data');
-        const data = await response.json();
+        const json = await response.json();
+        // json is { data: [...], total, benchmarkedCount, ... }
+        const list = json.data || json;
         // Transform the JSON data to match the expected format
-        BENCHMARK_DATA = data.map((model, index) => ({
-          rank: index + 1,
-          id: model.id || model.name,
-          name: model.name,
-          score: model.score || 0,
-          duration: model.duration || null,
-          tps: model.tps || null,
-          input: model.input || null,
-          output: model.output || null,
-          tools: model.tools || false,
-          tags: model.tags || [],
-          error: model.error || null
-        }));
+        BENCHMARK_DATA = list.map((model, index) => {
+          const b = model.benchmark || {};
+          return {
+            rank: b.rank || index + 1,
+            id: model.id || '',
+            name: model.id ? model.id.split('/').pop() : 'Unknown',
+            score: b.score || 0,
+            duration: b.duration || null,
+            tps: b.tps || null,
+            input: b.inputTokens || null,
+            output: b.outputTokens || null,
+            tools: b.toolsWorked || false,
+            tags: b.tags || [],
+            error: b.error || null
+          };
+        });
         return BENCHMARK_DATA;
       } catch (error) {
         console.error('Error loading benchmark data:', error);
@@ -828,6 +833,9 @@
       const total = BENCHMARK_DATA.length;
       const working = BENCHMARK_DATA.filter(m => m.score > 0).length;
       const failed = total - working;
+      const fast = BENCHMARK_DATA.filter(m => m.duration && m.duration < 5).length;
+      const tools = BENCHMARK_DATA.filter(m => m.tools).length;
+      const top = BENCHMARK_DATA.filter(m => m.score >= 85).length;
       const topScore = Math.max(...BENCHMARK_DATA.map(m => m.score || 0));
       const bestTPS = Math.max(...BENCHMARK_DATA.map(m => m.tps || 0));
 
@@ -836,6 +844,20 @@
       document.getElementById('stat-failed').textContent = failed;
       document.getElementById('stat-top-score').textContent = Math.round(topScore);
       document.getElementById('stat-best-tps').textContent = bestTPS.toFixed(1);
+
+      // Update filter button labels
+      const filterBtns = {
+        'all': `All (${total})`,
+        'working': `✅ Working (${working})`,
+        'failed': `❌ Failed (${failed})`,
+        'top': `🏆 Top Tier (${top})`,
+        'fast': `⚡ Fast (${fast})`,
+        'tools': `🛠 Tool-Calling (${tools})`
+      };
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        const key = btn.dataset.filter;
+        if (filterBtns[key]) btn.textContent = filterBtns[key];
+      });
     }
 
     // ── Sorting ──
