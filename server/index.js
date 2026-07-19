@@ -45,6 +45,21 @@ const upload = multer({
 app.use(express.json({ limit: "50mb" }));
 app.use(express.static(path.join(__dirname, "..", "public")));
 
+// ── API: Benchmark Data (public, no auth required) ──
+// GET /api/benchmark — Serve ranked_models_clean.json for the benchmark page
+app.get("/api/benchmark", (req, res) => {
+  try {
+    const fs = require("fs");
+    const path = require("path");
+    const filePath = path.join(__dirname, "..", "ranked_models_clean.json");
+    const raw = fs.readFileSync(filePath, "utf-8");
+    res.setHeader("Content-Type", "application/json");
+    res.send(raw);
+  } catch (e) {
+    res.status(500).json({ error: "Failed to load benchmark data" });
+  }
+});
+
 // Apply auth middleware to all API routes (attaches req.user if authenticated)
 app.use("/api", authMiddleware);
 
@@ -588,21 +603,6 @@ app.get("*", (req, res) => {
 // if the DB connection hasn't completed yet.
 db.initDatabase().catch(() => {
   /* DB not available — in-memory fallback will be used */
-});
-
-// ── API: Benchmark Data ──
-// GET /api/benchmark — Serve ranked_models_clean.json for the benchmark page
-app.get("/api/benchmark", (req, res) => {
-  try {
-    const fs = require("fs");
-    const path = require("path");
-    const filePath = path.join(__dirname, "..", "ranked_models_clean.json");
-    const raw = fs.readFileSync(filePath, "utf-8");
-    res.setHeader("Content-Type", "application/json");
-    res.send(raw);
-  } catch (e) {
-    res.status(500).json({ error: "Failed to load benchmark data" });
-  }
 });
 
 // ── Export for Vercel (serverless) ──
