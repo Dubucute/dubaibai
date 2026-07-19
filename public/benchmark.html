@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Benchmark — Dubu AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/glass.css">
+  <style>
+    :root {
+      --bench-accent: #6366f1;
+      --bench-green: #22c55e;
+      --bench-yellow: #f59e0b;
+      --bench-red: #ef4444;
+      --bench-blue: #3b82f6;
+      --bench-purple: #8b5cf6;
+      --bench-cyan: #06b6d4;
+      --bench-orange: #f97316;
+    }
+
+    body {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .bench-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 32px 64px;
+    }
+
+    /* ── Header ── */
+    .bench-header {
+      text-align: center;
+      margin-bottom: 48px;
+      position: relative;
+    }
+
+    .bench-header::before {
+      content: '';
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bench-header h1 {
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, #e8e8ed 0%, #9494a3 100%);
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+      z-index: 1;
+    }
+
+    .bench-header .subtitle {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-top: 8px;
+      font-weight: 400;
+      position: relative;
+      z-index: 1;
+    }
+
+    .bench-header .date {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Stats Row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: var(--surface-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-color-strong);
+      transform: translateY(-2px);
+    }
+
+    .stat-card .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-card .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .stat-card.green .stat-value { color: var(--bench-green); }
+    .stat-card.red .stat-value { color: var(--bench-red); }
+    .stat-card.blue .stat-value { color: var(--bench-blue); }
+    .stat-card.yellow .stat-value { color: var(--bench-yellow); }
+    .stat-card.purple .stat-value { color: var(--bench-purple); }
+
+    /* ── Scoring Legend ── */
+    .scoring-legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 32px;
+      padding: 16px 24px;
+      background: var(--surface-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+    }
+
+    .scoring-legend .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-bar {
+      width: 24px;
+      height: 8px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    /* ── Filter Bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      background: var(--surface-bg);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: var(--font-sans);
+    }
+
+    .filter-btn:hover {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+
+    .filter-btn.active {
+      background: rgba(99,102,241,0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Table ── */
+    .bench-table-wrapper {
+      background: var(--surface-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .bench-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .bench-table thead {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .bench-table th {
+      background: var(--surface-elevated);
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color-strong);
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.2s;
+      white-space: nowrap;
+    }
+
+    .bench-table th:hover {
+      color: var(--text-primary);
+    }
+
+    .bench-table th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
+    .bench-table th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
+
+    .bench-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+
+    .bench-table tbody tr {
+      transition: background 0.15s;
+    }
+
+    .bench-table tbody tr:hover {
+      background: var(--hover-bg);
+    }
+
+    .bench-table tbody tr.failed {
+      opacity: 0.45;
+    }
+
+    .bench-table tbody tr.failed:hover {
+      opacity: 0.7;
+    }
+
+    /* ── Rank Cell ── */
+    .rank-cell {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.9rem;
+      width: 48px;
+      text-align: center;
+    }
+
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .rank-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; }
+    .rank-2 { background: linear-gradient(135deg, #d1d5db, #9ca3af); color: #000; }
+    .rank-3 { background: linear-gradient(135deg, #d97706, #b45309); color: #fff; }
+    .rank-other { background: var(--surface-strong); color: var(--text-secondary); }
+
+    /* ── Model Name ── */
+    .model-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 220px;
+    }
+
+    .model-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.88rem;
+    }
+
+    .model-id {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .model-tags {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 3px;
+    }
+
+    .model-tag {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .tag-fast { background: rgba(34,197,94,0.12); color: #22c55e; }
+    .tag-smart { background: rgba(99,102,241,0.12); color: #6366f1; }
+    .tag-coding { background: rgba(59,130,246,0.12); color: #3b82f6; }
+    .tag-vision { background: rgba(139,92,246,0.12); color: #8b5cf6; }
+    .tag-reasoning { background: rgba(6,182,212,0.12); color: #06b6d4; }
+    .tag-failed { background: rgba(239,68,68,0.12); color: #ef4444; }
+    .tag-safety { background: rgba(245,158,11,0.12); color: #f59e0b; }
+
+    /* ── Score Bar ── */
+    .score-cell {
+      min-width: 140px;
+    }
+
+    .score-bar-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .score-bar {
+      flex: 1;
+      height: 8px;
+      background: var(--surface-strong);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .score-bar-fill.s90 { background: linear-gradient(90deg, #22c55e, #4ade80); }
+    .score-bar-fill.s85 { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .score-bar-fill.s80 { background: linear-gradient(90deg, #6366f1, #818cf8); }
+    .score-bar-fill.s75 { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+    .score-bar-fill.s70 { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .score-bar-fill.s40 { background: linear-gradient(90deg, #f97316, #fb923c); }
+    .score-bar-fill.s0 { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+    .score-number {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.88rem;
+      min-width: 36px;
+      text-align: right;
+    }
+
+    /* ── Speed Cell ── */
+    .speed-cell {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+    }
+
+    .speed-value {
+      font-weight: 600;
+    }
+
+    .speed-unit {
+      color: var(--text-muted);
+      font-size: 0.7rem;
+    }
+
+    .speed-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 500;
+      margin-left: 4px;
+    }
+
+    .speed-fast { background: rgba(34,197,94,0.12); color: #22c55e; }
+    .speed-medium { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .speed-slow { background: rgba(239,68,68,0.12); color: #ef4444; }
+    .speed-very_slow { background: rgba(239,68,68,0.18); color: #ef4444; }
+
+    /* ── TPS Cell ── */
+    .tps-cell {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
+
+    /* ── Token Cells ── */
+    .token-cell {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    /* ── Status Cell ── */
+    .status-cell {
+      text-align: center;
+    }
+
+    .status-icon {
+      font-size: 1.1rem;
+    }
+
+    .status-working { color: var(--bench-green); }
+    .status-failed { color: var(--bench-red); }
+
+    .error-msg {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── Chart Section ── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .chart-card {
+      background: var(--surface-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+
+    .chart-card h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text-primary);
+    }
+
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bar-label {
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+      min-width: 160px;
+      text-align: right;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 22px;
+      background: var(--surface-strong);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: #fff;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      min-width: fit-content;
+    }
+
+    /* ── Failure Reasons ── */
+    .failure-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 40px;
+    }
+
+    .failure-card {
+      background: var(--surface-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+
+    .failure-card h4 {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--bench-red);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .failure-card .count {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .failure-models {
+      list-style: none;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    .failure-models li {
+      padding: 3px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .failure-models li:last-child {
+      border-bottom: none;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1200px) {
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+      .charts-grid { grid-template-columns: 1fr; }
+      .failure-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .bench-container { padding: 16px; }
+      .bench-header h1 { font-size: 1.8rem; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .failure-grid { grid-template-columns: 1fr; }
+      .bench-table { font-size: 0.78rem; }
+      .bench-table th, .bench-table td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="bench-container">
+      <!-- Header -->
+      <div class="bench-header">
+        <h1>🏆 Model Benchmark</h1>
+        <div class="subtitle">Copilot-Style Tool-Calling & Coding Assessment — 55 Tools × 6 Turns</div>
+        <div class="date">Generated: 19 Jul 2026, 19:31:44 · Scoring: 40pt tools + 15pt context + 20pt speed + 15pt output + 10pt text</div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card purple">
+          <div class="stat-value">36</div>
+          <div class="stat-label">Total Models</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-value">20</div>
+          <div class="stat-label">Working</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-value">16</div>
+          <div class="stat-label">Failed</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-value">90</div>
+          <div class="stat-label">Top Score</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-value">48.5</div>
+          <div class="stat-label">Best TPS</div>
+        </div>
+      </div>
+
+      <!-- Scoring Legend -->
+      <div class="scoring-legend">
+        <div class="legend-item">
+          <div class="legend-bar" style="background: rgba(99,102,241,0.4);"></div>
+          Tool Calling: 40pt
+        </div>
+        <div class="legend-item">
+          <div class="legend-bar" style="background: rgba(59,130,246,0.4);"></div>
+          Context: 15pt
+        </div>
+        <div class="legend-item">
+          <div class="legend-bar" style="background: rgba(34,197,94,0.4);"></div>
+          Speed: 20pt
+        </div>
+        <div class="legend-item">
+          <div class="legend-bar" style="background: rgba(245,158,11,0.4);"></div>
+          Output: 15pt
+        </div>
+        <div class="legend-item">
+          <div class="legend-bar" style="background: rgba(139,92,246,0.4);"></div>
+          Text Bonus: 10pt
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all">All (36)</button>
+        <button class="filter-btn" data-filter="working">✅ Working (20)</button>
+        <button class="filter-btn" data-filter="failed">❌ Failed (16)</button>
+        <button class="filter-btn" data-filter="top">🏆 Top Tier (85+)</button>
+        <button class="filter-btn" data-filter="fast">⚡ Fast (&lt;5s)</button>
+        <button class="filter-btn" data-filter="tools">🛠 Tool-Calling</button>
+      </div>
+
+      <!-- Main Table -->
+      <div class="bench-table-wrapper">
+        <table class="bench-table" id="benchTable">
+          <thead>
+            <tr>
+              <th data-sort="rank" class="sorted-asc">Rank</th>
+              <th data-sort="model">Model</th>
+              <th data-sort="score">Score</th>
+              <th data-sort="duration">Duration</th>
+              <th data-sort="tps">TPS</th>
+              <th data-sort="input">Input</th>
+              <th data-sort="output">Output</th>
+              <th data-sort="status">Status</th>
+            </tr>
+          </thead>
+          <tbody id="benchBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <!-- Score Chart -->
+        <div class="chart-card">
+          <h3>📊 Score Distribution (Working Models)</h3>
+          <div class="bar-chart" id="scoreChart"></div>
+        </div>
+
+        <!-- Speed Chart -->
+        <div class="chart-card">
+          <h3>⚡ Tokens Per Second (TPS)</h3>
+          <div class="bar-chart" id="tpsChart"></div>
+        </div>
+      </div>
+
+      <!-- Failure Analysis -->
+      <div class="failure-grid" id="failureGrid"></div>
+    </div>
+  </div>
+
+  <script>
+    // ── Benchmark Data ──
+    const BENCHMARK_DATA = [
+      { rank: 1, id: "stepfun-ai/step-3.5-flash", name: "Step 3.5 Flash", score: 90, duration: 3.3, tps: 48.48, input: 10744, output: 160, tools: true, tags: ["fast", "smart", "coding"], error: null },
+      { rank: 2, id: "nvidia/ising-calibration-1-35b-a3b", name: "Ising Calibration 35B", score: 85, duration: 4.5, tps: 20.0, input: 10636, output: 90, tools: true, tags: ["fast", "coding"], error: null },
+      { rank: 3, id: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning", name: "Nemotron 3 Nano Omni 30B", score: 85, duration: 10.8, tps: 199.17, input: 11523, output: 2151, tools: true, tags: ["coding", "reasoning"], error: null },
+      { rank: 4, id: "openai/gpt-oss-20b", name: "GPT-OSS 20B", score: 85, duration: 6.1, tps: 168.85, input: 8326, output: 1030, tools: true, tags: ["fast", "coding"], error: null },
+      { rank: 5, id: "poolside/laguna-xs-2.1", name: "Laguna XS 2.1", score: 85, duration: 2.8, tps: 19.64, input: 10463, output: 55, tools: true, tags: ["fast", "coding"], error: null },
+      { rank: 6, id: "qwen/qwen3.5-122b-a10b", name: "Qwen 3.5 122B", score: 85, duration: 3.5, tps: 18.57, input: 9813, output: 65, tools: true, tags: ["fast", "smart", "coding"], error: null },
+      { rank: 7, id: "nvidia/nemotron-3-nano-30b-a3b", name: "Nemotron 3 Nano 30B", score: 80, duration: 6.5, tps: 61.54, input: 11523, output: 400, tools: true, tags: ["coding"], error: null },
+      { rank: 8, id: "minimaxai/minimax-m3", name: "MiniMax M3", score: 80, duration: 143.3, tps: 0.37, input: 9616, output: 53, tools: true, tags: [], error: null },
+      { rank: 9, id: "z-ai/glm-5.2", name: "GLM 5.2", score: 80, duration: 19.7, tps: 2.49, input: 9922, output: 49, tools: true, tags: [], error: null },
+      { rank: 10, id: "meta/llama-3.2-11b-vision-instruct", name: "Llama 3.2 11B Vision", score: 75, duration: 3.1, tps: 10.65, input: 12107, output: 33, tools: true, tags: ["fast", "vision"], error: null },
+      { rank: 11, id: "nvidia/nemotron-3-super-120b-a12b", name: "Nemotron 3 Super 120B", score: 75, duration: 4.0, tps: 28.75, input: 11523, output: 115, tools: true, tags: ["smart"], error: null },
+      { rank: 12, id: "nvidia/nemotron-3-ultra-550b-a55b", name: "Nemotron 3 Ultra 550B", score: 75, duration: 4.2, tps: 14.52, input: 11523, output: 61, tools: true, tags: ["smart"], error: null },
+      { rank: 13, id: "stepfun-ai/step-3.7-flash", name: "Step 3.7 Flash", score: 75, duration: 2.2, tps: 32.27, input: 10736, output: 71, tools: true, tags: ["fast"], error: null },
+      { rank: 14, id: "thinkingmachines/inkling", name: "Inkling", score: 75, duration: 2.1, tps: 27.14, input: 9324, output: 57, tools: true, tags: ["fast"], error: null },
+      { rank: 15, id: "nvidia/nvidia-nemotron-nano-9b-v2", name: "Nemotron Nano 9B v2", score: 75, duration: 34.0, tps: 37.85, input: 10284, output: 1287, tools: true, tags: [], error: null },
+      { rank: 16, id: "meta/llama-3.1-70b-instruct", name: "Llama 3.1 70B", score: 70, duration: 10.4, tps: 3.37, input: 12030, output: 35, tools: true, tags: ["smart"], error: null },
+      { rank: 17, id: "meta/llama-3.1-8b-instruct", name: "Llama 3.1 8B", score: 70, duration: 4.1, tps: 9.51, input: 12037, output: 39, tools: true, tags: ["fast"], error: null },
+      { rank: 18, id: "nvidia/nemotron-nano-12b-v2-vl", name: "Nemotron Nano 12B VL v2", score: 40, duration: 7.4, tps: 11.35, input: 10280, output: 84, tools: false, tags: ["vision"], error: "Tool-calling not supported" },
+      { rank: 19, id: "mistralai/mistral-nemotron", name: "Mistral Nemotron", score: 30, duration: 4.1, tps: 5.61, input: 10656, output: 23, tools: false, tags: [], error: "Tool-calling not supported" },
+      { rank: 20, id: "abacusai/dracarys-llama-3.1-70b-instruct", name: "Dracarys Llama 3.1 70B", score: 25, duration: 91.3, tps: 0.20, input: 6817, output: 18, tools: false, tags: [], error: "Extremely slow, no tool-calling" },
+      { rank: 21, id: "google/gemma-3n-e2b-it", name: "Gemma 3n E2B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 400 — request format incompatible" },
+      { rank: 22, id: "google/gemma-3n-e4b-it", name: "Gemma 3n E4B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 400 — request format incompatible" },
+      { rank: 23, id: "google/gemma-2-2b-it", name: "Gemma 2 2B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 422 — request validation failed" },
+      { rank: 24, id: "meta/llama-guard-4-12b", name: "Llama Guard 4 12B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "safety"], error: "Safety model, not a chat model" },
+      { rank: 25, id: "meta/llama-3.2-3b-instruct", name: "Llama 3.2 3B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "Timeout — read timeout after 180s" },
+      { rank: 26, id: "meta/llama-3.2-90b-vision-instruct", name: "Llama 3.2 90B Vision", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "vision"], error: "Timeout — read timeout after 180s" },
+      { rank: 27, id: "moonshotai/kimi-k2.6", name: "Kimi K2.6", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 404 — endpoint not found" },
+      { rank: 28, id: "nvidia/llama-3.1-nemoguard-8b-content-safety", name: "NemoGuard Content Safety", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "safety"], error: "Safety model, not a chat model" },
+      { rank: 29, id: "nvidia/llama-3.1-nemoguard-8b-topic-control", name: "NemoGuard Topic Control", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "safety"], error: "Safety model, not a chat model" },
+      { rank: 30, id: "nvidia/gliner-pii", name: "GLiNER PII", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "pii"], error: "NER/PII model, not a chat model" },
+      { rank: 31, id: "nvidia/llama-3.1-nemotron-safety-guard-8b-v3", name: "Nemotron Safety Guard v3", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "safety"], error: "Safety model, not a chat model" },
+      { rank: 32, id: "nvidia/nemotron-3.5-content-safety", name: "Nemotron 3.5 Content Safety", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "safety"], error: "Requires --enable-auto-tool-choice" },
+      { rank: 33, id: "nvidia/nemotron-mini-4b-instruct", name: "Nemotron Mini 4B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 400 — request format incompatible" },
+      { rank: 34, id: "nvidia/riva-translate-4b-instruct-v1.1", name: "Riva Translate 4B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "translation"], error: "Translation model, not a chat model" },
+      { rank: 35, id: "nvidia/llama-3.3-nemotron-super-49b-v1", name: "Nemotron Super 49B v1", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 502 — provider returned empty content" },
+      { rank: 36, id: "upstage/solar-10.7b-instruct", name: "Solar 10.7B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 400 — request format incompatible" },
+    ];
+
+    // ── Render Table ──
+    function renderTable(data) {
+      const tbody = document.getElementById('benchBody');
+      tbody.innerHTML = data.map(m => {
+        const isFailed = m.score === 0;
+        const rankClass = m.rank <= 3 ? `rank-${m.rank}` : 'rank-other';
+        const scoreClass = m.score >= 90 ? 's90' : m.score >= 85 ? 's85' : m.score >= 80 ? 's80' : m.score >= 75 ? 's75' : m.score >= 70 ? 's70' : m.score >= 40 ? 's40' : 's0';
+        const speedClass = m.duration ? (m.duration < 5 ? 'speed-fast' : m.duration < 15 ? 'speed-medium' : 'speed-slow') : '';
+        const tags = m.tags.map(t => `<span class="model-tag tag-${t}">${t}</span>`).join('');
+
+        return `<tr class="${isFailed ? 'failed' : ''}">
+          <td class="rank-cell"><span class="rank-badge ${rankClass}">${m.rank}</span></td>
+          <td class="model-cell">
+            <span class="model-name">${m.name}</span>
+            <span class="model-id">${m.id}</span>
+            ${tags ? `<div class="model-tags">${tags}</div>` : ''}
+          </td>
+          <td class="score-cell">
+            <div class="score-bar-wrapper">
+              <div class="score-bar"><div class="score-bar-fill ${scoreClass}" style="width:${m.score}%"></div></div>
+              <span class="score-number" style="color:${m.score >= 75 ? '#22c55e' : m.score >= 40 ? '#f59e0b' : '#ef4444'}">${m.score}</span>
+            </div>
+          </td>
+          <td class="speed-cell">
+            ${m.duration ? `<span class="speed-value">${m.duration}</span><span class="speed-unit">s</span><span class="speed-badge ${speedClass}">${m.duration < 5 ? 'fast' : m.duration < 15 ? 'med' : 'slow'}</span>` : '<span style="color:var(--text-muted)">—</span>'}
+          </td>
+          <td class="tps-cell">
+            ${m.tps ? `<span style="color:${m.tps > 50 ? '#22c55e' : m.tps > 10 ? '#f59e0b' : '#ef4444'}">${m.tps.toLocaleString()}</span>` : '<span style="color:var(--text-muted)">—</span>'}
+          </td>
+          <td class="token-cell">${m.input ? m.input.toLocaleString() : '—'}</td>
+          <td class="token-cell">${m.output ? m.output.toLocaleString() : '—'}</td>
+          <td class="status-cell">
+            ${m.tools ? '<span class="status-icon status-working" title="Tool-calling works">✅🛠</span>' :
+              m.score > 0 ? `<span class="status-icon" title="${m.error}" style="color:#f59e0b">⚠️</span>` :
+              `<span class="status-icon status-failed" title="${m.error}">❌</span>`}
+            ${m.error ? `<div class="error-msg" title="${m.error}">${m.error}</div>` : ''}
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ── Score Chart ──
+    function renderScoreChart() {
+      const working = BENCHMARK_DATA.filter(m => m.score > 0).sort((a, b) => b.score - a.score);
+      const chart = document.getElementById('scoreChart');
+      chart.innerHTML = working.map(m => {
+        const color = m.score >= 90 ? '#22c55e' : m.score >= 85 ? '#3b82f6' : m.score >= 80 ? '#6366f1' : m.score >= 75 ? '#8b5cf6' : '#f59e0b';
+        return `<div class="bar-row">
+          <div class="bar-label" title="${m.id}">${m.name}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${m.score}%;background:${color}">${m.score}/100</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── TPS Chart ──
+    function renderTPSChart() {
+      const withTPS = BENCHMARK_DATA.filter(m => m.tps && m.tps > 0).sort((a, b) => b.tps - a.tps);
+      const maxTPS = Math.max(...withTPS.map(m => m.tps));
+      const chart = document.getElementById('tpsChart');
+      chart.innerHTML = withTPS.map(m => {
+        const pct = (m.tps / maxTPS) * 100;
+        const color = m.tps > 50 ? '#22c55e' : m.tps > 10 ? '#f59e0b' : '#ef4444';
+        return `<div class="bar-row">
+          <div class="bar-label" title="${m.id}">${m.name}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${pct}%;background:${color}">${m.tps.toLocaleString()} TPS</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── Failure Analysis ──
+    function renderFailures() {
+      const failed = BENCHMARK_DATA.filter(m => m.score === 0);
+      const categories = {};
+      failed.forEach(m => {
+        let cat = 'Other';
+        if (m.error?.includes('safety') || m.error?.includes('Safety') || m.error?.includes('topic') || m.error?.includes('enable-auto-tool-choice')) cat = 'Safety Models';
+        else if (m.error?.includes('timeout') || m.error?.includes('Timeout')) cat = 'Timeouts';
+        else if (m.error?.includes('400')) cat = 'HTTP 400 (Incompatible)';
+        else if (m.error?.includes('404')) cat = 'HTTP 404 (Not Found)';
+        else if (m.error?.includes('422')) cat = 'HTTP 422 (Validation)';
+        else if (m.error?.includes('502')) cat = 'HTTP 502 (Empty)';
+        else if (m.error?.includes('PII') || m.error?.includes('pii') || m.error?.includes('NER')) cat = 'Specialty Models';
+        else if (m.error?.includes('Translation') || m.error?.includes('translation')) cat = 'Specialty Models';
+        if (!categories[cat]) categories[cat] = [];
+        categories[cat].push(m);
+      });
+
+      const grid = document.getElementById('failureGrid');
+      grid.innerHTML = Object.entries(categories).map(([cat, models]) => `
+        <div class="failure-card">
+          <h4>❌ ${cat} <span class="count">(${models.length})</span></h4>
+          <ul class="failure-models">
+            ${models.map(m => `<li title="${m.error}">${m.name}</li>`).join('')}
+          </ul>
+        </div>
+      `).join('');
+    }
+
+    // ── Filtering ──
+    let currentFilter = 'all';
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        applyFilter();
+      });
+    });
+
+    function applyFilter() {
+      let data = [...BENCHMARK_DATA];
+      switch (currentFilter) {
+        case 'working': data = data.filter(m => m.score > 0); break;
+        case 'failed': data = data.filter(m => m.score === 0); break;
+        case 'top': data = data.filter(m => m.score >= 85); break;
+        case 'fast': data = data.filter(m => m.duration && m.duration < 5); break;
+        case 'tools': data = data.filter(m => m.tools); break;
+      }
+      renderTable(data);
+    }
+
+    // ── Sorting ──
+    let sortCol = 'rank';
+    let sortDir = 'asc';
+
+    document.querySelectorAll('.bench-table th').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.sort;
+        if (sortCol === col) {
+          sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortCol = col;
+          sortDir = 'asc';
+        }
+
+        document.querySelectorAll('.bench-table th').forEach(t => t.classList.remove('sorted-asc', 'sorted-desc'));
+        th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+
+        let data = [...BENCHMARK_DATA];
+        if (currentFilter === 'working') data = data.filter(m => m.score > 0);
+        else if (currentFilter === 'failed') data = data.filter(m => m.score === 0);
+        else if (currentFilter === 'top') data = data.filter(m => m.score >= 85);
+        else if (currentFilter === 'fast') data = data.filter(m => m.duration && m.duration < 5);
+        else if (currentFilter === 'tools') data = data.filter(m => m.tools);
+
+        data.sort((a, b) => {
+          let va = a[col], vb = b[col];
+          if (va === null || va === undefined) va = sortDir === 'asc' ? Infinity : -Infinity;
+          if (vb === null || vb === undefined) vb = sortDir === 'asc' ? Infinity : -Infinity;
+          if (typeof va === 'string') return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+          return sortDir === 'asc' ? va - vb : vb - va;
+        });
+
+        renderTable(data);
+      });
+    });
+
+    // ── Init ──
+    renderTable(BENCHMARK_DATA);
+    renderScoreChart();
+    renderTPSChart();
+    renderFailures();
+  </script>
+</body>
+</html>

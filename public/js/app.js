@@ -336,19 +336,37 @@ window.removeAttachment = function (idx) {
   renderAttachments();
 };
 
-// ── Drag & Drop ──
+// ── Drag & Drop (Enhanced with Overlay) ──
 function setupDragDrop() {
-  const area = document.getElementById("chatMessages");
-  area.addEventListener("dragover", (e) => {
+  const chatArea = document.getElementById("chatMessages");
+  const dropzone = document.getElementById("dropzoneOverlay");
+  let dragCounter = 0;
+
+  chatArea.addEventListener("dragenter", (e) => {
     e.preventDefault();
-    area.style.background = "var(--hover-bg)";
+    dragCounter++;
+    if (e.dataTransfer.types.includes("Files")) {
+      dropzone.classList.add("visible");
+    }
   });
-  area.addEventListener("dragleave", () => {
-    area.style.background = "";
-  });
-  area.addEventListener("drop", (e) => {
+
+  chatArea.addEventListener("dragleave", (e) => {
     e.preventDefault();
-    area.style.background = "";
+    dragCounter--;
+    if (dragCounter === 0) {
+      dropzone.classList.remove("visible");
+    }
+  });
+
+  chatArea.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  });
+
+  chatArea.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    dropzone.classList.remove("visible");
     const files = Array.from(e.dataTransfer.files);
     if (files.length === 0) return;
     const dt = new DataTransfer();
@@ -356,7 +374,179 @@ function setupDragDrop() {
     document.getElementById("fileInput").files = dt.files;
     document.getElementById("fileInput").dispatchEvent(new Event("change"));
   });
+
+  // Also handle drop on the entire window
+  document.body.addEventListener("dragover", (e) => {
+    e.preventDefault();
+  });
+
+  document.body.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    dropzone.classList.remove("visible");
+  });
+
+  // Close dropzone on Escape
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && dropzone.classList.contains("visible")) {
+      dropzone.classList.remove("visible");
+    }
+  });
+
+  // Clipboard paste (Ctrl+V / Cmd+V)
+  document.addEventListener("paste", (e) => {
+    const items = Array.from(e.clipboardData?.items || []);
+    const imageItems = items.filter(i => i.type.startsWith("image/"));
+    if (imageItems.length > 0) {
+      e.preventDefault();
+      for (const item of imageItems) {
+        const blob = item.getAsFile();
+        if (blob) handlePastedImage(blob);
+      }
+    }
+  });
 }
+
+function handlePastedImage(blob) {
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const dataUrl = ev.target.result;
+    const fileName = `pasted-image-${Date.now()}.png`;
+    showPastePreview(dataUrl, fileName);
+    attachedFiles.push({
+      name: fileName,
+      size: blob.size,
+      type: "image",
+      data: dataUrl,
+      file: blob
+    });
+    renderAttachments();
+    showToast("Image pasted from clipboard", "success", 2000);
+  };
+  reader.readAsDataURL(blob);
+}
+
+function showPastePreview(dataUrl, fileName) {
+  const existing = document.querySelector(".paste-preview");
+  if (existing) existing.remove();
+  const preview = document.createElement("div");
+  preview.className = "paste-preview";
+  preview.innerHTML = `<img src="${dataUrl}" alt="Pasted image"><div class="paste-preview-name">${fileName}</div>`;
+  document.body.appendChild(preview);
+  setTimeout(() => {
+    preview.style.opacity = "0";
+    preview.style.transition = "opacity 0.2s ease";
+    setTimeout(() => preview.remove(), 200);
+  }, 3000);
+}
+
+// ===== Skeleton Loading States =====
+function createSkeletonMessage() {
+  const div = document.createElement('div');
+  div.className = 'skeleton-msg';
+  div.id = 'skeletonLoader';
+  div.innerHTML = `
+    <div class="skeleton-avatar"></div>
+    <div class="skeleton-body">
+      <div class="skeleton-name"></div>
+      <div class="skeleton-lines">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+      </div>
+    </div>
+  `;
+  return div;
+}
+
+function showSkeletonLoader() {
+  const container = document.getElementById('agentMessages');
+  removeSkeletonLoader();
+  const skeleton = createSkeletonMessage();
+  skeleton.setAttribute('aria-live', 'polite');
+  skeleton.setAttribute('aria-label', 'Loading response...');
+  container.appendChild(skeleton);
+  scrollToBottom(container);
+}
+
+function removeSkeletonLoader() {
+  const existing = document.getElementById('skeletonLoader');
+  if (existing) existing.remove();
+}
+
+// ===== Export Options =====
+window.toggleExportDropdown = function() {
+  const dropdown = document.getElementById('exportDropdown');
+  const btn = document.getElementById('exportBtn');
+  const isOpen = dropdown.classList.contains('open');
+  document.querySelectorAll('.export-dropdown').forEach(d => d.classList.remove('open'));
+  if (!isOpen) {
+    dropdown.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+    setTimeout(() => {
+      document.addEventListener('click', closeExportDropdown, { once: true });
+    }, 0);
+  } else {
+    btn.setAttribute('aria-expanded', 'false');
+  }
+};
+
+function closeExportDropdown(e) {
+  const dropdown = document.getElementById('exportDropdown');
+  const btn = document.getElementById('exportBtn');
+  const wrapper = document.querySelector('.export-wrapper');
+  if (!wrapper.contains(e.target)) {
+    dropdown.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+}
+
+window.exportAsJSON = function() {
+  const data = {
+    conversation: {
+      id: currentConversationId,
+      title: document.querySelector('.topbar-model-label')?.textContent || 'Conversation',
+      exported: new Date().toISOString()
+    },
+    messages: agentHistory.map(msg => ({
+      role: msg.role,
+      content: msg.content,
+      timestamp: msg.timestamp || null
+    }))
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `dubu-conversation-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Exported as JSON', 'success', 2000);
+};
+
+window.copyConversationToClipboard = async function() {
+  const text = agentHistory.map(msg => {
+    const role = msg.role === 'user' ? 'You' : 'Dubu AI';
+    return `**${role}:**\n${msg.content}`;
+  }).join('\n\n---\n\n');
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('Conversation copied to clipboard', 'success', 2000);
+  } catch (e) {
+    showToast('Failed to copy to clipboard', 'error');
+  }
+};
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.export-dropdown').forEach(d => d.classList.remove('open'));
+    document.getElementById('exportBtn')?.setAttribute('aria-expanded', 'false');
+  }
+});
+
+// ── Expose formatMessageHtml globally for model-compare.js ──
+window.formatMessageHtml = formatMessageHtml;
 
 // ── Send message ──
 window.sendToAgent = async function () {
@@ -507,10 +697,12 @@ window.sendToAgent = async function () {
   attachedFiles = [];
   renderAttachments();
 
-  // Create thinking indicator
+  // Show skeleton loader while waiting for first token
+  showSkeletonLoader();
   const container = document.getElementById("agentMessages");
   const thinkingDiv = document.createElement("div");
   thinkingDiv.className = "msg msg-agent";
+  thinkingDiv.style.display = "none";
   thinkingDiv.innerHTML = `<div class="msg-avatar"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="8" fill="currentColor" opacity="0.15"/><path d="M14 6L8 10v8l6 4 6-4v-8l-6-4z" fill="currentColor" opacity="0.4"/><circle cx="14" cy="14" r="3.5" fill="currentColor"/></svg></div><div class="msg-body"><div class="thinking-indicator"><div class="thinking-dots"><span></span><span></span><span></span></div><span class="thinking-text">Thinking...</span></div></div>`;
   container.appendChild(thinkingDiv);
   scrollToBottom(container);
@@ -557,7 +749,9 @@ window.sendToAgent = async function () {
           case "token":
             // Real-time token streaming — live markdown rendering
             if (!thinkingDiv.dataset.streaming) {
-              // First token — replace thinking indicator with streaming content area
+              // First token — remove skeleton, show streaming content
+              removeSkeletonLoader();
+              thinkingDiv.style.display = "";
               thinkingDiv.dataset.streaming = "true";
               _streamText = "";
               bubble.innerHTML = `<div class="msg-name">${escHtml(modelName || "Dubu AI")}</div><div class="msg-content streaming"><div class="streaming-text"></div><span class="streaming-cursor">▊</span></div>`;
@@ -685,6 +879,7 @@ window.sendToAgent = async function () {
             break;
 
           case "error":
+            removeSkeletonLoader();
             thinkingDiv.remove();
             addMessage("agent", data.content, "Error");
             showToast(data.content || "An error occurred", "error");
