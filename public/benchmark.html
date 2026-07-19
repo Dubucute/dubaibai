@@ -670,45 +670,33 @@
   </div>
 
   <script>
-    // ── Benchmark Data ──
-    const BENCHMARK_DATA = [
-      { rank: 1, id: "stepfun-ai/step-3.5-flash", name: "Step 3.5 Flash", score: 90, duration: 3.3, tps: 48.48, input: 10744, output: 160, tools: true, tags: ["fast", "smart", "coding"], error: null },
-      { rank: 2, id: "nvidia/ising-calibration-1-35b-a3b", name: "Ising Calibration 35B", score: 85, duration: 4.5, tps: 20.0, input: 10636, output: 90, tools: true, tags: ["fast", "coding"], error: null },
-      { rank: 3, id: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning", name: "Nemotron 3 Nano Omni 30B", score: 85, duration: 10.8, tps: 199.17, input: 11523, output: 2151, tools: true, tags: ["coding", "reasoning"], error: null },
-      { rank: 4, id: "openai/gpt-oss-20b", name: "GPT-OSS 20B", score: 85, duration: 6.1, tps: 168.85, input: 8326, output: 1030, tools: true, tags: ["fast", "coding"], error: null },
-      { rank: 5, id: "poolside/laguna-xs-2.1", name: "Laguna XS 2.1", score: 85, duration: 2.8, tps: 19.64, input: 10463, output: 55, tools: true, tags: ["fast", "coding"], error: null },
-      { rank: 6, id: "qwen/qwen3.5-122b-a10b", name: "Qwen 3.5 122B", score: 85, duration: 3.5, tps: 18.57, input: 9813, output: 65, tools: true, tags: ["fast", "smart", "coding"], error: null },
-      { rank: 7, id: "nvidia/nemotron-3-nano-30b-a3b", name: "Nemotron 3 Nano 30B", score: 80, duration: 6.5, tps: 61.54, input: 11523, output: 400, tools: true, tags: ["coding"], error: null },
-      { rank: 8, id: "minimaxai/minimax-m3", name: "MiniMax M3", score: 80, duration: 143.3, tps: 0.37, input: 9616, output: 53, tools: true, tags: [], error: null },
-      { rank: 9, id: "z-ai/glm-5.2", name: "GLM 5.2", score: 80, duration: 19.7, tps: 2.49, input: 9922, output: 49, tools: true, tags: [], error: null },
-      { rank: 10, id: "meta/llama-3.2-11b-vision-instruct", name: "Llama 3.2 11B Vision", score: 75, duration: 3.1, tps: 10.65, input: 12107, output: 33, tools: true, tags: ["fast", "vision"], error: null },
-      { rank: 11, id: "nvidia/nemotron-3-super-120b-a12b", name: "Nemotron 3 Super 120B", score: 75, duration: 4.0, tps: 28.75, input: 11523, output: 115, tools: true, tags: ["smart"], error: null },
-      { rank: 12, id: "nvidia/nemotron-3-ultra-550b-a55b", name: "Nemotron 3 Ultra 550B", score: 75, duration: 4.2, tps: 14.52, input: 11523, output: 61, tools: true, tags: ["smart"], error: null },
-      { rank: 13, id: "stepfun-ai/step-3.7-flash", name: "Step 3.7 Flash", score: 75, duration: 2.2, tps: 32.27, input: 10736, output: 71, tools: true, tags: ["fast"], error: null },
-      { rank: 14, id: "thinkingmachines/inkling", name: "Inkling", score: 75, duration: 2.1, tps: 27.14, input: 9324, output: 57, tools: true, tags: ["fast"], error: null },
-      { rank: 15, id: "nvidia/nvidia-nemotron-nano-9b-v2", name: "Nemotron Nano 9B v2", score: 75, duration: 34.0, tps: 37.85, input: 10284, output: 1287, tools: true, tags: [], error: null },
-      { rank: 16, id: "meta/llama-3.1-70b-instruct", name: "Llama 3.1 70B", score: 70, duration: 10.4, tps: 3.37, input: 12030, output: 35, tools: true, tags: ["smart"], error: null },
-      { rank: 17, id: "meta/llama-3.1-8b-instruct", name: "Llama 3.1 8B", score: 70, duration: 4.1, tps: 9.51, input: 12037, output: 39, tools: true, tags: ["fast"], error: null },
-      { rank: 18, id: "nvidia/nemotron-nano-12b-v2-vl", name: "Nemotron Nano 12B VL v2", score: 40, duration: 7.4, tps: 11.35, input: 10280, output: 84, tools: false, tags: ["vision"], error: "Tool-calling not supported" },
-      { rank: 19, id: "mistralai/mistral-nemotron", name: "Mistral Nemotron", score: 30, duration: 4.1, tps: 5.61, input: 10656, output: 23, tools: false, tags: [], error: "Tool-calling not supported" },
-      { rank: 20, id: "abacusai/dracarys-llama-3.1-70b-instruct", name: "Dracarys Llama 3.1 70B", score: 25, duration: 91.3, tps: 0.20, input: 6817, output: 18, tools: false, tags: [], error: "Extremely slow, no tool-calling" },
-      { rank: 21, id: "google/gemma-3n-e2b-it", name: "Gemma 3n E2B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 400 — request format incompatible" },
-      { rank: 22, id: "google/gemma-3n-e4b-it", name: "Gemma 3n E4B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 400 — request format incompatible" },
-      { rank: 23, id: "google/gemma-2-2b-it", name: "Gemma 2 2B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 422 — request validation failed" },
-      { rank: 24, id: "meta/llama-guard-4-12b", name: "Llama Guard 4 12B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "safety"], error: "Safety model, not a chat model" },
-      { rank: 25, id: "meta/llama-3.2-3b-instruct", name: "Llama 3.2 3B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "Timeout — read timeout after 180s" },
-      { rank: 26, id: "meta/llama-3.2-90b-vision-instruct", name: "Llama 3.2 90B Vision", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "vision"], error: "Timeout — read timeout after 180s" },
-      { rank: 27, id: "moonshotai/kimi-k2.6", name: "Kimi K2.6", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 404 — endpoint not found" },
-      { rank: 28, id: "nvidia/llama-3.1-nemoguard-8b-content-safety", name: "NemoGuard Content Safety", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "safety"], error: "Safety model, not a chat model" },
-      { rank: 29, id: "nvidia/llama-3.1-nemoguard-8b-topic-control", name: "NemoGuard Topic Control", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "safety"], error: "Safety model, not a chat model" },
-      { rank: 30, id: "nvidia/gliner-pii", name: "GLiNER PII", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "pii"], error: "NER/PII model, not a chat model" },
-      { rank: 31, id: "nvidia/llama-3.1-nemotron-safety-guard-8b-v3", name: "Nemotron Safety Guard v3", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "safety"], error: "Safety model, not a chat model" },
-      { rank: 32, id: "nvidia/nemotron-3.5-content-safety", name: "Nemotron 3.5 Content Safety", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "safety"], error: "Requires --enable-auto-tool-choice" },
-      { rank: 33, id: "nvidia/nemotron-mini-4b-instruct", name: "Nemotron Mini 4B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 400 — request format incompatible" },
-      { rank: 34, id: "nvidia/riva-translate-4b-instruct-v1.1", name: "Riva Translate 4B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed", "translation"], error: "Translation model, not a chat model" },
-      { rank: 35, id: "nvidia/llama-3.3-nemotron-super-49b-v1", name: "Nemotron Super 49B v1", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 502 — provider returned empty content" },
-      { rank: 36, id: "upstage/solar-10.7b-instruct", name: "Solar 10.7B", score: 0, duration: null, tps: null, input: null, output: null, tools: false, tags: ["failed"], error: "HTTP 400 — request format incompatible" },
-    ];
+    // ── Load Benchmark Data ──
+    let BENCHMARK_DATA = [];
+    async function loadBenchmarkData() {
+      try {
+        const response = await fetch('ranked_models_clean.json');
+        if (!response.ok) throw new Error('Failed to load benchmark data');
+        const data = await response.json();
+        // Transform the JSON data to match the expected format
+        BENCHMARK_DATA = data.map((model, index) => ({
+          rank: index + 1,
+          id: model.id || model.name,
+          name: model.name,
+          score: model.score || 0,
+          duration: model.duration || null,
+          tps: model.tps || null,
+          input: model.input || null,
+          output: model.output || null,
+          tools: model.tools || false,
+          tags: model.tags || [],
+          error: model.error || null
+        }));
+        return BENCHMARK_DATA;
+      } catch (error) {
+        console.error('Error loading benchmark data:', error);
+        return [];
+      }
+    }
 
     // ── Render Table ──
     function renderTable(data) {
