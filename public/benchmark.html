@@ -575,23 +575,23 @@
       <!-- Stats Row -->
       <div class="stats-row">
         <div class="stat-card purple">
-          <div class="stat-value">36</div>
+          <div class="stat-value" id="stat-total">0</div>
           <div class="stat-label">Total Models</div>
         </div>
         <div class="stat-card green">
-          <div class="stat-value">20</div>
+          <div class="stat-value" id="stat-working">0</div>
           <div class="stat-label">Working</div>
         </div>
         <div class="stat-card red">
-          <div class="stat-value">16</div>
+          <div class="stat-value" id="stat-failed">0</div>
           <div class="stat-label">Failed</div>
         </div>
         <div class="stat-card blue">
-          <div class="stat-value">90</div>
+          <div class="stat-value" id="stat-top-score">0</div>
           <div class="stat-label">Top Score</div>
         </div>
         <div class="stat-card yellow">
-          <div class="stat-value">48.5</div>
+          <div class="stat-value" id="stat-best-tps">0</div>
           <div class="stat-label">Best TPS</div>
         </div>
       </div>
@@ -823,6 +823,21 @@
       renderTable(data);
     }
 
+    // ── Update Stats ──
+    function updateStats() {
+      const total = BENCHMARK_DATA.length;
+      const working = BENCHMARK_DATA.filter(m => m.score > 0).length;
+      const failed = total - working;
+      const topScore = Math.max(...BENCHMARK_DATA.map(m => m.score || 0));
+      const bestTPS = Math.max(...BENCHMARK_DATA.map(m => m.tps || 0));
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-working').textContent = working;
+      document.getElementById('stat-failed').textContent = failed;
+      document.getElementById('stat-top-score').textContent = Math.round(topScore);
+      document.getElementById('stat-best-tps').textContent = bestTPS.toFixed(1);
+    }
+
     // ── Sorting ──
     let sortCol = 'rank';
     let sortDir = 'asc';
@@ -860,10 +875,14 @@
     });
 
     // ── Init ──
-    renderTable(BENCHMARK_DATA);
-    renderScoreChart();
-    renderTPSChart();
-    renderFailures();
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadBenchmarkData();
+      updateStats();
+      renderTable(BENCHMARK_DATA);
+      renderScoreChart();
+      renderTPSChart();
+      renderFailures();
+    });
   </script>
 </body>
 </html>
