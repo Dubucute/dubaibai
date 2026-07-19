@@ -897,13 +897,14 @@
     });
 
     // ── Init ──
-    await loadBenchmarkData();
-    updateStats();
-    renderTable(BENCHMARK_DATA);
-    renderScoreChart();
-    renderTPSChart();
-    renderFailures();
-  });
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadBenchmarkData();
+      updateStats();
+      renderTable(BENCHMARK_DATA);
+      renderScoreChart();
+      renderTPSChart();
+      renderFailures();
+    });
 </script>
 </body>
 </html>
