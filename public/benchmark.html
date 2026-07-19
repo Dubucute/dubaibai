@@ -674,7 +674,7 @@
     let BENCHMARK_DATA = [];
     async function loadBenchmarkData() {
       try {
-        const response = await fetch('../ranked_models_clean.json');
+        const response = await fetch('/api/benchmark');
         if (!response.ok) throw new Error('Failed to load benchmark data');
         const json = await response.json();
         // json is { data: [...], total, benchmarkedCount, ... }
