@@ -250,6 +250,7 @@ window.sendToAgent = async function () {
             break;
 
           case "result":
+            {
             const fullResponse = data.content || "No response generated.";
             const wasStreaming = thinkingDiv.dataset?.streaming === "true";
 
@@ -362,6 +363,7 @@ window.sendToAgent = async function () {
               modelName || "Ready";
             break;
 
+          }
           case "error":
             removeSkeletonLoader();
             thinkingDiv.remove();

@@ -5,7 +5,7 @@
 const fs = require("fs");
 const path = require("path");
 const CONFIG = require("./config");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require("crypto");
 
 // DB module — gracefully handles missing DATABASE_URL
 let db;
@@ -49,7 +49,7 @@ class Store {
   // ── Conversations ──
 
   async createConversation(title = "New Chat", model = CONFIG.defaultModel, userId = null) {
-    const id = uuidv4();
+    const id = randomUUID();
 
     if (isDbReady()) {
       try {
@@ -282,7 +282,7 @@ class Store {
         const orig = await this.getConversation(id, userId);
         if (!orig) {return null;}
 
-        const newId = uuidv4();
+        const newId = randomUUID();
         await db.query(
           `INSERT INTO conversations (id, user_id, title, model, messages, created_at, updated_at)
            VALUES ($1, $2, $3, $4, $5::jsonb, NOW(), NOW())`,
@@ -299,7 +299,7 @@ class Store {
     if (!convo) {return null;}
     const fork = {
       ...convo,
-      id: uuidv4(),
+      id: randomUUID(),
       title: `${convo.title  } (fork)`,
       created: Date.now(),
       updated: Date.now(),
@@ -313,7 +313,7 @@ class Store {
   // ── Documents (for RAG) ──
 
   async addDocument(name, content, type = "text", userId = null) {
-    const id = uuidv4();
+    const id = randomUUID();
 
     if (isDbReady()) {
       try {

@@ -357,13 +357,7 @@ const MODELS = {
         quality: 5,
         context: 8192,
       },
-      "nvidia/nvidia-nemotron-nano-9b-v2": {
-        name: "Nemotron Nano 9B v2",
-        capabilities: ["chat", "fast"],
-        speed: "very_fast",
-        quality: 5,
-        context: 65536,
-      },
+
       "nvidia/llama-3.1-nemotron-nano-8b-v1": {
         name: "Nemotron Nano 8B",
         capabilities: ["chat", "fast"],
@@ -386,14 +380,7 @@ const MODELS = {
         benchmarkScore: 80,
         context: 65536,
       },
-      "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": {
-        name: "Nemotron 3 Nano Omni 30B",
-        capabilities: ["chat", "reasoning", "code"],
-        speed: "medium",
-        quality: 9,
-        benchmarkScore: 85,
-        context: 131072,
-      },
+
       "nvidia/mistral-nemo-minitron-8b-8k-instruct": {
         name: "Mistral Nemo Minitron 8B",
         capabilities: ["chat", "fast"],
@@ -591,14 +578,7 @@ const MODELS = {
         benchmarkScore: 25,
         context: 131072,
       },
-      "openai/gpt-oss-20b": {
-        name: "GPT-OSS 20B",
-        capabilities: ["chat", "code", "reasoning"],
-        speed: "fast",
-        quality: 9,
-        benchmarkScore: 85,
-        context: 32768,
-      },
+
       "openai/gpt-oss-120b": {
         name: "GPT-OSS 120B",
         capabilities: ["chat", "reasoning", "code"],
@@ -620,13 +600,7 @@ const MODELS = {
         quality: 9,
         context: 131072,
       },
-      "meta/llama-4-maverick-17b-128e-instruct": {
-        name: "Llama 4 Maverick 17B",
-        capabilities: ["vision", "image_understanding", "chat"],
-        speed: "fast",
-        quality: 9,
-        context: 131072,
-      },
+
       "microsoft/phi-4-multimodal-instruct": {
         name: "Phi-4 Multimodal",
         capabilities: ["vision", "image_understanding", "audio"],
@@ -796,19 +770,7 @@ const MODELS = {
         dimensions: 1024,
         speed: "fast",
       },
-      "snowflake/arctic-embed-l": {
-        name: "Arctic Embed L",
-        capabilities: ["embedding", "retrieval"],
-        dimensions: 1024,
-        speed: "fast",
-      },
-    },
-  },
 
-  // ── Safety / Guard Models ──
-  safety: {
-    category: "Safety",
-    models: {
       "nvidia/llama-3.1-nemoguard-8b-content-safety": {
         name: "Nemoguard Content Safety",
         capabilities: ["content_safety"],
@@ -851,19 +813,62 @@ const MODELS = {
   video: {
     category: "Video",
     models: {
-      "nvidia/cosmos-reason2-8b": {
-        name: "Cosmos Reason2 8B",
-        capabilities: ["video", "reasoning", "vision"],
-        speed: "fast",
-        quality: 6,
-      },
+      // Shared with vision section — see vision for model entries
     },
   },
 };
 
-// ── Task Routing Map ──
-// Maps task names to optimal model chains (primary + fallbacks)
-// Ordered by: smartest first, then fastest fallbacks
+const ownerMap = {
+  "nvidia": "NVIDIA",
+  "meta": "Meta",
+  "mistralai": "Mistral",
+  "google": "Google",
+  "openai": "OpenAI",
+  "upstage": "Upstage",
+  "qwen": "Qwen",
+  "ibm": "IBM",
+  "writer": "Writer",
+  "deepseek": "DeepSeek",
+  "phi": "Microsoft",
+  "microsoft": "Microsoft",
+  "allenai": "AllenAI",
+  "nousresearch": "Nous",
+  "01-ai": "01.AI",
+  "zai": "Z.ai",
+  "stepfun": "StepFun",
+  "baichuan": "Baichuan",
+  "internlm": "InternLM",
+  "minimax": "MiniMax",
+  "moonshot": "Moonshot",
+  "baai": "BAAI",
+  "thudm": "THUDM",
+};
+
+function formatModelName(name, owner) {
+  const ownerKey = (owner || "").toLowerCase();
+  const prefix = ownerMap[ownerKey] || (owner ? owner.charAt(0).toUpperCase() + owner.slice(1) : "");
+
+  if (prefix && !name.toLowerCase().startsWith(prefix.toLowerCase())) {
+    return `${prefix} ${name}`;
+  }
+  return name;
+}
+
+function getModelsByCapability(capability) {
+  const results = [];
+  for (const category of Object.values(MODELS)) {
+    for (const [id, info] of Object.entries(category.models)) {
+      if (info.capabilities && info.capabilities.includes(capability)) {
+        results.push({ id, ...info, category: category.category });
+      }
+    }
+  }
+  return results.sort((a, b) => (b.quality || 0) - (a.quality || 0));
+}
+
+// =============================================================================
+// TASK ROUTES — model chains for each task type
+// =============================================================================
 const TASK_ROUTES = {
   // General conversation
   chat: {
@@ -1194,18 +1199,6 @@ function generateDisplayName(id, owner) {
     return `${prefix} ${name}`;
   }
   return name;
-}
-
-function getModelsByCapability(capability) {
-  const results = [];
-  for (const category of Object.values(MODELS)) {
-    for (const [id, info] of Object.entries(category.models)) {
-      if (info.capabilities && info.capabilities.includes(capability)) {
-        results.push({ id, ...info, category: category.category });
-      }
-    }
-  }
-  return results.sort((a, b) => (b.quality || 0) - (a.quality || 0));
 }
 
 module.exports = {

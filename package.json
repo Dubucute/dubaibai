@@ -2,6 +2,9 @@
   "name": "dubu-ai",
   "version": "2.0.0",
   "description": "Dubu AI — Autonomous Agent Platform powered by NVIDIA NIM",
+  "engines": {
+    "node": ">=19"
+  },
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
@@ -16,8 +19,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.1.0",
     "multer": "^2.0.0",
-    "pg": "^8.22.0",
-    "uuid": "^14.0.0"
+    "pg": "^8.22.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
