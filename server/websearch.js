@@ -113,7 +113,7 @@ function parseSearchResults(html, maxResults) {
     const url = match[1];
     const block = match[2];
 
-    if (seen.has(url) || isSearchEngineUrl(url)) continue;
+    if (seen.has(url) || isSearchEngineUrl(url)) {continue;}
     seen.add(url);
 
     // Extract title from <div class="title">
@@ -135,7 +135,7 @@ function parseSearchResults(html, maxResults) {
     const simplePattern = /<a[^>]+href="(https?:\/\/[^"]+)"[^>]*class="hover"/gi;
     while ((match = simplePattern.exec(html)) !== null && results.length < maxResults) {
       const url = match[1];
-      if (seen.has(url) || isSearchEngineUrl(url)) continue;
+      if (seen.has(url) || isSearchEngineUrl(url)) {continue;}
       seen.add(url);
 
       // Grab ~1000 chars after the <a> tag to find title/description
@@ -145,7 +145,7 @@ function parseSearchResults(html, maxResults) {
 
       const title = titleMatch ? stripHtml(titleMatch[1]) : "";
       const snippet = descMatch ? stripHtml(descMatch[1]) : "";
-      if (title) results.push({ title, url, snippet });
+      if (title) {results.push({ title, url, snippet });}
     }
   }
 

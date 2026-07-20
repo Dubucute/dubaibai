@@ -15,7 +15,7 @@ try {
 function getSupabaseAdmin() {
   const url = process.env.SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
-  if (!url || !secretKey) return null;
+  if (!url || !secretKey) {return null;}
   return createClient(url, secretKey, {
     auth: {
       autoRefreshToken: false,
@@ -67,13 +67,13 @@ async function signIn(email, password) {
  * Verify a session / access token and return the user.
  */
 async function getSessionUser(accessToken) {
-  if (!AUTH_ENABLED || !accessToken) return null;
+  if (!AUTH_ENABLED || !accessToken) {return null;}
   try {
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser(accessToken);
-    if (error || !user) return null;
+    if (error || !user) {return null;}
     return {
       id: user.id,
       email: user.email,

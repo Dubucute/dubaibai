@@ -32,7 +32,7 @@ register({
     let results;
     if (document_id) {
       const doc = store.getDocument(document_id);
-      if (!doc) throw new Error(`Document ${document_id} not found`);
+      if (!doc) {throw new Error(`Document ${document_id} not found`);}
       results = store.searchDocuments(query).filter((r) => r.id === document_id);
     } else {
       results = store.searchDocuments(query);

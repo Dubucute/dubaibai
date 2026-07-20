@@ -32,10 +32,10 @@ class Store {
 
   // ── Ensure fallback data is loaded from JSON file ──
   _ensureLoaded() {
-    if (isDbReady() || this._loaded) return;
+    if (isDbReady() || this._loaded) {return;}
     this._load();
     this._loaded = true;
-    if (!this._profiles) this._profiles = new Map();
+    if (!this._profiles) {this._profiles = new Map();}
   }
 
   // ── Build userId filter condition ──
@@ -56,13 +56,13 @@ class Store {
         await db.query(
           `INSERT INTO conversations (id, user_id, title, model, messages, created_at, updated_at)
            VALUES ($1, $2, $3, $4, '[]', NOW(), NOW())`,
-          [id, userId || null, title, model]
+          [id, userId || null, title, model],
         );
         return { id, title, model, messages: [], created: Date.now(), updated: Date.now(), userId: userId || null };
       } catch (e) {
         console.warn("DB createConversation failed:", e.message);
         // On Vercel, in-memory fallback doesn't work across instances — throw so caller knows
-        if (process.env.VERCEL) throw new Error("Database unavailable: " + e.message);
+        if (process.env.VERCEL) {throw new Error(`Database unavailable: ${  e.message}`);}
       }
     }
 
@@ -79,7 +79,7 @@ class Store {
       try {
         const row = await db.queryOne(
           `SELECT * FROM conversations WHERE id = $1`,
-          [id]
+          [id],
         );
         if (!row) {
           // Check if it exists at all (without user filter) for debugging
@@ -95,7 +95,7 @@ class Store {
         return this._rowToConvo(row);
       } catch (e) {
         console.warn("DB getConversation failed:", e.message, e.code);
-        if (process.env.VERCEL) throw new Error("Database unavailable: " + e.message);
+        if (process.env.VERCEL) {throw new Error(`Database unavailable: ${  e.message}`);}
       }
     }
 
@@ -113,7 +113,7 @@ class Store {
            WHERE ${clause.text}
            ORDER BY updated_at DESC
            LIMIT 100`,
-          clause.params
+          clause.params,
         );
         return rows.map((r) => ({
           id: r.id,
@@ -129,14 +129,14 @@ class Store {
         }));
       } catch (e) {
         console.warn("DB listConversations failed, falling back:", e.message);
-        if (process.env.VERCEL) throw new Error("Database unavailable: " + e.message);
+        if (process.env.VERCEL) {throw new Error(`Database unavailable: ${  e.message}`);}
       }
     }
 
     this._ensureLoaded();
     return Array.from(this.conversations.values())
       .filter(c => {
-        if (userId) return !c.userId || c.userId === userId;
+        if (userId) {return !c.userId || c.userId === userId;}
         return !c.userId;
       })
       .sort((a, b) => b.updated - a.updated)
@@ -159,13 +159,13 @@ class Store {
       try {
         // Check ownership
         const convo = await this.getConversation(convoId, userId);
-        if (!convo) return null;
+        if (!convo) {return null;}
 
         const msgWithTimestamp = { ...message, timestamp: Date.now() };
         // Claim conversation if authenticated user messages an unowned conversation
         const claimSql = userId ? `, user_id = COALESCE(user_id, $5)` : "";
         const params = [JSON.stringify([msgWithTimestamp]), message.role === "user", message.content || "", convoId];
-        if (userId) params.push(userId);
+        if (userId) {params.push(userId);}
         await db.query(
           `UPDATE conversations
            SET messages = messages || $1::jsonb, updated_at = NOW(),
@@ -175,18 +175,18 @@ class Store {
                END
                ${claimSql}
            WHERE id = $4`,
-          params
+          params,
         );
         return await this.getConversation(convoId);
       } catch (e) {
         console.warn("DB addMessage failed, falling back:", e.message);
-        if (process.env.VERCEL) throw new Error("Database unavailable: " + e.message);
+        if (process.env.VERCEL) {throw new Error(`Database unavailable: ${  e.message}`);}
       }
     }
 
     this._ensureLoaded();
     const convo = this.conversations.get(convoId);
-    if (!convo) return null;
+    if (!convo) {return null;}
     if (userId && !convo.userId) {
       convo.userId = userId;
     }
@@ -203,18 +203,18 @@ class Store {
     if (isDbReady()) {
       try {
         const convo = await this.getConversation(convoId, userId);
-        if (!convo) return null;
+        if (!convo) {return null;}
 
         const row = await db.queryOne(
           `SELECT messages FROM conversations WHERE id = $1`,
-          [convoId]
+          [convoId],
         );
-        if (!row || !row.messages[msgIndex]) return null;
+        if (!row || !row.messages[msgIndex]) {return null;}
         const msgs = row.messages;
         msgs[msgIndex] = { ...msgs[msgIndex], ...updates };
         await db.query(
           `UPDATE conversations SET messages = $1::jsonb, updated_at = NOW() WHERE id = $2`,
-          [JSON.stringify(msgs), convoId]
+          [JSON.stringify(msgs), convoId],
         );
         return await this.getConversation(convoId);
       } catch (e) {
@@ -224,7 +224,7 @@ class Store {
 
     this._ensureLoaded();
     const convo = this.conversations.get(convoId);
-    if (!convo || !convo.messages[msgIndex]) return null;
+    if (!convo || !convo.messages[msgIndex]) {return null;}
     Object.assign(convo.messages[msgIndex], updates);
     convo.updated = Date.now();
     this._save();
@@ -235,21 +235,21 @@ class Store {
     if (isDbReady()) {
       try {
         const convo = await this.getConversation(id, userId);
-        if (!convo) return null;
+        if (!convo) {return null;}
         await db.query(
           `UPDATE conversations SET title = $1, updated_at = NOW() WHERE id = $2`,
-          [title, id]
+          [title, id],
         );
         return { ...convo, title };
       } catch (e) {
         console.warn("DB updateConversationTitle failed, falling back:", e.message);
-        if (process.env.VERCEL) throw new Error("Database unavailable: " + e.message);
+        if (process.env.VERCEL) {throw new Error(`Database unavailable: ${  e.message}`);}
       }
     }
 
     this._ensureLoaded();
     const convo = this.conversations.get(id);
-    if (!convo) return null;
+    if (!convo) {return null;}
     convo.title = title;
     convo.updated = Date.now();
     this._save();
@@ -261,8 +261,8 @@ class Store {
       try {
         // First verify the conversation exists and user owns it
         const row = await db.queryOne(`SELECT id, user_id FROM conversations WHERE id = $1`, [id]);
-        if (!row) return; // Already gone — not an error
-        if (userId && row.user_id && row.user_id !== userId) return; // Not owner — silently skip
+        if (!row) {return;} // Already gone — not an error
+        if (userId && row.user_id && row.user_id !== userId) {return;} // Not owner — silently skip
         await db.query(`DELETE FROM conversations WHERE id = $1`, [id]);
         console.log(`🗑️ Deleted conversation ${id}`);
         return;
@@ -280,13 +280,13 @@ class Store {
     if (isDbReady()) {
       try {
         const orig = await this.getConversation(id, userId);
-        if (!orig) return null;
+        if (!orig) {return null;}
 
         const newId = uuidv4();
         await db.query(
           `INSERT INTO conversations (id, user_id, title, model, messages, created_at, updated_at)
            VALUES ($1, $2, $3, $4, $5::jsonb, NOW(), NOW())`,
-          [newId, userId || null, orig.title + " (fork)", orig.model, JSON.stringify(orig.messages)]
+          [newId, userId || null, `${orig.title  } (fork)`, orig.model, JSON.stringify(orig.messages)],
         );
         return await this.getConversation(newId, userId);
       } catch (e) {
@@ -296,11 +296,11 @@ class Store {
 
     this._ensureLoaded();
     const convo = this.conversations.get(id);
-    if (!convo) return null;
+    if (!convo) {return null;}
     const fork = {
       ...convo,
       id: uuidv4(),
-      title: convo.title + " (fork)",
+      title: `${convo.title  } (fork)`,
       created: Date.now(),
       updated: Date.now(),
       messages: [...convo.messages],
@@ -320,7 +320,7 @@ class Store {
         await db.query(
           `INSERT INTO documents (id, user_id, name, content, type, created_at)
            VALUES ($1, $2, $3, $4, $5, NOW())`,
-          [id, userId || null, name, content, type]
+          [id, userId || null, name, content, type],
         );
         return { id, name, content, type, created: Date.now() };
       } catch (e) {
@@ -339,8 +339,8 @@ class Store {
     if (isDbReady()) {
       try {
         const row = await db.queryOne(`SELECT * FROM documents WHERE id = $1`, [id]);
-        if (!row) return null;
-        if (userId && row.user_id && row.user_id !== userId) return null;
+        if (!row) {return null;}
+        if (userId && row.user_id && row.user_id !== userId) {return null;}
         return {
           id: row.id,
           name: row.name,
@@ -366,7 +366,7 @@ class Store {
            FROM documents
            WHERE ${clause.text}
            ORDER BY created_at DESC`,
-          clause.params
+          clause.params,
         );
         return rows.map((r) => ({
           id: r.id,
@@ -415,7 +415,7 @@ class Store {
         const clause = this._userClause(userId);
         const rows = await db.query(
           `SELECT id, name, content FROM documents WHERE ${clause.text}`,
-          clause.params
+          clause.params,
         );
         return this._searchInDocs(rows, q);
       } catch (e) {
@@ -430,14 +430,14 @@ class Store {
   // ── User Profiles ──
 
   async getProfile(userId) {
-    if (!userId) return null;
+    if (!userId) {return null;}
 
     if (isDbReady()) {
       try {
         const row = await db.queryOne(
           `SELECT user_id, username, display_name, avatar_url, bio, settings, created_at, updated_at
            FROM user_settings WHERE user_id = $1`,
-          [userId]
+          [userId],
         );
         if (!row) {
           // Create default profile
@@ -461,7 +461,7 @@ class Store {
 
     // In-memory fallback
     this._ensureLoaded();
-    if (!this._profiles) this._profiles = new Map();
+    if (!this._profiles) {this._profiles = new Map();}
     if (!this._profiles.has(userId)) {
       this._profiles.set(userId, this._defaultProfile(userId));
     }
@@ -475,25 +475,25 @@ class Store {
           `INSERT INTO user_settings (user_id, settings, created_at, updated_at)
            VALUES ($1, '{}'::jsonb, NOW(), NOW())
            ON CONFLICT (user_id) DO NOTHING`,
-          [userId]
+          [userId],
         );
         return;
       } catch (e) {
         console.warn("DB createProfile failed:", e.message);
       }
     }
-    if (!this._profiles) this._profiles = new Map();
+    if (!this._profiles) {this._profiles = new Map();}
     if (!this._profiles.has(userId)) {
       this._profiles.set(userId, this._defaultProfile(userId));
     }
   }
 
   async updateProfile(userId, updates) {
-    if (!userId) return null;
+    if (!userId) {return null;}
     const allowed = ["username", "displayName", "avatarUrl", "bio"];
     const safe = {};
     for (const key of allowed) {
-      if (updates[key] !== undefined) safe[key] = updates[key];
+      if (updates[key] !== undefined) {safe[key] = updates[key];}
     }
 
     if (isDbReady()) {
@@ -522,7 +522,7 @@ class Store {
           setClauses.push(`updated_at = NOW()`);
           await db.query(
             `UPDATE user_settings SET ${setClauses.join(", ")} WHERE user_id = $1`,
-            params
+            params,
           );
         }
         return await this.getProfile(userId);
@@ -533,12 +533,12 @@ class Store {
 
     // In-memory fallback
     this._ensureLoaded();
-    if (!this._profiles) this._profiles = new Map();
+    if (!this._profiles) {this._profiles = new Map();}
     const profile = this._profiles.get(userId) || this._defaultProfile(userId);
-    if (safe.username !== undefined) profile.username = safe.username;
-    if (safe.displayName !== undefined) profile.displayName = safe.displayName;
-    if (safe.avatarUrl !== undefined) profile.avatarUrl = safe.avatarUrl;
-    if (safe.bio !== undefined) profile.bio = safe.bio;
+    if (safe.username !== undefined) {profile.username = safe.username;}
+    if (safe.displayName !== undefined) {profile.displayName = safe.displayName;}
+    if (safe.avatarUrl !== undefined) {profile.avatarUrl = safe.avatarUrl;}
+    if (safe.bio !== undefined) {profile.bio = safe.bio;}
     profile.updatedAt = Date.now();
     this._profiles.set(userId, profile);
     this._save();
@@ -572,7 +572,7 @@ class Store {
         }
       });
       if (score > 0)
-        results.push({ id: doc.id, name: doc.name, score, matches: matches.slice(0, 5) });
+        {results.push({ id: doc.id, name: doc.name, score, matches: matches.slice(0, 5) });}
     }
     return results.sort((a, b) => b.score - a.score);
   }
@@ -594,7 +594,7 @@ class Store {
   _save() {
     try {
       const dir = path.dirname(DATA_FILE);
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      if (!fs.existsSync(dir)) {fs.mkdirSync(dir, { recursive: true });}
       const data = {
         conversations: Array.from(this.conversations.entries()),
         documents: Array.from(this.documents.entries()),
@@ -611,10 +611,10 @@ class Store {
       if (fs.existsSync(DATA_FILE)) {
         const raw = fs.readFileSync(DATA_FILE, "utf-8");
         const data = JSON.parse(raw);
-        if (data.conversations) this.conversations = new Map(data.conversations);
-        if (data.documents) this.documents = new Map(data.documents);
-        if (data.profiles) this._profiles = new Map(data.profiles);
-        if (!this._profiles) this._profiles = new Map();
+        if (data.conversations) {this.conversations = new Map(data.conversations);}
+        if (data.documents) {this.documents = new Map(data.documents);}
+        if (data.profiles) {this._profiles = new Map(data.profiles);}
+        if (!this._profiles) {this._profiles = new Map();}
       }
     } catch (e) {
       /* start fresh */

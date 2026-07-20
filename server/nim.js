@@ -19,9 +19,9 @@ class NIMClient {
     const temp = temperature !== undefined ? temperature : CONFIG.temperature;
     const errors = [];
     let lastModel = null;
-    
+
     // If user specified a model, try it first, then fallback to chain
-    const modelsToTry = modelOverride 
+    const modelsToTry = modelOverride
       ? [modelOverride, ...route.chain.filter(m => m !== modelOverride)]
       : route.chain;
 
@@ -71,9 +71,9 @@ class NIMClient {
     const temp = temperature !== undefined ? temperature : CONFIG.temperature;
     const errors = [];
     let lastModel = null;
-    
+
     // If user specified a model, try it first, then fallback to chain (excluding the already-tried model)
-    const modelsToTry = modelOverride 
+    const modelsToTry = modelOverride
       ? [modelOverride, ...route.chain.filter(m => m !== modelOverride)]
       : route.chain;
 
@@ -113,14 +113,14 @@ class NIMClient {
           return Promise.race([
             reader.read(),
             new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("Stream stalled — no data for 15s")), READ_TIMEOUT_MS)
+              setTimeout(() => reject(new Error("Stream stalled — no data for 15s")), READ_TIMEOUT_MS),
             ),
           ]);
         };
 
         while (true) {
           const { done, value } = await readWithTimeout();
-          if (done) break;
+          if (done) {break;}
 
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split("\n");
@@ -128,9 +128,9 @@ class NIMClient {
 
           for (const line of lines) {
             const trimmed = line.trim();
-            if (!trimmed.startsWith("data: ")) continue;
+            if (!trimmed.startsWith("data: ")) {continue;}
             const raw = trimmed.slice(6).trim();
-            if (!raw || raw === "[DONE]") continue;
+            if (!raw || raw === "[DONE]") {continue;}
 
             try {
               const parsed = JSON.parse(raw);

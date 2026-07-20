@@ -1104,23 +1104,23 @@ function buildModelsFromRanked(data) {
   for (const item of data.data) {
     // Map capabilities object (boolean flags) to array of capability names
     const caps = item.capabilities ? Object.keys(item.capabilities).filter(k => item.capabilities[k]) : [];
-    
+
     // Determine group from capabilities or benchmark info
     let group = "Other";
-    if (caps.includes("vision")) group = "Vision";
-    else if (caps.includes("image")) group = "Image Gen";
-    else if (caps.includes("embedding")) group = "Embeddings";
-    else if (caps.includes("safety")) group = "Safety";
-    else if (item.benchmark?.rank && item.benchmark.rank <= 5) group = "Smart";
-    else if (item.benchmark?.speedRank === "fast" || item.benchmark?.speedRank === "very_fast") group = "Fast";
-    else if (caps.includes("code") || caps.includes("toolCalling")) group = "Code";
-    else if (caps.includes("finance")) group = "Finance";
-    else if (caps.includes("medical")) group = "Medical";
-    else if (caps.includes("chat")) group = "Chat";
-    
+    if (caps.includes("vision")) {group = "Vision";}
+    else if (caps.includes("image")) {group = "Image Gen";}
+    else if (caps.includes("embedding")) {group = "Embeddings";}
+    else if (caps.includes("safety")) {group = "Safety";}
+    else if (item.benchmark?.rank && item.benchmark.rank <= 5) {group = "Smart";}
+    else if (item.benchmark?.speedRank === "fast" || item.benchmark?.speedRank === "very_fast") {group = "Fast";}
+    else if (caps.includes("code") || caps.includes("toolCalling")) {group = "Code";}
+    else if (caps.includes("finance")) {group = "Finance";}
+    else if (caps.includes("medical")) {group = "Medical";}
+    else if (caps.includes("chat")) {group = "Chat";}
+
     // Map the fields to the shape the frontend expects
     const displayName = item.name || generateDisplayName(item.id, item.owned_by);
-    
+
     all[item.id] = {
       name: displayName,
       capabilities: caps,
@@ -1146,7 +1146,7 @@ function buildModelsFromRanked(data) {
 function generateDisplayName(id, owner) {
   // Extract the model name part (after the last /)
   const modelPart = id.split("/").pop() || id;
-  
+
   // Clean up common patterns
   let name = modelPart
     .replace(/-/g, " ")
@@ -1156,10 +1156,10 @@ function generateDisplayName(id, owner) {
     .replace(/\b(a\d+b|a\d+)\b/gi, "") // Remove MoE suffixes like a12b
     .replace(/\s+/g, " ")
     .trim();
-  
+
   // Capitalize words
   name = name.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-  
+
   // Add owner prefix for well-known providers
   const ownerMap = {
     "nvidia": "NVIDIA",
@@ -1186,10 +1186,10 @@ function generateDisplayName(id, owner) {
     "baai": "BAAI",
     "thudm": "THUDM",
   };
-  
+
   const ownerKey = (owner || "").toLowerCase();
   const prefix = ownerMap[ownerKey] || (owner ? owner.charAt(0).toUpperCase() + owner.slice(1) : "");
-  
+
   if (prefix && !name.toLowerCase().startsWith(prefix.toLowerCase())) {
     return `${prefix} ${name}`;
   }

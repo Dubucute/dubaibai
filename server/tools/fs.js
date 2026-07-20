@@ -276,7 +276,7 @@ register({
     }
 
     function readDir(dir, depth) {
-      if (depth > maxDepth) return [];
+      if (depth > maxDepth) {return [];}
       const entries = [];
       try {
         const items = fs.readdirSync(dir);

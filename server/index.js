@@ -72,7 +72,7 @@ app.post("/api/auth/login", async (req, res) => {
     return res.status(400).json({ error: "Email and password are required." });
   }
   const result = await signIn(email, password);
-  if (result.error) return res.status(401).json({ error: result.error });
+  if (result.error) {return res.status(401).json({ error: result.error });}
   res.json(result);
 });
 
@@ -106,7 +106,7 @@ app.get("/api/auth/session", async (req, res) => {
 // GET /api/auth/profile — Get user profile (requires auth)
 app.get("/api/auth/profile", async (req, res) => {
   const userId = uid(req);
-  if (!userId) return res.status(401).json({ error: "Not authenticated" });
+  if (!userId) {return res.status(401).json({ error: "Not authenticated" });}
   try {
     const profile = await store.getProfile(userId);
     res.json({ profile });
@@ -118,7 +118,7 @@ app.get("/api/auth/profile", async (req, res) => {
 // POST /api/auth/profile — Update user profile (requires auth)
 app.post("/api/auth/profile", async (req, res) => {
   const userId = uid(req);
-  if (!userId) return res.status(401).json({ error: "Not authenticated" });
+  if (!userId) {return res.status(401).json({ error: "Not authenticated" });}
   try {
     const profile = await store.updateProfile(userId, req.body);
     res.json({ profile });
@@ -197,7 +197,7 @@ app.post("/api/suggestions", async (req, res) => {
 // ── API: Detect intent (for frontend) ──
 app.post("/api/detect", (req, res) => {
   const { message, context } = req.body;
-  if (!message) return res.status(400).json({ error: "Message required" });
+  if (!message) {return res.status(400).json({ error: "Message required" });}
   const intent = detectIntent(message, context || {});
   res.json(intent);
 });
@@ -226,7 +226,7 @@ app.get("/api/tools", (req, res) => {
 app.post("/api/tools/:name/execute", async (req, res) => {
   const { name } = req.params;
   const tool = getTool(name);
-  if (!tool) return res.status(404).json({ error: `Unknown tool: ${name}` });
+  if (!tool) {return res.status(404).json({ error: `Unknown tool: ${name}` });}
 
   try {
     const result = await tool.execute(req.body.args || req.body, {
@@ -241,7 +241,7 @@ app.post("/api/tools/:name/execute", async (req, res) => {
 // ── API: Unified Agent (the main event) ──
 app.post("/api/agent/process", async (req, res) => {
   const { message, history = [], context = {}, model, stream = false } = req.body;
-  if (!message) return res.status(400).json({ error: "Message is required." });
+  if (!message) {return res.status(400).json({ error: "Message is required." });}
 
   const orchestrator = new Orchestrator({
     apiKey: req.headers["x-api-key"] || CONFIG.apiKey,
@@ -266,7 +266,7 @@ app.post("/api/agent/process", async (req, res) => {
     try {
       let finalResult = null;
       for await (const update of orchestrator.process(message, history, context, model)) {
-        if (update.type === "result") finalResult = update;
+        if (update.type === "result") {finalResult = update;}
       }
       res.json({
         success: !!finalResult,
@@ -350,7 +350,7 @@ app.post("/api/conversations", async (req, res) => {
 app.get("/api/conversations/:id", async (req, res) => {
   try {
     const convo = await store.getConversation(req.params.id, uid(req));
-    if (!convo) return res.status(404).json({ error: "Not found" });
+    if (!convo) {return res.status(404).json({ error: "Not found" });}
     res.json({ conversation: convo });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -371,8 +371,8 @@ app.post("/api/conversations/:id/messages", async (req, res) => {
       role: src.role,
       content: src.content,
     };
-    if (src.tool_calls) msg.tool_calls = src.tool_calls;
-    if (src.tool_call_id) msg.tool_call_id = src.tool_call_id;
+    if (src.tool_calls) {msg.tool_calls = src.tool_calls;}
+    if (src.tool_call_id) {msg.tool_call_id = src.tool_call_id;}
     await store.addMessage(convo.id, msg, userId);
     res.json({ success: true });
   } catch (e) {
@@ -392,11 +392,11 @@ app.delete("/api/conversations/:id", async (req, res) => {
 app.post("/api/conversations/:id/generate-title", async (req, res) => {
   try {
     const convo = await store.getConversation(req.params.id, uid(req));
-    if (!convo) return res.status(404).json({ error: "Not found" });
+    if (!convo) {return res.status(404).json({ error: "Not found" });}
 
     // Find the first user message to generate a title from
     const firstUserMsg = convo.messages.find((m) => m.role === "user");
-    if (!firstUserMsg) return res.status(400).json({ error: "No user messages to generate title from" });
+    if (!firstUserMsg) {return res.status(400).json({ error: "No user messages to generate title from" });}
 
     try {
       const orchestrator = new Orchestrator({
@@ -427,7 +427,7 @@ app.post("/api/conversations/:id/generate-title", async (req, res) => {
 app.post("/api/conversations/:id/fork", async (req, res) => {
   try {
     const fork = await store.forkConversation(req.params.id, uid(req));
-    if (!fork) return res.status(404).json({ error: "Not found" });
+    if (!fork) {return res.status(404).json({ error: "Not found" });}
     res.json({ conversation: fork });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -446,7 +446,7 @@ app.get("/api/documents", async (req, res) => {
 
 app.post("/api/documents/upload", upload.single("file"), async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ error: "No file uploaded." });
+    if (!req.file) {return res.status(400).json({ error: "No file uploaded." });}
     const content = req.file.buffer.toString("utf-8");
     const doc = await store.addDocument(req.file.originalname, content, req.file.mimetype, uid(req));
     res.json({ document: doc });
@@ -458,7 +458,7 @@ app.post("/api/documents/upload", upload.single("file"), async (req, res) => {
 app.post("/api/documents/text", async (req, res) => {
   try {
     const { name, content } = req.body;
-    if (!name || !content) return res.status(400).json({ error: "Name and content required." });
+    if (!name || !content) {return res.status(400).json({ error: "Name and content required." });}
     const doc = await store.addDocument(name, content, "text/plain", uid(req));
     res.json({ document: doc });
   } catch (e) {
@@ -469,7 +469,7 @@ app.post("/api/documents/text", async (req, res) => {
 app.get("/api/documents/:id", async (req, res) => {
   try {
     const doc = await store.getDocument(req.params.id, uid(req));
-    if (!doc) return res.status(404).json({ error: "Not found" });
+    if (!doc) {return res.status(404).json({ error: "Not found" });}
     res.json({ document: doc });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -488,7 +488,7 @@ app.delete("/api/documents/:id", async (req, res) => {
 app.get("/api/documents/:id/search", async (req, res) => {
   try {
     const { q } = req.query;
-    if (!q) return res.status(400).json({ error: "Query required" });
+    if (!q) {return res.status(400).json({ error: "Query required" });}
     const results = await store.searchDocuments(q, uid(req));
     res.json({ results });
   } catch (e) {
@@ -505,7 +505,7 @@ app.post("/api/filesystem/write", (req, res) => {
   try {
     const tool = getTool("create_file");
     if (!tool)
-      return res.status(500).json({ success: false, error: "Filesystem tool not loaded." });
+      {return res.status(500).json({ success: false, error: "Filesystem tool not loaded." });}
     tool
       .execute({ filepath, content, overwrite })
       .then((result) => {
@@ -527,7 +527,7 @@ app.post("/api/filesystem/create-dir", (req, res) => {
   try {
     const tool = getTool("create_folder");
     if (!tool)
-      return res.status(500).json({ success: false, error: "Filesystem tool not loaded." });
+      {return res.status(500).json({ success: false, error: "Filesystem tool not loaded." });}
     tool
       .execute({ folderpath })
       .then((result) => {
@@ -549,7 +549,7 @@ app.post("/api/filesystem/read", (req, res) => {
   try {
     const tool = getTool("read_file");
     if (!tool)
-      return res.status(500).json({ success: false, error: "Filesystem tool not loaded." });
+      {return res.status(500).json({ success: false, error: "Filesystem tool not loaded." });}
     tool
       .execute({ filepath })
       .then((result) => {
@@ -568,7 +568,7 @@ app.post("/api/filesystem/list", (req, res) => {
   try {
     const tool = getTool("list_files");
     if (!tool)
-      return res.status(500).json({ success: false, error: "Filesystem tool not loaded." });
+      {return res.status(500).json({ success: false, error: "Filesystem tool not loaded." });}
     tool
       .execute({ dirpath, maxDepth })
       .then((result) => {
@@ -593,7 +593,8 @@ app.get("/", (req, res) => {
 });
 
 // ── SPA fallback → chat page ──
-app.get("*", (req, res) => {
+// Express v5 uses path-to-regexp v8+ which requires named wildcards
+app.get("/{*path}", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "chat.html"));
 });
 

@@ -148,8 +148,8 @@ class Orchestrator {
       // Enhance the content string with rank info
       const rankStr = `#${bench.rank}`;
       const scoreStr = `${bench.combinedScore}`;
-      update.content = `**${update.modelName}** ${rankStr} (score: ${scoreStr})` +
-        (update.fallbackUsed ? ` (fallback)` : '');
+      update.content = `**${update.modelName}** ${rankStr} (score: ${scoreStr})${
+        update.fallbackUsed ? ` (fallback)` : ""}`;
     }
     return update;
   }
@@ -336,9 +336,9 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
     const prompt = this._extractImagePrompt(message);
     const modelOverride = context.imageModel || null;
     const imgOpts = {};
-    if (context.imagineWidth) imgOpts.width = context.imagineWidth;
-    if (context.imagineHeight) imgOpts.height = context.imagineHeight;
-    if (context.imagineSteps) imgOpts.steps = context.imagineSteps;
+    if (context.imagineWidth) {imgOpts.width = context.imagineWidth;}
+    if (context.imagineHeight) {imgOpts.height = context.imagineHeight;}
+    if (context.imagineSteps) {imgOpts.steps = context.imagineSteps;}
 
     yield {
       type: "thinking",
@@ -617,8 +617,8 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
       let title = (result.content || "").trim();
       // Clean up: remove quotes, truncate, ensure it's reasonable
       title = title.replace(/[""'']/g, "").trim();
-      if (title.length > 60) title = title.slice(0, 57) + "...";
-      if (title.length < 3) title = null;
+      if (title.length > 60) {title = `${title.slice(0, 57)  }...`;}
+      if (title.length < 3) {title = null;}
 
       return title;
     } catch (e) {

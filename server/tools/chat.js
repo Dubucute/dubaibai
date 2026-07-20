@@ -69,8 +69,8 @@ register({
     const model = args.model || context.model || CONFIG.defaultModel;
 
     const messages = [];
-    if (system_prompt) messages.push({ role: "system", content: system_prompt });
-    if (context.history) messages.push(...context.history.slice(-20));
+    if (system_prompt) {messages.push({ role: "system", content: system_prompt });}
+    if (context.history) {messages.push(...context.history.slice(-20));}
     messages.push({ role: "user", content: message });
 
     const url = `${CONFIG.apiBase}/v1/chat/completions`;

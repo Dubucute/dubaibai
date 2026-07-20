@@ -40,7 +40,7 @@ function loadLocalRanked() {
  * Load ranked models from the database.
  */
 async function loadFromDatabase() {
-  if (!db.DB_ENABLED || !db.DB_READY) return null;
+  if (!db.DB_ENABLED || !db.DB_READY) {return null;}
   try {
     const result = await db.loadRankedModels();
     console.log(`  📊 Loaded ${result.benchmarkedCount || result.data?.length || 0} ranked models from database`);
@@ -86,7 +86,7 @@ async function fetchRanked(forceRefresh = false) {
 async function refreshFromProxy(forceRefresh = false) {
   const url = `${PROXY_URL}/v1/models/ranked?limit=50`;
   console.log(`  🔄 Fetching ranked models from ${url}`);
-  
+
   return new Promise((resolve, reject) => {
     https.get(url, { headers: { "Accept": "application/json" } }, (res) => {
       let body = "";
@@ -94,7 +94,7 @@ async function refreshFromProxy(forceRefresh = false) {
       res.on("end", async () => {
         try {
           const parsed = JSON.parse(body);
-          
+
           _cache = {
             data: parsed.data,
             benchmarkedCount: parsed.benchmarkedCount,
@@ -110,7 +110,7 @@ async function refreshFromProxy(forceRefresh = false) {
           } catch (e) {
             // Ignore write errors on read-only filesystems (Vercel)
           }
-          
+
           // Save to database for next cold start
           if (db.DB_ENABLED && db.DB_READY) {
             try {
@@ -119,24 +119,24 @@ async function refreshFromProxy(forceRefresh = false) {
               console.warn(`  ⚠️ Failed to save ranked models to database: ${e.message}`);
             }
           }
-          
+
           console.log(`  📊 Updated ranked models cache (${parsed.benchmarkedCount || parsed.data?.length || 0} models)`);
           return resolve(_cache);
         } catch (e) {
           console.warn(`  ⚠️ Could not parse proxy response: ${e.message}`);
           const local = loadLocalRanked();
-          if (local) return resolve(local);
+          if (local) {return resolve(local);}
           const fromDb = await loadFromDatabase();
-          if (fromDb) return resolve(fromDb);
+          if (fromDb) {return resolve(fromDb);}
           return reject(new Error("All fallback sources failed"));
         }
       });
     }).on("error", async (e) => {
       console.warn(`  ⚠️ Proxy request failed (${e.message}), falling back to local file`);
       const local = loadLocalRanked();
-      if (local) return resolve(local);
+      if (local) {return resolve(local);}
       const fromDb = await loadFromDatabase();
-      if (fromDb) return resolve(fromDb);
+      if (fromDb) {return resolve(fromDb);}
       return reject(new Error("All fallback sources failed"));
     });
   });
@@ -146,7 +146,7 @@ async function refreshFromProxy(forceRefresh = false) {
  * Get a model's benchmark info by ID.
  */
 function getModelBenchmark(modelId) {
-  if (!_cache?.data) return null;
+  if (!_cache?.data) {return null;}
   const found = _cache.data.find((m) => m.id === modelId);
   return found?.benchmark || null;
 }
@@ -161,7 +161,7 @@ function getModelBenchmark(modelId) {
  * @param {string} opts.exclude - Comma-separated model IDs to exclude
  */
 function getRankedModels(opts = {}) {
-  if (!_cache?.data) return [];
+  if (!_cache?.data) {return [];}
 
   let models = _cache.data.filter((m) => m.benchmark); // only benchmarked
 
@@ -180,7 +180,7 @@ function getRankedModels(opts = {}) {
   }
 
   // Already sorted by rank from the API
-  if (opts.limit) models = models.slice(0, opts.limit);
+  if (opts.limit) {models = models.slice(0, opts.limit);}
   return models;
 }
 
@@ -191,7 +191,7 @@ function getRankedModels(opts = {}) {
  * already combines quality + speed into the ranking formula).
  */
 function buildChain(taskType, opts = {}) {
-  if (!_cache?.data) return [];
+  if (!_cache?.data) {return [];}
 
   let models = _cache.data.filter((m) => m.benchmark);
 
@@ -206,7 +206,7 @@ function buildChain(taskType, opts = {}) {
         .sort((a, b) => {
           // Speed-first: faster models win
           const speedDiff = (a.benchmark.speed || 99) - (b.benchmark.speed || 99);
-          if (speedDiff !== 0) return speedDiff;
+          if (speedDiff !== 0) {return speedDiff;}
           return (a.benchmark.rank || 999) - (b.benchmark.rank || 999);
         });
       break;
@@ -225,9 +225,9 @@ function buildChain(taskType, opts = {}) {
     case "websearch": {
       // Reasoning/websearch: rank-order with size boost for tie-breaking
       const sizeBoost = (id) => {
-        if (/550b|397b|675b/i.test(id)) return 3000;
-        if (/120b|119b|100b|90b|70b/i.test(id)) return 2000;
-        if (/49b|30b|32b/i.test(id)) return 1000;
+        if (/550b|397b|675b/i.test(id)) {return 3000;}
+        if (/120b|119b|100b|90b|70b/i.test(id)) {return 2000;}
+        if (/49b|30b|32b/i.test(id)) {return 1000;}
         return 0;
       };
       models = models
@@ -235,7 +235,7 @@ function buildChain(taskType, opts = {}) {
         .filter((m) => m.capabilities?.chat === true)
         .sort((a, b) => {
           const rankDiff = (a.benchmark.rank || 999) - (b.benchmark.rank || 999);
-          if (rankDiff !== 0) return rankDiff; // rank first
+          if (rankDiff !== 0) {return rankDiff;} // rank first
           return (sizeBoost(b.id) || 0) - (sizeBoost(a.id) || 0); // bigger model wins ties
         });
       break;
@@ -259,7 +259,7 @@ function buildChain(taskType, opts = {}) {
  * Get benchmark summary stats.
  */
 function getSummary() {
-  if (!_cache) return null;
+  if (!_cache) {return null;}
   return {
     total: _cache.total,
     benchmarked: _cache.benchmarkedCount,

@@ -57,8 +57,8 @@ register({
 
     // Extract base64 image from various response formats
     let imageBase64 = null;
-    if (data.image) imageBase64 = data.image;
-    else if (data.artifacts?.[0]?.base64) imageBase64 = data.artifacts[0].base64;
+    if (data.image) {imageBase64 = data.image;}
+    else if (data.artifacts?.[0]?.base64) {imageBase64 = data.artifacts[0].base64;}
 
     return {
       image: imageBase64,

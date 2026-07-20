@@ -29,7 +29,7 @@ async function initDatabase() {
     return;
   }
   // Guard: return existing promise if already initializing
-  if (_initPromise) return _initPromise;
+  if (_initPromise) {return _initPromise;}
 
   _initPromise = (async () => {
     try {
@@ -61,10 +61,10 @@ async function initDatabase() {
           break;
         } catch (e) {
           console.warn(`  ⚠️  Connection attempt ${attempt}/2 failed:`, e.message);
-          if (attempt < 2) await new Promise((r) => setTimeout(r, 500));
+          if (attempt < 2) {await new Promise((r) => setTimeout(r, 500));}
         }
       }
-      if (!connected) throw new Error("Failed to connect after 3 attempts");
+      if (!connected) {throw new Error("Failed to connect after 3 attempts");}
 
       // Create tables
       await createTables();
@@ -192,7 +192,7 @@ async function createTables() {
  * Returns the rows array.
  */
 async function query(text, params = []) {
-  if (!pool) throw new Error("Database not available");
+  if (!pool) {throw new Error("Database not available");}
   try {
     const result = await pool.query(text, params);
     return result.rows;
@@ -204,7 +204,7 @@ async function query(text, params = []) {
       _initPromise = null;
       pool = null;
       await initDatabase();
-      if (!pool) throw new Error("Database reconnection failed");
+      if (!pool) {throw new Error("Database reconnection failed");}
       const result = await pool.query(text, params);
       return result.rows;
     }
@@ -225,7 +225,7 @@ async function queryOne(text, params = []) {
  * @param {Array} models - Array of model objects from the proxy
  */
 async function saveRankedModels(models) {
-  if (!pool) throw new Error("Database not available");
+  if (!pool) {throw new Error("Database not available");}
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -247,7 +247,7 @@ async function saveRankedModels(models) {
           model.type || null,
           JSON.stringify(model.capabilities || {}),
           JSON.stringify(model.benchmark || null),
-        ]
+        ],
       );
     }
     await client.query("COMMIT");
@@ -265,13 +265,13 @@ async function saveRankedModels(models) {
  * @returns {Object} { data: [...], benchmarkedCount, total }
  */
 async function loadRankedModels() {
-  if (!pool) throw new Error("Database not available");
+  if (!pool) {throw new Error("Database not available");}
   const rows = await pool.query(
     `SELECT model_id, name, owned_by, type, capabilities, benchmark
      FROM ranked_models
      ORDER BY 
        CASE WHEN benchmark->>'rank' IS NOT NULL THEN (benchmark->>'rank')::int ELSE 999 END ASC,
-       model_id ASC`
+       model_id ASC`,
   );
   const data = rows.rows.map((r) => ({
     id: r.model_id,

@@ -1,290 +1,27 @@
-﻿{
-  "object": "list",
-  "total": 36,
-  "benchmarkedCount": 20,
-  "failedCount": 16,
-  "query": { "limit": "50" },
-  "benchmarkDate": "2026-07-19T19:31:44Z",
-  "scoring": {
-    "toolCalling": 40,
-    "context": 15,
-    "speed": 20,
-    "output": 15,
-    "textBonus": 10,
-    "total": 100
-  },
+{
   "data": [
-    {
-      "id": "stepfun-ai/step-3.5-flash",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "stepfun-ai",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 1, "score": 90, "combinedScore": 9000,
-        "duration": 3.3, "tps": 48.48, "speedRank": "fast",
-        "inputTokens": 10744, "outputTokens": 160,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "5/5", "codingPercentage": 100, "tasksPassed": 5,
-        "tags": ["coding_expert", "fast", "smart", "best_overall", "top_tier", "tool_reliable"]
-      }
-    },
-    {
-      "id": "nvidia/ising-calibration-1-35b-a3b",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "nvidia",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 2, "score": 85, "combinedScore": 8500,
-        "duration": 4.5, "tps": 20.0, "speedRank": "fast",
-        "inputTokens": 10636, "outputTokens": 90,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 85, "tasksPassed": 4,
-        "tags": ["coding_expert", "fast", "tool_reliable"]
-      }
-    },
-    {
-      "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "nvidia",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 3, "score": 85, "combinedScore": 8500,
-        "duration": 10.8, "tps": 199.17, "speedRank": "medium",
-        "inputTokens": 11523, "outputTokens": 2151,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 85, "tasksPassed": 4,
-        "tags": ["coding_expert", "reasoning", "tool_reliable"]
-      }
-    },
-    {
-      "id": "openai/gpt-oss-20b",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "openai",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 4, "score": 85, "combinedScore": 8500,
-        "duration": 6.1, "tps": 168.85, "speedRank": "fast",
-        "inputTokens": 8326, "outputTokens": 1030,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 85, "tasksPassed": 4,
-        "tags": ["coding_expert", "fast", "tool_reliable"]
-      }
-    },
-    {
-      "id": "poolside/laguna-xs-2.1",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "poolside",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 5, "score": 85, "combinedScore": 8500,
-        "duration": 2.8, "tps": 19.64, "speedRank": "fast",
-        "inputTokens": 10463, "outputTokens": 55,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 85, "tasksPassed": 4,
-        "tags": ["coding_expert", "fast", "tool_reliable"]
-      }
-    },
-    {
-      "id": "qwen/qwen3.5-122b-a10b",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "qwen",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 6, "score": 85, "combinedScore": 8500,
-        "duration": 3.5, "tps": 18.57, "speedRank": "fast",
-        "inputTokens": 9813, "outputTokens": 65,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 85, "tasksPassed": 4,
-        "tags": ["coding_expert", "fast", "smart", "tool_reliable"]
-      }
-    },
     {
       "id": "nvidia/nemotron-3-nano-30b-a3b",
       "object": "model",
       "created": 735790403,
       "owned_by": "nvidia",
       "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
       "benchmark": {
-        "rank": 7, "score": 80, "combinedScore": 8000,
-        "duration": 6.5, "tps": 61.54, "speedRank": "medium",
-        "inputTokens": 11523, "outputTokens": 400,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 80, "tasksPassed": 4,
-        "tags": ["coding_expert", "tool_reliable"]
-      }
-    },
-    {
-      "id": "minimaxai/minimax-m3",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "minimaxai",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 8, "score": 80, "combinedScore": 8000,
-        "duration": 143.3, "tps": 0.37, "speedRank": "very_slow",
-        "inputTokens": 9616, "outputTokens": 53,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 80, "tasksPassed": 4,
-        "tags": ["tool_reliable"],
-        "warning": "Extremely slow - 143s response time"
-      }
-    },
-    {
-      "id": "z-ai/glm-5.2",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "z-ai",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 9, "score": 80, "combinedScore": 8000,
-        "duration": 19.7, "tps": 2.49, "speedRank": "slow",
-        "inputTokens": 9922, "outputTokens": 49,
-        "toolCalls": 2, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 80, "tasksPassed": 4,
-        "tags": ["tool_reliable"]
-      }
-    },
-    {
-      "id": "meta/llama-3.2-11b-vision-instruct",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "meta",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": true },
-      "benchmark": {
-        "rank": 10, "score": 75, "combinedScore": 7500,
-        "duration": 3.1, "tps": 10.65, "speedRank": "fast",
-        "inputTokens": 12107, "outputTokens": 33,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 75, "tasksPassed": 4,
-        "tags": ["fast", "vision", "tool_reliable"]
-      }
-    },
-    {
-      "id": "nvidia/nemotron-3-super-120b-a12b",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "nvidia",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 11, "score": 75, "combinedScore": 7500,
-        "duration": 4.0, "tps": 28.75, "speedRank": "fast",
-        "inputTokens": 11523, "outputTokens": 115,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 75, "tasksPassed": 4,
-        "tags": ["smart", "tool_reliable"]
-      }
-    },
-    {
-      "id": "nvidia/nemotron-3-ultra-550b-a55b",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "nvidia",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 12, "score": 75, "combinedScore": 7500,
-        "duration": 4.2, "tps": 14.52, "speedRank": "fast",
-        "inputTokens": 11523, "outputTokens": 61,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 75, "tasksPassed": 4,
-        "tags": ["smart", "tool_reliable"]
-      }
-    },
-    {
-      "id": "stepfun-ai/step-3.7-flash",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "stepfun-ai",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 13, "score": 75, "combinedScore": 7500,
-        "duration": 2.2, "tps": 32.27, "speedRank": "fast",
-        "inputTokens": 10736, "outputTokens": 71,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 75, "tasksPassed": 4,
-        "tags": ["fast", "tool_reliable"]
-      }
-    },
-    {
-      "id": "thinkingmachines/inkling",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "thinkingmachines",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 14, "score": 75, "combinedScore": 7500,
-        "duration": 2.1, "tps": 27.14, "speedRank": "fast",
-        "inputTokens": 9324, "outputTokens": 57,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 75, "tasksPassed": 4,
-        "tags": ["fast", "tool_reliable"]
-      }
-    },
-    {
-      "id": "nvidia/nvidia-nemotron-nano-9b-v2",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "nvidia",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 15, "score": 75, "combinedScore": 7500,
-        "duration": 34.0, "tps": 37.85, "speedRank": "slow",
-        "inputTokens": 10284, "outputTokens": 1287,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 75, "tasksPassed": 4,
-        "tags": ["tool_reliable"]
-      }
-    },
-    {
-      "id": "meta/llama-3.1-70b-instruct",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "meta",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 16, "score": 70, "combinedScore": 7000,
-        "duration": 10.4, "tps": 3.37, "speedRank": "medium",
-        "inputTokens": 12030, "outputTokens": 35,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 70, "tasksPassed": 3,
-        "tags": ["smart", "tool_reliable"]
-      }
-    },
-    {
-      "id": "meta/llama-3.1-8b-instruct",
-      "object": "model",
-      "created": 735790403,
-      "owned_by": "meta",
-      "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": true, "vision": false },
-      "benchmark": {
-        "rank": 17, "score": 70, "combinedScore": 7000,
-        "duration": 4.1, "tps": 9.51, "speedRank": "fast",
-        "inputTokens": 12037, "outputTokens": 39,
-        "toolCalls": 1, "toolsWorked": true,
-        "codingScore": "4/5", "codingPercentage": 70, "tasksPassed": 3,
-        "tags": ["fast", "tool_reliable"]
+        "rank": 1,
+        "combinedScore": 8925,
+        "speed": 2.4,
+        "speedRank": "medium",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
       }
     },
     {
@@ -293,15 +30,118 @@
       "created": 735790403,
       "owned_by": "nvidia",
       "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": true },
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": true
+      },
       "benchmark": {
-        "rank": 18, "score": 40, "combinedScore": 4000,
-        "duration": 7.4, "tps": 11.35, "speedRank": "medium",
-        "inputTokens": 10280, "outputTokens": 84,
-        "toolCalls": 0, "toolsWorked": false,
-        "codingScore": "2/5", "codingPercentage": 40, "tasksPassed": 2,
-        "tags": ["vision"],
-        "warning": "Tool-calling not supported"
+        "rank": 2,
+        "combinedScore": 8793,
+        "speed": 2.68,
+        "speedRank": "medium",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "mistralai/mistral-large-3-675b-instruct-2512",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "mistralai",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 3,
+        "combinedScore": 8691,
+        "speed": 2.93,
+        "speedRank": "medium",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "meta/llama-3.1-8b-instruct",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "meta",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 4,
+        "combinedScore": 8654,
+        "speed": 3.03,
+        "speedRank": "medium",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "openai/gpt-oss-20b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "openai",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 5,
+        "combinedScore": 8541,
+        "speed": 3.37,
+        "speedRank": "medium",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "upstage/solar-10.7b-instruct",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "upstage",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 6,
+        "combinedScore": 8467,
+        "speed": 3.61,
+        "speedRank": "medium",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
       }
     },
     {
@@ -310,15 +150,238 @@
       "created": 735790403,
       "owned_by": "mistralai",
       "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
       "benchmark": {
-        "rank": 19, "score": 30, "combinedScore": 3000,
-        "duration": 4.1, "tps": 5.61, "speedRank": "fast",
-        "inputTokens": 10656, "outputTokens": 23,
-        "toolCalls": 0, "toolsWorked": false,
-        "codingScore": "2/5", "codingPercentage": 30, "tasksPassed": 1,
-        "tags": [],
-        "warning": "Tool-calling not supported"
+        "rank": 7,
+        "combinedScore": 8457,
+        "speed": 3.65,
+        "speedRank": "medium",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "google/gemma-2-2b-it",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "google",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 8,
+        "combinedScore": 8345,
+        "speed": 1.23,
+        "speedRank": "fast",
+        "codingScore": "4/5",
+        "codingPercentage": 80,
+        "tasksPassed": 4
+      }
+    },
+    {
+      "id": "nvidia/nemotron-3-ultra-550b-a55b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 9,
+        "combinedScore": 8306,
+        "speed": 4.24,
+        "speedRank": "medium",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "nvidia/llama-3.1-nemotron-nano-vl-8b-v1",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": true
+      },
+      "benchmark": {
+        "rank": 10,
+        "combinedScore": 8289,
+        "speed": 4.32,
+        "speedRank": "medium",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "meta/llama-3.2-11b-vision-instruct",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "meta",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": true
+      },
+      "benchmark": {
+        "rank": 11,
+        "combinedScore": 8190,
+        "speed": 4.8,
+        "speedRank": "medium",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 12,
+        "combinedScore": 8126,
+        "speed": 5.16,
+        "speedRank": "slow",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "nvidia/nemotron-mini-4b-instruct",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 13,
+        "combinedScore": 8087,
+        "speed": 1.52,
+        "speedRank": "fast",
+        "codingScore": "4/5",
+        "codingPercentage": 80,
+        "tasksPassed": 4
+      }
+    },
+    {
+      "id": "mistralai/mixtral-8x7b-instruct-v0.1",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "mistralai",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 14,
+        "combinedScore": 7941,
+        "speed": 6.47,
+        "speedRank": "slow",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "mistralai/mistral-small-4-119b-2603",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "mistralai",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 15,
+        "combinedScore": 7920,
+        "speed": 6.65,
+        "speedRank": "slow",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "meta/llama-3.2-1b-instruct",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "meta",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 16,
+        "combinedScore": 7918,
+        "speed": 6.67,
+        "speedRank": "slow",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
       }
     },
     {
@@ -327,128 +390,817 @@
       "created": 735790403,
       "owned_by": "abacusai",
       "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
       "benchmark": {
-        "rank": 20, "score": 25, "combinedScore": 2500,
-        "duration": 91.3, "tps": 0.20, "speedRank": "very_slow",
-        "inputTokens": 6817, "outputTokens": 18,
-        "toolCalls": 0, "toolsWorked": false,
-        "codingScore": "1/5", "codingPercentage": 25, "tasksPassed": 1,
-        "tags": [],
-        "warning": "Extremely slow (91s), no tool-calling support"
+        "rank": 17,
+        "combinedScore": 7883,
+        "speed": 6.99,
+        "speedRank": "slow",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "meta/llama-3.1-70b-instruct",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "meta",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 18,
+        "combinedScore": 7647,
+        "speed": 10.09,
+        "speedRank": "very_slow",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "nvidia/nemotron-3-super-120b-a12b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 19,
+        "combinedScore": 7627,
+        "speed": 10.47,
+        "speedRank": "very_slow",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
       }
     },
     {
       "id": "google/gemma-3n-e2b-it",
       "object": "model",
-      "created": 735790403, "owned_by": "google", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 21, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed"], "error": "HTTP 400 - request format incompatible" }
+      "created": 735790403,
+      "owned_by": "google",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 20,
+        "combinedScore": 7624,
+        "speed": 10.52,
+        "speedRank": "very_slow",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
     },
     {
       "id": "google/gemma-3n-e4b-it",
       "object": "model",
-      "created": 735790403, "owned_by": "google", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 22, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed"], "error": "HTTP 400 - request format incompatible" }
-    },
-    {
-      "id": "google/gemma-2-2b-it",
-      "object": "model",
-      "created": 735790403, "owned_by": "google", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 23, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed"], "error": "HTTP 422 - request validation failed" }
-    },
-    {
-      "id": "meta/llama-guard-4-12b",
-      "object": "model",
-      "created": 735790403, "owned_by": "meta", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 24, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed", "safety"], "error": "HTTP 400 - safety model, not a general chat model" }
-    },
-    {
-      "id": "meta/llama-3.2-3b-instruct",
-      "object": "model",
-      "created": 735790403, "owned_by": "meta", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 25, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed"], "error": "Timeout - read timeout after 180s" }
-    },
-    {
-      "id": "meta/llama-3.2-90b-vision-instruct",
-      "object": "model",
-      "created": 735790403, "owned_by": "meta", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": true },
-      "benchmark": { "rank": 26, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed", "vision"], "error": "Timeout - read timeout after 180s" }
-    },
-    {
-      "id": "moonshotai/kimi-k2.6",
-      "object": "model",
-      "created": 735790403, "owned_by": "moonshotai", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 27, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed"], "error": "HTTP 404 - endpoint not found" }
-    },
-    {
-      "id": "nvidia/llama-3.1-nemoguard-8b-content-safety",
-      "object": "model",
-      "created": 735790403, "owned_by": "nvidia", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 28, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed", "safety"], "error": "HTTP 400 - safety model" }
-    },
-    {
-      "id": "nvidia/llama-3.1-nemoguard-8b-topic-control",
-      "object": "model",
-      "created": 735790403, "owned_by": "nvidia", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 29, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed", "safety"], "error": "HTTP 400 - safety model" }
-    },
-    {
-      "id": "nvidia/gliner-pii",
-      "object": "model",
-      "created": 735790403, "owned_by": "nvidia", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 30, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed", "pii"], "error": "HTTP 422 - NER/PII model, not a chat model" }
-    },
-    {
-      "id": "nvidia/llama-3.1-nemotron-safety-guard-8b-v3",
-      "object": "model",
-      "created": 735790403, "owned_by": "nvidia", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 31, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed", "safety"], "error": "HTTP 400 - safety model" }
-    },
-    {
-      "id": "nvidia/nemotron-3.5-content-safety",
-      "object": "model",
-      "created": 735790403, "owned_by": "nvidia", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 32, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed", "safety"], "error": "HTTP 400 - requires --enable-auto-tool-choice" }
-    },
-    {
-      "id": "nvidia/nemotron-mini-4b-instruct",
-      "object": "model",
-      "created": 735790403, "owned_by": "nvidia", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 33, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed"], "error": "HTTP 400 - request format incompatible" }
-    },
-    {
-      "id": "nvidia/riva-translate-4b-instruct-v1.1",
-      "object": "model",
-      "created": 735790403, "owned_by": "nvidia", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 34, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed", "translation"], "error": "HTTP 400 - translation model, not a chat model" }
+      "created": 735790403,
+      "owned_by": "google",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 21,
+        "combinedScore": 7522,
+        "speed": 12.87,
+        "speedRank": "very_slow",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
     },
     {
       "id": "nvidia/llama-3.3-nemotron-super-49b-v1",
       "object": "model",
-      "created": 735790403, "owned_by": "nvidia", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 35, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed"], "error": "HTTP 502 - provider returned empty content" }
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 22,
+        "combinedScore": 7496,
+        "speed": 13.63,
+        "speedRank": "very_slow",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
     },
     {
-      "id": "upstage/solar-10.7b-instruct",
+      "id": "sarvamai/sarvam-m",
       "object": "model",
-      "created": 735790403, "owned_by": "upstage", "type": "chat",
-      "capabilities": { "chat": true, "embedding": false, "image": false, "audio": false, "toolCalling": false, "vision": false },
-      "benchmark": { "rank": 36, "score": 0, "combinedScore": 0, "duration": null, "tps": null, "speedRank": "failed", "inputTokens": null, "outputTokens": null, "toolCalls": 0, "toolsWorked": false, "codingScore": "0/5", "codingPercentage": 0, "tasksPassed": 0, "tags": ["failed"], "error": "HTTP 400 - request format incompatible" }
+      "created": 735790403,
+      "owned_by": "sarvamai",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 23,
+        "combinedScore": 7426,
+        "speed": 16.1,
+        "speedRank": "very_slow",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "mistralai/mistral-medium-3.5-128b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "mistralai",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 24,
+        "combinedScore": 7293,
+        "speed": 24.08,
+        "speedRank": "very_slow",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "meta/llama-3.3-70b-instruct",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "meta",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 25,
+        "combinedScore": 7152,
+        "speed": 47.73,
+        "speedRank": "very_slow",
+        "codingScore": "5/5",
+        "codingPercentage": 100,
+        "tasksPassed": 5
+      }
+    },
+    {
+      "id": "nvidia/llama-3.1-nemotron-nano-8b-v1",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 26,
+        "combinedScore": 6426,
+        "speed": 7.58,
+        "speedRank": "slow",
+        "codingScore": "4/5",
+        "codingPercentage": 80,
+        "tasksPassed": 4
+      }
+    },
+    {
+      "id": "deepseek-ai/deepseek-v4-flash",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "deepseek-ai",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 27,
+        "combinedScore": 5750,
+        "speed": 48.34,
+        "speedRank": "very_slow",
+        "codingScore": "4/5",
+        "codingPercentage": 80,
+        "tasksPassed": 4
+      }
+    },
+    {
+      "id": "stepfun-ai/step-3.5-flash",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "stepfun-ai",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 28,
+        "combinedScore": 5419,
+        "speed": 4.65,
+        "speedRank": "medium",
+        "codingScore": "3/5",
+        "codingPercentage": 60,
+        "tasksPassed": 3
+      }
+    },
+    {
+      "id": "openai/gpt-oss-120b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "openai",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 30,
+        "combinedScore": 2870,
+        "speed": 105.45,
+        "speedRank": "very_slow",
+        "codingScore": "2/5",
+        "codingPercentage": 40,
+        "tasksPassed": 2
+      }
+    },
+    {
+      "id": "stepfun-ai/step-3.7-flash",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "stepfun-ai",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 31,
+        "combinedScore": 2070,
+        "speed": 9.7,
+        "speedRank": "slow",
+        "codingScore": "1/5",
+        "codingPercentage": 20,
+        "tasksPassed": 1
+      }
+    },
+    {
+      "id": "minimaxai/minimax-m2.7",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "minimaxai",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 32,
+        "combinedScore": 1483,
+        "speed": 88.68,
+        "speedRank": "very_slow",
+        "codingScore": "1/5",
+        "codingPercentage": 20,
+        "tasksPassed": 1
+      }
+    },
+    {
+      "id": "nvidia/nemotron-4-340b-reward",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 33,
+        "combinedScore": 0,
+        "speed": 0.43,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "nvidia/nemotron-4-340b-instruct",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 34,
+        "combinedScore": 0,
+        "speed": 0.44,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 35,
+        "combinedScore": 0,
+        "speed": 0.3,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "writer/palmyra-creative-122b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "writer",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 36,
+        "combinedScore": 0,
+        "speed": 0.33,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "meta/codellama-70b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "meta",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 37,
+        "combinedScore": 0,
+        "speed": 0.31,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "meta/llama2-70b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "meta",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 38,
+        "combinedScore": 0,
+        "speed": 0.33,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "nvidia/llama-3.1-nemotron-70b-instruct",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 39,
+        "combinedScore": 0,
+        "speed": 0.33,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "nvidia/llama3-chatqa-1.5-70b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 40,
+        "combinedScore": 0,
+        "speed": 0.34,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "writer/palmyra-fin-70b-32k",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "writer",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 41,
+        "combinedScore": 0,
+        "speed": 0.32,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "writer/palmyra-med-70b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "writer",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 42,
+        "combinedScore": 0,
+        "speed": 0.33,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "writer/palmyra-med-70b-32k",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "writer",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 43,
+        "combinedScore": 0,
+        "speed": 0.34,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "nvidia/llama-3.1-nemotron-51b-instruct",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 44,
+        "combinedScore": 0,
+        "speed": 0.37,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "qwen/qwen3.5-397b-a17b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "qwen",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 45,
+        "combinedScore": 0,
+        "speed": 121.78,
+        "speedRank": "very_slow",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "ibm/granite-34b-code-instruct",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "ibm",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 46,
+        "combinedScore": 0,
+        "speed": 0.47,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 47,
+        "combinedScore": 0,
+        "speed": 19.54,
+        "speedRank": "very_slow",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "nvidia/nemotron-nano-3-30b-a3b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 48,
+        "combinedScore": 0,
+        "speed": 0.44,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "mistralai/codestral-22b-instruct-v0.1",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "mistralai",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 49,
+        "combinedScore": 0,
+        "speed": 0.35,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "mistralai/mixtral-8x22b-v0.1",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "mistralai",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": false
+      },
+      "benchmark": {
+        "rank": 50,
+        "combinedScore": 0,
+        "speed": 0.43,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
+    },
+    {
+      "id": "nvidia/neva-22b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia",
+      "type": "chat",
+      "capabilities": {
+        "chat": true,
+        "embedding": false,
+        "image": false,
+        "audio": false,
+        "toolCalling": true,
+        "vision": true
+      },
+      "benchmark": {
+        "rank": 51,
+        "combinedScore": 0,
+        "speed": 0.31,
+        "speedRank": "fast",
+        "codingScore": "0/5",
+        "codingPercentage": 0,
+        "tasksPassed": 0
+      }
     }
-  ]
+  ],
+  "benchmarkedCount": 50,
+  "total": 118
 }
