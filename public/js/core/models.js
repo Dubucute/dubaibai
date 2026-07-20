@@ -146,16 +146,10 @@
     if (empty) empty.style.display = "none";
 
     var selected = state.get("agentModel") || "";
-    var html = "";
-    var groups = {};
-    filtered.forEach(function(m) {
-      if (!groups[m.group]) groups[m.group] = [];
-      groups[m.group].push(m);
-    });
-
-    // Prepend "Auto-Select" option at the top
     var isAutoSelected = !selected;
-    html += '<div class="md-item ' + (isAutoSelected ? "active" : "") + '" data-model-id="auto" tabindex="0" role="option" aria-selected="' + (isAutoSelected ? "true" : "false") + '">' +
+
+    // Always render Auto-Select first — even when search returns no results
+    var html = '<div class="md-item ' + (isAutoSelected ? "active" : "") + '" data-model-id="auto" tabindex="0" role="option" aria-selected="' + (isAutoSelected ? "true" : "false") + '">' +
       '<div class="md-item-icon"><svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M8 1l3 5 5 1-4 4 1 5-5-3-5 3 1-5-4-4 5-1 3-5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg></div>' +
       '<div class="md-item-info">' +
       '<div class="md-item-name">Auto-Select</div>' +
@@ -163,6 +157,12 @@
       '</div>' +
       '<div class="md-item-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
       '</div>';
+
+    var groups = {};
+    filtered.forEach(function(m) {
+      if (!groups[m.group]) groups[m.group] = [];
+      groups[m.group].push(m);
+    });
 
     var sortedGroups = Object.keys(groups).sort(function(a, b) {
       return (GROUP_ORDER[a] || 99) - (GROUP_ORDER[b] || 99);
