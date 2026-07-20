@@ -12,10 +12,11 @@ try {
 }
 
 // ── Connection URL selection with diagnostics ──
-// Order: POSTGRES_URL (pooled, prefer serverless) → NON_POOLING (direct) → DATABASE_URL (manual)
+// Order: NON_POOLING (session pooler, port 5432) → POSTGRES_URL (transaction pooler, port 6543) → DATABASE_URL (manual)
+// Port 5432 (session/passthrough) has been more reliable than the PgBouncer on 6543.
 const CANDIDATE_KEYS = [
-  { key: "POSTGRES_URL", desc: "pooled (port 6543)" },
-  { key: "POSTGRES_URL_NON_POOLING", desc: "direct (port 5432)" },
+  { key: "POSTGRES_URL_NON_POOLING", desc: "session pooler (port 5432)" },
+  { key: "POSTGRES_URL", desc: "transaction pooler (port 6543)" },
   { key: "DATABASE_URL", desc: "manual" },
 ];
 
