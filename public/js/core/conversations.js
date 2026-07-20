@@ -28,6 +28,25 @@
 
   window.selectConversation = async function (id, silent) {
     if (silent === undefined) silent = false;
+
+    // ── Save partial AI response before switching ──
+    // If the AI is still streaming and we switch conversations, save
+    // whatever partial text we have so it's not lost.
+    if (window.currentAgentRequest && typeof _streamText !== "undefined" && _streamText && _streamText.trim()) {
+      try {
+        var currentId = window.currentConversationId;
+        if (currentId) {
+          await AgentAPI.conversationAddMessage(currentId, {
+            role: "assistant",
+            content: _streamText,
+            replaceLast: true,
+          });
+        }
+      } catch (e) {
+        // Best-effort save
+      }
+    }
+
     try {
       var convo = await AgentAPI.getConversation(id);
       if (!convo) {

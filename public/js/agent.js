@@ -328,6 +328,7 @@ window.AgentAPI = {
         role: message.role,
         content: message.content,
         model: message.model,
+        replaceLast: message.replaceLast || false,
       }),
     });
     if (r.status === 404) {

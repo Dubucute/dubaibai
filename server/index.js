@@ -373,6 +373,18 @@ app.post("/api/conversations/:id/messages", async (req, res) => {
     };
     if (src.tool_calls) {msg.tool_calls = src.tool_calls;}
     if (src.tool_call_id) {msg.tool_call_id = src.tool_call_id;}
+
+    // Streaming update: if replaceLast=true, update last message instead of appending
+    if (src.replaceLast) {
+      const msgs = convo.messages || [];
+      if (msgs.length > 0) {
+        const lastIdx = msgs.length - 1;
+        await store.updateMessage(convo.id, lastIdx, { content: src.content }, userId);
+        res.json({ success: true });
+        return;
+      }
+    }
+
     await store.addMessage(convo.id, msg, userId);
     res.json({ success: true });
   } catch (e) {

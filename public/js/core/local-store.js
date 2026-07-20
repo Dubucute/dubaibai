@@ -84,15 +84,25 @@ window.LocalStore = {
     for (var i = 0; i < convs.length; i++) {
       if (convs[i].id === convoId) {
         var c = convs[i];
-        c.messages.push({
-          role: message.role,
-          content: message.content,
-          model: message.model || null,
-          timestamp: Date.now(),
-        });
+        var msgs = c.messages;
+        // Streaming handling: if the last message is assistant and we're adding
+        // another assistant message, replace it (don't append). This preserves
+        // partial responses when users switch conversations mid-stream.
+        if (message.role === "assistant" && msgs.length > 0 && msgs[msgs.length - 1].role === "assistant") {
+          msgs[msgs.length - 1].content = message.content;
+          msgs[msgs.length - 1].timestamp = Date.now();
+          if (message.model) msgs[msgs.length - 1].model = message.model;
+        } else {
+          msgs.push({
+            role: message.role,
+            content: message.content,
+            model: message.model || null,
+            timestamp: Date.now(),
+          });
+        }
         c.updated = Date.now();
         // Auto-generate title from first user message
-        if (c.messages.length === 1 && message.role === "user") {
+        if (msgs.length === 1 && message.role === "user") {
           c.title = message.content.slice(0, 50) + (message.content.length > 50 ? "..." : "");
         } else if (c.title === "New Chat" && message.role === "user") {
           c.title = message.content.slice(0, 50) + (message.content.length > 50 ? "..." : "");
