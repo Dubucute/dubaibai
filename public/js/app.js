@@ -181,12 +181,10 @@ window.sendToAgent = async function () {
   attachedFiles = [];
   renderAttachments();
 
-  // Show skeleton loader while waiting for first token
-  showSkeletonLoader();
+  // Show typing indicator (bouncing dots) while waiting for first token
   const container = document.getElementById("agentMessages");
   const thinkingDiv = document.createElement("div");
   thinkingDiv.className = "msg msg-agent";
-  thinkingDiv.style.display = "none";
   thinkingDiv.innerHTML = `<div class="msg-avatar"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="8" fill="currentColor" opacity="0.15"/><path d="M14 6L8 10v8l6 4 6-4v-8l-6-4z" fill="currentColor" opacity="0.4"/><circle cx="14" cy="14" r="3.5" fill="currentColor"/></svg></div><div class="msg-body"><div class="thinking-indicator"><div class="thinking-dots"><span></span><span></span><span></span></div><span class="thinking-text">Thinking...</span></div></div>`;
   container.appendChild(thinkingDiv);
   scrollToBottom(container);
@@ -232,9 +230,7 @@ window.sendToAgent = async function () {
 
           case "token":              // Real-time token streaming — live markdown rendering
             if (!thinkingDiv.dataset.streaming) {
-              // First token — remove skeleton, show streaming content
-              removeSkeletonLoader();
-              thinkingDiv.style.display = "";
+              // First token — replace typing dots with streaming content
               thinkingDiv.dataset.streaming = "true";
               _streamText = "";
               bubble.innerHTML = `<div class="msg-name">${escHtml(modelName || "Dubu AI")}</div><div class="msg-content streaming"><div class="streaming-text"></div><span class="streaming-cursor">▊</span></div>`;
@@ -810,12 +806,9 @@ window.retryLastRequest = function () {
   // Create a new thinking indicator and send
   const thinkingDiv = document.createElement("div");
   thinkingDiv.className = "msg msg-agent";
-  thinkingDiv.style.display = "none";
   thinkingDiv.innerHTML = `<div class="msg-avatar"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="8" fill="currentColor" opacity="0.15"/><path d="M14 6L8 10v8l6 4 6-4v-8l-6-4z" fill="currentColor" opacity="0.4"/><circle cx="14" cy="14" r="3.5" fill="currentColor"/></svg></div><div class="msg-body"><div class="thinking-indicator"><div class="thinking-dots"><span></span><span></span><span></span></div><span class="thinking-text">Retrying...</span></div></div>`;
   container.appendChild(thinkingDiv);
   scrollToBottom(container);
-
-  showSkeletonLoader();
 
   // Bypass sendToAgent's conversation check — reuse existing conversation
   retrySend(lastUserMsg, thinkingDiv);
@@ -863,8 +856,6 @@ function retrySend(userMessage, thinkingDiv) {
           break;
         case "token":
           if (!thinkingDiv.dataset.streaming) {
-            removeSkeletonLoader();
-            thinkingDiv.style.display = "";
             thinkingDiv.dataset.streaming = "true";
             _streamText = "";
             bubble.innerHTML = `<div class="msg-name">${escHtml(modelName || "Dubu AI")}</div><div class="msg-content streaming"><div class="streaming-text"></div><span class="streaming-cursor">▊</span></div>`;
