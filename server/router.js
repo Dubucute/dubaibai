@@ -8,6 +8,19 @@ const { TASK_ROUTES } = require("./models");
 
 const INTENT_PATTERNS = [
   {
+    task: "websearch",
+    weight: 10,
+    patterns: [
+      /^search\s+(for|the|about|on|in)?\s/i,
+      /\b(search\s+the\s+web|look\s+up|find\s+information|find\s+(out|more)|google\s+(it|this|for))\b/i,
+      /\b(what\s+is\s+the\s+(latest|current|recent|newest|trending))\b/i,
+      /\b(news\s+(about|on|regarding|of)|latest\s+(news|update|trends))\b/i,
+      /\b(price|cost|how\s+much\s+(is|are|does|do))\b/i,
+      /\b(weather|forecast|temperature)\s+(in|for|at|today|tomorrow)\b/i,
+      /^(how\s+(much|many|long|far|old|tall|heavy|big|fast))\s/is,
+    ],
+  },
+  {
     task: "code",
     weight: 10,
     patterns: [

@@ -58,6 +58,13 @@ class Orchestrator {
     // Debug: log context flags
     console.log(`  📡 Context flags: webSearch=${context.webSearch}, deepThink=${context.deepThink}, task=${task}`);
 
+    // ── Auto-search: when the router detects search intent from keywords
+    // (e.g., "search for", "find", "what is the latest"), auto-enable web
+    // search so the handler fetches results BEFORE the model responds.
+    if (task === "websearch") {
+      context.webSearch = true;
+    }
+
     // ── Web Search override: when web search is enabled, force the websearch
     // model chain (smart models that can synthesize search results).
     let effectiveTask = task;
@@ -68,7 +75,7 @@ class Orchestrator {
         task: "websearch",
         confidence: 1,
         label: "Web Search",
-        content: "Web search enabled — using smart model to synthesize results",
+        content: "Web search enabled — searching the web for current information",
         reasoning: `Web search active, overriding "${task}" route to websearch chain`,
       };
     }
