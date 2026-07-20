@@ -18,7 +18,7 @@ let DATABASE_URL = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOL
 // Auto-fix Supabase pooler URLs: ensure ?pgbouncer=true is present
 if (DATABASE_URL && DATABASE_URL.includes(":6543/") && !DATABASE_URL.includes("pgbouncer=true")) {
   DATABASE_URL += (DATABASE_URL.includes("?") ? "&" : "?") + "pgbouncer=true";
-  console.log("  🔧 Auto-added ?pgbouncer=true to pooler connection URL");
+  console.log("  🔧 Auto-added ?pgbouncer=true to pooler connection");
 }
 const DB_ENABLED = !!DATABASE_URL;
 
