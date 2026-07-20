@@ -88,7 +88,7 @@
         addMessage(msg.role, msg.content, author);
       }
       if (agentHistory.length === 0) showWelcomeMessage();
-      scrollToBottom(container);
+      scrollToBottom(container, true);
       renderConversationList();
     } catch (e) {
       if (!silent) showToast("Failed to load conversation", "error");

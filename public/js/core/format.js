@@ -288,12 +288,18 @@
   };
 
   // ── Scroll to bottom ──
-  window.scrollToBottom = function (el) {
+  window.scrollToBottom = function (el, force) {
     if (!el) el = document.getElementById("agentMessages");
     if (!el) el = document.getElementById("chatMessages");
     if (!el) return;
-    // Only auto-scroll if user is already near the bottom
-    var threshold = 150;
+    // Force scroll always (first token, conversation load, etc.)
+    if (force) {
+      el.scrollTop = el.scrollHeight;
+      return;
+    }
+    // During streaming, only auto-scroll if user is near the bottom.
+    // A small threshold (40px) tolerates slight viewport gaps.
+    var threshold = 40;
     if (el.scrollTop + el.clientHeight >= el.scrollHeight - threshold) {
       el.scrollTop = el.scrollHeight;
     }

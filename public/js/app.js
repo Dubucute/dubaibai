@@ -230,8 +230,7 @@ window.sendToAgent = async function () {
             delete thinkingDiv.dataset.streamContent;
             break;
 
-          case "token":
-            // Real-time token streaming — live markdown rendering
+          case "token":              // Real-time token streaming — live markdown rendering
             if (!thinkingDiv.dataset.streaming) {
               // First token — remove skeleton, show streaming content
               removeSkeletonLoader();
@@ -239,6 +238,8 @@ window.sendToAgent = async function () {
               thinkingDiv.dataset.streaming = "true";
               _streamText = "";
               bubble.innerHTML = `<div class="msg-name">${escHtml(modelName || "Dubu AI")}</div><div class="msg-content streaming"><div class="streaming-text"></div><span class="streaming-cursor">▊</span></div>`;
+              // Force scroll on first token so user sees the bot start typing
+              scrollToBottom(null, true);
             }
             // Accumulate text and render markdown live
             _streamText += data.content || "";
