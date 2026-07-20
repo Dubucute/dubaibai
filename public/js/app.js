@@ -1039,6 +1039,63 @@ window.downloadImage = function (idxOrUrl, prompt) {
   showToast("Image downloaded", "success", 1500);
 };
 
+// ── Skeleton Loader ──
+function createSkeletonMessage() {
+  const div = document.createElement("div");
+  div.className = "skeleton-msg";
+  div.id = "skeletonLoader";
+  div.innerHTML = `
+    <div class="skeleton-avatar"></div>
+    <div class="skeleton-body">
+      <div class="skeleton-name"></div>
+      <div class="skeleton-lines">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+      </div>
+    </div>
+  `;
+  return div;
+}
+
+function showSkeletonLoader() {
+  const container = document.getElementById("agentMessages");
+  removeSkeletonLoader();
+  const skeleton = createSkeletonMessage();
+  skeleton.setAttribute("aria-live", "polite");
+  skeleton.setAttribute("aria-label", "Loading response...");
+  container.appendChild(skeleton);
+  scrollToBottom(container);
+}
+
+function removeSkeletonLoader() {
+  var existing = document.getElementById("skeletonLoader");
+  if (existing) existing.remove();
+}
+
+// ── Mobile Sidebar ──
+window.toggleMobileSidebar = function () {
+  var sidebar = document.getElementById("sidebar");
+  var overlay = document.getElementById("mobileSidebarOverlay");
+  var hamburger = document.getElementById("hamburgerBtn");
+  var isOpen = sidebar.classList.toggle("mobile-open");
+  overlay.classList.toggle("visible", isOpen);
+  hamburger.classList.toggle("active", isOpen);
+  document.body.style.overflow = isOpen ? "hidden" : "";
+};
+
+function closeMobileSidebar() {
+  var sidebar = document.getElementById("sidebar");
+  if (sidebar.classList.contains("mobile-open")) window.toggleMobileSidebar();
+}
+
+// ── Settings ──
+window.closeSettings = function () {
+  document.getElementById("settingsOverlay").classList.remove("visible");
+  document.getElementById("settingsPanel").classList.remove("open");
+};
+
 // ── Init ──
 document.addEventListener("DOMContentLoaded", () => {
   applyTheme(state.get("theme") || "dark");

@@ -70,7 +70,7 @@
   };
 
   // ── Update model dropdown trigger ──
-  function updateModelDropdownTrigger() {
+  window.updateModelDropdownTrigger = function () {
     var selected = state.get("agentModel") || "";
     var nameEl = document.getElementById("mdTriggerName");
     var iconEl = document.getElementById("mdTriggerIcon");
@@ -205,6 +205,17 @@
     var modelName = selectedValue ? (loadedModels.find(function(m) { return m.id === selectedValue; }) || {}).name || selectedValue.split("/").pop() : "Auto-Select";
     showToast("Model: " + modelName, "success", 1500);
   }
+
+  // ── Close model dropdown ──
+  window.closeModelDropdown = function () {
+    document.getElementById("mdTrigger")?.classList.remove("open");
+    document.getElementById("mdPanel")?.classList.remove("open");
+    var searchInput = document.getElementById("mdSearchInput");
+    if (searchInput) {
+      searchInput.value = "";
+      filterModelDropdown("");
+    }
+  };
 
   // ── Close all model dropdowns ──
   window.closeModelDropdowns = function () {

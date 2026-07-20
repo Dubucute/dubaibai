@@ -17,7 +17,7 @@
     selectTheme(THEMES[(idx + 1) % THEMES.length]);
   };
 
-  function applyTheme(name) {
+  window.applyTheme = function (name) {
     var app = document.getElementById("app");
     THEMES.forEach(function(t) {
       document.body.classList.remove("theme-" + t);

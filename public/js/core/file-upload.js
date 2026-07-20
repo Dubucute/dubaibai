@@ -4,7 +4,7 @@
     document.getElementById("fileInput").click();
   };
 
-  function setupFileInput() {
+  window.setupFileInput = function () {
     var input = document.getElementById("fileInput");
     input.onchange = function(e) {
       var files = Array.from(e.target.files);
@@ -51,7 +51,7 @@
     };
   }
 
-  function renderAttachments() {
+  window.renderAttachments = function () {
     var bar = document.getElementById("attachBar");
     var list = document.getElementById("attachList");
     if (attachedFiles.length === 0) {
@@ -74,7 +74,7 @@
     renderAttachments();
   };
 
-  function setupDragDrop() {
+  window.setupDragDrop = function () {
     var chatArea = document.getElementById("chatMessages");
     var dropzone = document.getElementById("dropzoneOverlay");
     var dragCounter = 0;
@@ -141,7 +141,7 @@
     });
   }
 
-  function handlePastedImage(blob) {
+  window.handlePastedImage = function (blob) {
     var reader = new FileReader();
     reader.onload = function(ev) {
       var dataUrl = ev.target.result;
@@ -160,7 +160,7 @@
     reader.readAsDataURL(blob);
   }
 
-  function showPastePreview(dataUrl, fileName) {
+  window.showPastePreview = function (dataUrl, fileName) {
     var existing = document.querySelector(".paste-preview");
     if (existing) existing.remove();
     var preview = document.createElement("div");
