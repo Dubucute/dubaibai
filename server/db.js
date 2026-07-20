@@ -11,7 +11,8 @@ try {
   /* dotenv not installed, skip */
 }
 
-const DATABASE_URL = process.env.DATABASE_URL;
+// Try DATABASE_URL first, then fall back to Supabase's auto-injected env vars
+const DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING || "";
 const DB_ENABLED = !!DATABASE_URL;
 
 let pool = null;
