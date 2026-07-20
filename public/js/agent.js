@@ -253,6 +253,7 @@ window.AgentAPI = {
     const r = await fetch(`/api/conversations/${id}`, {
       headers: authHeaders(),
     });
+    if (r.status === 404) return null;
     if (!r.ok) throw new Error("Conversation not found");
     return (await r.json()).conversation;
   },

@@ -32,6 +32,10 @@
       var convo = await AgentAPI.getConversation(id);
       if (!convo) {
         if (!silent) showToast("Conversation not found", "error");
+        // Clean up stale localStorage ID so it's not retried
+        if (localStorage.getItem("dubu_last_convo_id") === id) {
+          localStorage.removeItem("dubu_last_convo_id");
+        }
         return;
       }
       currentConversationId = convo.id;
@@ -123,7 +127,8 @@
     if (lastId) {
       try {
         await selectConversation(lastId, true);
-        return;
+        // Only return if the conversation was actually loaded
+        if (currentConversationId) return;
       } catch (e) {
         localStorage.removeItem("dubu_last_convo_id");
       }
