@@ -61,8 +61,8 @@ class Store {
         return { id, title, model, messages: [], created: Date.now(), updated: Date.now(), userId: userId || null };
       } catch (e) {
         console.warn("DB createConversation failed:", e.message);
-        // On Vercel, in-memory fallback doesn't work across instances — throw so caller knows
-        if (process.env.VERCEL) {throw new Error(`Database unavailable: ${  e.message}`);}
+        // On Vercel, in-memory fallback won't persist — but keep going so the frontend
+        // can retry on the next request (getConversation now retries when DB not ready)
       }
     }
 
@@ -95,7 +95,23 @@ class Store {
         return this._rowToConvo(row);
       } catch (e) {
         console.warn("DB getConversation failed:", e.message, e.code);
-        if (process.env.VERCEL) {throw new Error(`Database unavailable: ${  e.message}`);}
+      }
+    }
+
+    // DB not ready yet — wait briefly for init to complete (handles Vercel cold starts
+    // where the DB connection is still initializing on this instance).
+    if (process.env.VERCEL && !isDbReady()) {
+      for (let i = 0; i < 5; i++) {
+        await new Promise(r => setTimeout(r, 600));
+        if (isDbReady()) {
+          try {
+            const row = await db.queryOne(`SELECT * FROM conversations WHERE id = $1`, [id]);
+            if (row) return this._rowToConvo(row);
+          } catch (e) {
+            console.warn("DB getConversation retry failed:", e.message);
+            break;
+          }
+        }
       }
     }
 
@@ -128,8 +144,7 @@ class Store {
               : "",
         }));
       } catch (e) {
-        console.warn("DB listConversations failed, falling back:", e.message);
-        if (process.env.VERCEL) {throw new Error(`Database unavailable: ${  e.message}`);}
+        console.warn("DB listConversations failed:", e.message);
       }
     }
 
@@ -180,7 +195,6 @@ class Store {
         return await this.getConversation(convoId);
       } catch (e) {
         console.warn("DB addMessage failed, falling back:", e.message);
-        if (process.env.VERCEL) {throw new Error(`Database unavailable: ${  e.message}`);}
       }
     }
 
@@ -242,8 +256,7 @@ class Store {
         );
         return { ...convo, title };
       } catch (e) {
-        console.warn("DB updateConversationTitle failed, falling back:", e.message);
-        if (process.env.VERCEL) {throw new Error(`Database unavailable: ${  e.message}`);}
+        console.warn("DB updateConversationTitle failed:", e.message);
       }
     }
 
