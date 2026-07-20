@@ -122,20 +122,26 @@
   };
 
   // ── Auto-restore conversation on load ──
-  // Retries up to 5 times with 1s delay to handle serverless cold starts
+  // Retries up to 3 times with 1s delay to handle serverless cold starts
   // where the DB connection (initDatabase) may not have completed yet.
   window.autoRestoreConversation = async function (retries) {
-    if (retries === undefined) retries = 5;
+    if (retries === undefined) retries = 3;
 
     // Try restoring the last conversation ID from localStorage
+    // We retry AgentAPI.getConversation() directly rather than
+    // selectConversation() to avoid the localStorage side-effect
+    // where selectConversation clears the ID on failure.
     var lastId = localStorage.getItem("dubu_last_convo_id");
     if (lastId) {
       for (var attempt = 0; attempt <= retries; attempt++) {
         try {
-          await selectConversation(lastId, true);
-          if (currentConversationId) return;
+          var convo = await AgentAPI.getConversation(lastId);
+          if (convo) {
+            await selectConversation(lastId, true);
+            return;
+          }
         } catch (e) {
-          // selectConversation caught the error internally
+          // Not found or network error — retry
         }
         if (attempt < retries) await new Promise(function(r) { setTimeout(r, 1000); });
       }
