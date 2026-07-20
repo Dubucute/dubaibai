@@ -368,7 +368,8 @@ window.sendToAgent = async function () {
           case "error":
             removeSkeletonLoader();
             thinkingDiv.remove();
-            addMessage("agent", data.content, "Error");
+            // Show a proper error card with retry button
+            showErrorCard(data.content || "The model failed to respond.");
             showToast(data.content || "An error occurred", "error");
             break;
         }
@@ -729,6 +730,245 @@ function generateKeywordSuggestions(responseText) {
     "What else should I know about this?",
     "Can you give me a practical example?",
   ];
+}
+
+// ── Show error card with retry button ──
+// Shows a friendly error message with a retry button that re-sends
+// the last user message without removing it from the DOM.
+function showErrorCard(errorMessage) {
+  const container = document.getElementById("agentMessages");
+  const div = document.createElement("div");
+  div.className = "msg msg-agent";
+  div.innerHTML = `
+    <div class="msg-avatar"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="8" fill="currentColor" opacity="0.15"/><path d="M14 6L8 10v8l6 4 6-4v-8l-6-4z" fill="currentColor" opacity="0.4"/><circle cx="14" cy="14" r="3.5" fill="currentColor"/></svg></div>
+    <div class="msg-body">
+      <div class="msg-name">Error</div>
+      <div class="msg-content">
+        <div class="error-card">
+          <div class="error-card-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.3"/>
+              <path d="M10 6v4M10 13v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="error-card-text">${sanitizeText(errorMessage)}</div>
+          <button class="error-retry-btn" onclick="retryLastRequest()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7a5 5 0 015-5 5 5 0 015 5M12 7a5 5 0 01-5 5 5 5 0 01-5-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M10.5 7L12 5.5 13.5 7M.5 7L2 5.5 3.5 7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Retry
+          </button>
+          <button class="error-dismiss-btn" onclick="this.closest('.msg-agent').remove()">
+            Dismiss
+          </button>
+        </div>
+      </div>
+    </div>`;
+  container.appendChild(div);
+  scrollToBottom(container);
+}
+
+// ── Retry last request ──
+// Re-sends the last user message to the agent without removing DOM elements.
+// Unlike regenerate, this keeps the conversation history intact.
+window.retryLastRequest = function () {
+  if (currentAgentRequest) {
+    currentAgentRequest.abort();
+    currentAgentRequest = null;
+  }
+
+  // Find the last user message from agentHistory
+  let lastUserMsg = null;
+  for (let i = agentHistory.length - 1; i >= 0; i--) {
+    if (agentHistory[i].role === "user") {
+      lastUserMsg = agentHistory[i].content;
+      break;
+    }
+  }
+  if (!lastUserMsg) {
+    showToast("No previous message to retry", "warning");
+    return;
+  }
+
+  // Remove the last error message from DOM (the one with the retry button)
+  const container = document.getElementById("agentMessages");
+  const lastAgent = container?.querySelector(".msg-agent:last-child");
+  if (lastAgent && lastAgent.querySelector(".error-retry-btn")) {
+    lastAgent.remove();
+  }
+
+  // Remove the last assistant response if any (non-streaming mode)
+  // This cleans up any partial response that was added before the error
+  agentHistory = agentHistory.filter(m => !(m.role === "assistant" && m.content === lastUserMsg));
+
+  // Reset the send button state
+  const sendBtn = document.getElementById("agentSendBtn");
+  const stopBtn = document.getElementById("agentStopBtn");
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.style.display = "none";
+  }
+  if (stopBtn) stopBtn.style.display = "flex";
+
+  // Create a new thinking indicator and send
+  const thinkingDiv = document.createElement("div");
+  thinkingDiv.className = "msg msg-agent";
+  thinkingDiv.style.display = "none";
+  thinkingDiv.innerHTML = `<div class="msg-avatar"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="8" fill="currentColor" opacity="0.15"/><path d="M14 6L8 10v8l6 4 6-4v-8l-6-4z" fill="currentColor" opacity="0.4"/><circle cx="14" cy="14" r="3.5" fill="currentColor"/></svg></div><div class="msg-body"><div class="thinking-indicator"><div class="thinking-dots"><span></span><span></span><span></span></div><span class="thinking-text">Retrying...</span></div></div>`;
+  container.appendChild(thinkingDiv);
+  scrollToBottom(container);
+
+  showSkeletonLoader();
+
+  // Bypass sendToAgent's conversation check — reuse existing conversation
+  retrySend(lastUserMsg, thinkingDiv);
+};
+
+// ── Internal retry send (bypasses sendToAgent's input and conversation logic) ──
+function retrySend(userMessage, thinkingDiv) {
+  const container = document.getElementById("agentMessages");
+  const context = {
+    hasImage: false,
+    hasDocuments: false,
+    webSearch: webSearchEnabled,
+    deepThink: deepThinkEnabled,
+  };
+
+  let modelName = null;
+  let fallbackUsed = false;
+
+  currentAgentRequest = AgentAPI.send(userMessage, agentHistory, context, {
+    model: state.get("agentModel") || undefined,
+    onUpdate: (data) => {
+      const bubble = thinkingDiv.querySelector(".msg-body");
+      if (!bubble) return;
+
+      switch (data.type) {
+        case "intent":
+          bubble.innerHTML = `<div class="thinking-indicator"><div class="thinking-dots"><span></span><span></span><span></span></div><span class="thinking-text">Using ${data.label}...</span></div>`;
+          break;
+        case "thinking":
+          bubble.innerHTML = `<div class="thinking-indicator"><div class="thinking-dots"><span></span><span></span><span></span></div><span class="thinking-text">${sanitizeText(data.content)}</span></div>`;
+          break;
+        case "model_info":
+          modelName = data.modelName || data.model?.split("/").pop();
+          fallbackUsed = data.fallbackUsed || false;
+          let badgeLabel = fallbackUsed ? "Fallback: " : "";
+          badgeLabel += modelName || "Model selected";
+          if (data.benchmark?.rank) {
+            badgeLabel += `  #${data.benchmark.rank}`;
+            if (data.benchmark.score) badgeLabel += ` (${data.benchmark.score})`;
+          }
+          const badgeHtml = `<span class="routing-badge ${fallbackUsed ? "fallback" : ""}">${sanitizeText(badgeLabel)}</span>`;
+          bubble.innerHTML = `${badgeHtml}<div class="thinking-indicator"><div class="thinking-dots"><span></span><span></span><span></span></div><span class="thinking-text">Generating...</span></div>`;
+          delete thinkingDiv.dataset.streaming;
+          delete thinkingDiv.dataset.streamContent;
+          break;
+        case "token":
+          if (!thinkingDiv.dataset.streaming) {
+            removeSkeletonLoader();
+            thinkingDiv.style.display = "";
+            thinkingDiv.dataset.streaming = "true";
+            _streamText = "";
+            bubble.innerHTML = `<div class="msg-name">${escHtml(modelName || "Dubu AI")}</div><div class="msg-content streaming"><div class="streaming-text"></div><span class="streaming-cursor">▊</span></div>`;
+            scrollToBottom(null, true);
+          }
+          _streamText += data.content || "";
+          const streamTextEl = bubble.querySelector(".streaming-text");
+          if (streamTextEl) {
+            streamTextEl.innerHTML = formatMessageHtml(_streamText);
+          }
+          scrollToBottom();
+          break;
+        case "result": {
+          const fullResponse = data.content || "";
+          if (data.image) {
+            thinkingDiv.remove();
+            const imageUrl = `data:image/png;base64,${data.image}`;
+            const imgMsg = document.createElement("div");
+            imgMsg.className = "msg msg-agent";
+            imgMsg.innerHTML = `<div class="msg-avatar"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="8" fill="currentColor" opacity="0.15"/><path d="M14 6L8 10v8l6 4 6-4v-8l-6-4z" fill="currentColor" opacity="0.4"/><circle cx="14" cy="14" r="3.5" fill="currentColor"/></svg></div><div class="msg-body"><div class="msg-name">${escHtml(modelName || "Image")}</div><div class="msg-content"><img src="${imageUrl}" class="msg-image" alt="" loading="lazy"></div></div>`;
+            container.appendChild(imgMsg);
+          } else if (thinkingDiv.dataset.streaming === "true") {
+            const cursor = bubble.querySelector(".streaming-cursor");
+            if (cursor) cursor.remove();
+            const streamText = _streamText || fullResponse;
+            const formattedHtml = formatMessageHtml(streamText);
+            const contentEl = bubble.querySelector(".msg-content");
+            if (contentEl) {
+              contentEl.innerHTML = formattedHtml;
+              contentEl.classList.remove("streaming");
+            }
+            bubble.insertAdjacentHTML("beforeend", getActionButtonsHtml());
+            setTimeout(() => {
+              if (typeof Prism !== "undefined") {
+                Prism.highlightAllUnder(bubble);
+                addLineNumbers(bubble);
+              }
+            }, 50);
+            agentHistory.push({ role: "assistant", content: streamText });
+            const suggestions = generateFollowUpSuggestions(streamText);
+            addSuggestedQuestions(suggestions);
+            AgentAPI.conversationAddMessage(currentConversationId, {
+              role: "assistant", content: streamText,
+              model: data.model || modelName,
+            }).then(() => { loadConversationList(); autoGenerateTitle(); }).catch(() => {});
+          } else {
+            thinkingDiv.remove();
+            addMessage("agent", fullResponse, modelName || "Dubu AI");
+            agentHistory.push({ role: "assistant", content: fullResponse });
+            AgentAPI.conversationAddMessage(currentConversationId, {
+              role: "assistant", content: fullResponse,
+              model: data.model || modelName,
+            }).then(() => { loadConversationList(); autoGenerateTitle(); }).catch(() => {});
+          }
+          document.getElementById("tsDot").className = "ts-dot connected";
+          document.getElementById("topbarStatus").querySelector(".ts-text").textContent =
+            modelName || "Ready";
+          break;
+        }
+        case "error":
+          removeSkeletonLoader();
+          thinkingDiv.remove();
+          showErrorCard(data.content || "Retry failed.");
+          break;
+      }
+      scrollToBottom(container);
+    },
+    onDone: () => {
+      currentAgentRequest = null;
+      const sendBtn = document.getElementById("agentSendBtn");
+      const stopBtn = document.getElementById("agentStopBtn");
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.style.display = "flex";
+      }
+      if (stopBtn) stopBtn.style.display = "none";
+    },
+    onError: (err) => {
+      if (thinkingDiv.parentNode) thinkingDiv.remove();
+      let userMsg = "Connection error";
+      if (err.includes("fetch") || err.includes("network")) userMsg = "Unable to reach the server.";
+      else if (err.includes("401") || err.includes("403")) userMsg = "Authentication failed.";
+      else if (err.includes("429")) userMsg = "Rate limited. Please wait.";
+      else userMsg = err.length > 100 ? err.slice(0, 100) + "..." : err;
+      showErrorCard(userMsg);
+      currentAgentRequest = null;
+      const sendBtn = document.getElementById("agentSendBtn");
+      const stopBtn = document.getElementById("agentStopBtn");
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.style.display = "flex";
+      }
+      if (stopBtn) stopBtn.style.display = "none";
+    },
+  });
+}
+
+// ── Helper to build action buttons HTML (for retry) ──
+function getActionButtonsHtml() {
+  return `<div class="msg-actions"><button class="msg-action-btn" onclick="copyMsgText(this)" title="Copy"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="3.5" y="2.5" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 4.5v5a1 1 0 001 1h3" stroke="currentColor" stroke-width="1.2"/></svg></button><button class="msg-action-btn" onclick="regenerateResponse(this)" title="Regenerate"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6a4 4 0 014-4 4 4 0 014 4M10 6a4 4 0 01-4 4 4 4 0 01-4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8.5 6L10 4.5 11.5 6M.5 6L2 4.5 3.5 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="msg-action-btn feedback-btn" onclick="feedbackMessage(this, 'like')" title="Like"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6.5L6 2l2 2-1 3h3L7 10H4l-1-3.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="msg-action-btn feedback-btn" onclick="feedbackMessage(this, 'dislike')" title="Dislike"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5.5L6 10l2-2-1-3h3L7 2H4L3 5.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>`;
 }
 
 // ── Regenerate response ──
