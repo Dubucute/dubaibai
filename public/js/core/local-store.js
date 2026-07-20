@@ -103,7 +103,7 @@ window.LocalStore = {
     }
     if (!found) return null;
     saveAll(convs);
-    return convs[i === convs.length ? i - 1 : i]; // return the updated convo
+    return convs[i];
   },
 
   /** Delete a conversation */
