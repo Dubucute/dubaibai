@@ -374,10 +374,12 @@ app.post("/api/conversations/:id/messages", async (req, res) => {
     if (src.tool_calls) {msg.tool_calls = src.tool_calls;}
     if (src.tool_call_id) {msg.tool_call_id = src.tool_call_id;}
 
-    // Streaming update: if replaceLast=true, update last message instead of appending
+    // Streaming update: if replaceLast=true AND the last message is also assistant,
+    // update the last message instead of appending. If the last message is user,
+    // fall through to append (we don't want to overwrite the user's message).
     if (src.replaceLast) {
       const msgs = convo.messages || [];
-      if (msgs.length > 0) {
+      if (msgs.length > 0 && msgs[msgs.length - 1].role === "assistant") {
         const lastIdx = msgs.length - 1;
         await store.updateMessage(convo.id, lastIdx, { content: src.content }, userId);
         res.json({ success: true });
