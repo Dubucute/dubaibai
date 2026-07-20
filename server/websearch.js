@@ -1,7 +1,8 @@
-// ===== Web Search via 4get.sny.sh =====
-// Privacy-respecting meta search engine — scrapes results from HTML
+// ===== Web Search & Deep Search =====
+// Privacy-respecting meta search engine via 4get.sny.sh + full page content fetching
 
 const https = require("https");
+const http = require("http");
 
 const SEARCH_URL = "https://4get.sny.sh/web";
 const USER_AGENT =
@@ -30,6 +31,159 @@ async function webSearch(query, opts = {}) {
 
   return { query, results, raw };
 }
+
+/**
+ * Deep search: search the web, then fetch full page content from each result.
+ * Returns structured results with full page text for AI consumption.
+ * @param {string} query - Search query
+ * @param {object} opts - Options: { searchCount, fetchCount, maxCharsPerPage }
+ * @returns {Promise<{ query: string, results: Array<{ title, url, snippet, content }>, raw: string }>}
+ */
+async function deepSearch(query, opts = {}) {
+  const searchCount = opts.searchCount || 6;
+  const fetchCount = opts.fetchCount || 4;
+  const maxCharsPerPage = opts.maxCharsPerPage || 3000;
+
+  // Step 1: Get search results
+  const searchResult = await webSearch(query, { count: searchCount });
+  const results = searchResult.results;
+
+  // Step 2: Fetch full page content (top N results, in parallel)
+  const pagesToFetch = results.slice(0, Math.min(fetchCount, results.length));
+  const fetchPromises = pagesToFetch.map(async (r) => {
+    try {
+      const content = await fetchPageContent(r.url, maxCharsPerPage);
+      return { ...r, content };
+    } catch (e) {
+      return { ...r, content: `[Failed to fetch: ${e.message}]` };
+    }
+  });
+
+  const fetchedResults = await Promise.all(fetchPromises);
+
+  // Merge fetched content back into results
+  const contentMap = {};
+  for (const fr of fetchedResults) {
+    contentMap[fr.url] = fr.content;
+  }
+  for (const r of results) {
+    r.content = contentMap[r.url] || null;
+  }
+
+  // Step 3: Build rich text for LLM context
+  const raw = results
+    .map((r, i) => {
+      let block = `${i + 1}. **${r.title}**\n   ${r.url}\n   ${r.snippet}`;
+      if (r.content) {
+        block += `\n\n   **Page content:**\n   ${r.content}`;
+      }
+      return block;
+    })
+    .join("\n\n");
+
+  return { query, results, raw };
+}
+
+/**
+ * Fetch the full page content from a URL and extract readable text.
+ * Strips HTML tags, scripts, and styles to get clean text.
+ */
+function fetchPageContent(url, maxChars = 3000) {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith("https") ? https : http;
+    const req = client.get(
+      url,
+      {
+        headers: {
+          "User-Agent": USER_AGENT,
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5",
+        },
+        timeout: 8000,
+      },
+      (res) => {
+        // Follow redirects up to 3 hops
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          const redirectUrl = new URL(res.headers.location, url).href;
+          return resolve(fetchPageContent(redirectUrl, maxChars));
+        }
+
+        if (res.statusCode >= 400) {
+          return resolve(`[Error: HTTP ${res.statusCode}]`);
+        }
+
+        // Check content type — skip binary content
+        const contentType = res.headers["content-type"] || "";
+        if (!contentType.includes("text/html") && !contentType.includes("text/plain")) {
+          return resolve(`[Non-text content: ${contentType}]`);
+        }
+
+        let data = "";
+        res.on("data", (chunk) => {
+          data += chunk.toString("utf-8");
+          if (data.length > maxChars * 2) {
+            req.destroy();
+            // We've got enough content, process what we have
+          }
+        });
+        res.on("end", () => {
+          const text = extractTextFromHtml(data);
+          resolve(text.slice(0, maxChars));
+        });
+        res.on("error", () => {
+          resolve(`[Connection error]`);
+        });
+      },
+    );
+
+    req.on("error", (err) => {
+      resolve(`[Request failed: ${err.message}]`);
+    });
+
+    req.on("timeout", () => {
+      req.destroy();
+      resolve(`[Timeout]`);
+    });
+  });
+}
+
+/**
+ * Extract readable text from HTML by stripping tags, scripts, styles.
+ */
+function extractTextFromHtml(html) {
+  // Remove scripts and styles
+  let text = html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, "")
+    .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, "")
+    .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, "");
+
+  // Replace <br>, <p>, <div>, <li>, <h1-6> with newlines
+  text = text
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|h\d|blockquote|tr|th|td)>/gi, "\n")
+    .replace(/<[^>]+>/g, ""); // Strip remaining tags
+
+  // Decode HTML entities
+  text = text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#\d+;/g, " ");
+
+  // Clean up whitespace
+  text = text
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]+/g, " ")
+    .trim();
+
+  return text;
+}
+
 
 /**
  * Fetch HTML from a URL with proper headers matching the user's curl config.
@@ -184,4 +338,4 @@ function isSearchEngineUrl(url) {
   return engines.some((e) => url.includes(e));
 }
 
-module.exports = { webSearch };
+module.exports = { webSearch, fetchPageContent };

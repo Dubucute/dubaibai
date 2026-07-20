@@ -6,7 +6,7 @@ const CONFIG = require("./config");
 const NIMClient = require("./nim");
 const { detectIntent, getIntentEmoji, getIntentLabel } = require("./router");
 const { getModelInfo, getTaskRoute, getModelBenchmark } = require("./models");
-const { webSearch } = require("./websearch");
+const { webSearch, fetchPageContent } = require("./websearch");
 
 class Orchestrator {
   constructor(options = {}) {
@@ -196,6 +196,11 @@ class Orchestrator {
           fullContent += update.content;
           yield { type: "token", content: update.content };
         } else if (update.type === "done") {
+          // Check if model requested a webpage fetch
+          const fetchResult = await this._processFetchRequests(fullContent);
+          if (fetchResult) {
+            fullContent += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+          }
           yield {
             type: "result",
             content: fullContent,
@@ -245,6 +250,10 @@ class Orchestrator {
           fullContent += update.content;
           yield { type: "token", content: update.content };
         } else if (update.type === "done") {
+          const fetchResult = await this._processFetchRequests(fullContent);
+          if (fetchResult) {
+            fullContent += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+          }
           yield {
             type: "result",
             content: fullContent,
@@ -288,6 +297,10 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
           fullContent += update.content;
           yield { type: "token", content: update.content };
         } else if (update.type === "done") {
+          const fetchResult = await this._processFetchRequests(fullContent);
+          if (fetchResult) {
+            fullContent += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+          }
           yield {
             type: "result",
             content: fullContent,
@@ -317,6 +330,10 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
           fullContent += update.content;
           yield { type: "token", content: update.content };
         } else if (update.type === "done") {
+          const fetchResult = await this._processFetchRequests(fullContent);
+          if (fetchResult) {
+            fullContent += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+          }
           yield {
             type: "result",
             content: fullContent,
@@ -453,6 +470,10 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
           fullContent += update.content;
           yield { type: "token", content: update.content };
         } else if (update.type === "done") {
+          const fetchResult = await this._processFetchRequests(fullContent);
+          if (fetchResult) {
+            fullContent += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+          }
           yield {
             type: "result",
             content: fullContent,
@@ -627,6 +648,39 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
     }
   }
 
+  // ── Fetch webpage post-processing ──
+  // After the model streams a response, check for !fetch[URL] patterns
+  // and fetch the page content automatically.
+  async _processFetchRequests(fullContent) {
+    const fetchPattern = /!\[([^\]]+)\]/g;
+    const urls = [];
+    let match;
+    while ((match = fetchPattern.exec(fullContent)) !== null) {
+      const url = match[1].trim();
+      if (url.startsWith("http://") || url.startsWith("https://")) {
+        urls.push(url);
+      }
+    }
+
+    if (urls.length === 0) return null;
+
+    // Deduplicate
+    const unique = [...new Set(urls)];
+
+    // Fetch first URL only (others are ignored to avoid abuse)
+    try {
+      console.log(`  🌐 Fetching webpage: ${unique[0]}`);
+      const content = await fetchPageContent(unique[0], 4000);
+      return {
+        url: unique[0],
+        content,
+      };
+    } catch (e) {
+      console.warn(`  ⚠️ Fetch webpage failed: ${unique[0]} — ${e.message}`);
+      return null;
+    }
+  }
+
   // ── Helpers ──
 
   _buildSystemPrompt(context) {
@@ -657,6 +711,15 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
 - Vision analysis when images are attached
 - Professional translation between languages
 - Document analysis and file operations
+
+## fetch_webpage Tool (Available to ALL models)
+You have access to a built-in webpage fetching tool. To use it, output:
+\`\`\`
+!fetch[https://example.com]
+\`\`\`
+The system will automatically fetch the page content and continue your response.
+Use this when the user asks you to read a specific webpage, check a URL,
+or access online documentation. You can request multiple fetches if needed.
 
 ## Current Context
 - Today: ${new Date().toLocaleDateString()}

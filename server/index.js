@@ -34,6 +34,7 @@ require("./tools/embeddings");
 require("./tools/code");
 require("./tools/search");
 require("./tools/fs");
+require("./tools/fetch");
 
 const app = express();
 const upload = multer({
