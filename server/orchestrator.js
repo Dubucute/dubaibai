@@ -652,7 +652,9 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
   // After the model streams a response, check for !fetch[URL] patterns
   // and fetch the page content automatically.
   async _processFetchRequests(fullContent) {
-    const fetchPattern = /!\[([^\]]+)\]/g;
+    // Match !fetch[URL] specifically to avoid false matches with
+    // markdown image syntax (![alt](url)).
+    const fetchPattern = /!fetch\[([^\]]+)\]/g;
     const urls = [];
     let match;
     while ((match = fetchPattern.exec(fullContent)) !== null) {
@@ -664,10 +666,8 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
 
     if (urls.length === 0) return null;
 
-    // Deduplicate
+    // Deduplicate and fetch the first URL only
     const unique = [...new Set(urls)];
-
-    // Fetch first URL only (others are ignored to avoid abuse)
     try {
       console.log(`  🌐 Fetching webpage: ${unique[0]}`);
       const content = await fetchPageContent(unique[0], 4000);
@@ -719,7 +719,7 @@ You have access to a built-in webpage fetching tool. To use it, output:
 \`\`\`
 The system will automatically fetch the page content and continue your response.
 Use this when the user asks you to read a specific webpage, check a URL,
-or access online documentation. You can request multiple fetches if needed.
+or access online documentation. Only one URL per response is supported.
 
 ## Current Context
 - Today: ${new Date().toLocaleDateString()}
