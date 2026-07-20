@@ -17,10 +17,13 @@ let DATABASE_URL = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOL
 
 // Strip sslmode from the URL — it can override our ssl config below
 if (DATABASE_URL) {
-  // Remove sslmode parameter from the URL (pg v8 parses this and it can conflict with Pool ssl config)
-  DATABASE_URL = DATABASE_URL.replace(/[?&]sslmode=[^&]+/gi, "");
-  // Clean up trailing ? or & if a parameter was removed
-  DATABASE_URL = DATABASE_URL.replace(/\?$/, "").replace(/&$/, "");
+  try {
+    const url = new URL(DATABASE_URL);
+    url.searchParams.delete("sslmode");
+    DATABASE_URL = url.toString();
+  } catch {
+    // URL parsing failed — unlikely for a valid connection string, skip
+  }
 }
 
 // Auto-fix Supabase pooler URLs: ensure ?pgbouncer=true is present
