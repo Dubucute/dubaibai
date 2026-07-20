@@ -798,10 +798,6 @@ window.retryLastRequest = function () {
     lastAgent.remove();
   }
 
-  // Remove the last assistant response if any (non-streaming mode)
-  // This cleans up any partial response that was added before the error
-  agentHistory = agentHistory.filter(m => !(m.role === "assistant" && m.content === lastUserMsg));
-
   // Reset the send button state
   const sendBtn = document.getElementById("agentSendBtn");
   const stopBtn = document.getElementById("agentStopBtn");
