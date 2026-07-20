@@ -11,31 +11,71 @@ try {
   /* dotenv not installed, skip */
 }
 
-// Try DATABASE_URL first, then fall back to Supabase's auto-injected env vars
-// POSTGRES_URL (pooled, port 6543) is preferred over NON_POOLING for serverless
-let DATABASE_URL = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING || process.env.DATABASE_URL || "";
+// ── Connection URL selection with diagnostics ──
+// Order: POSTGRES_URL (pooled, prefer serverless) → NON_POOLING (direct) → DATABASE_URL (manual)
+const CANDIDATE_KEYS = [
+  { key: "POSTGRES_URL", desc: "pooled (port 6543)" },
+  { key: "POSTGRES_URL_NON_POOLING", desc: "direct (port 5432)" },
+  { key: "DATABASE_URL", desc: "manual" },
+];
 
-// Strip sslmode from the URL — it can override our ssl config below
-if (DATABASE_URL) {
-  try {
-    const url = new URL(DATABASE_URL);
-    url.searchParams.delete("sslmode");
-    DATABASE_URL = url.toString();
-  } catch {
-    // URL parsing failed — unlikely for a valid connection string, skip
+for (const c of CANDIDATE_KEYS) {
+  const raw = process.env[c.key];
+  if (raw) {
+    const hostMatch = raw.match(/@([^:/]+)/);
+    const portMatch = raw.match(/:([0-9]+)\//);
+    const host = hostMatch ? hostMatch[1] : "?";
+    const port = portMatch ? portMatch[1] : "?";
+    console.log(`  🔍 Checking ${c.key} (${c.desc}): ${host}:${port}`);
   }
 }
 
-// Auto-fix Supabase pooler URLs: ensure ?pgbouncer=true is present
-if (DATABASE_URL && DATABASE_URL.includes(":6543/") && !DATABASE_URL.includes("pgbouncer=true")) {
-  DATABASE_URL += (DATABASE_URL.includes("?") ? "&" : "?") + "pgbouncer=true";
-  console.log("  🔧 Auto-added ?pgbouncer=true to pooler connection");
+// Collect all candidate URLs (trimmed, non-empty, deduplicated)
+const CANDIDATE_URLS = [];
+const seen = new Set();
+for (const c of CANDIDATE_KEYS) {
+  const raw = (process.env[c.key] || "").trim();
+  if (raw && !seen.has(raw)) {
+    seen.add(raw);
+    CANDIDATE_URLS.push(raw);
+  }
 }
-const DB_ENABLED = !!DATABASE_URL;
 
+let DB_ENABLED = CANDIDATE_URLS.length > 0;
 let pool = null;
 let DB_READY = false;
 let _initPromise = null;
+
+/**
+ * Prepare a connection URL: strip sslmode, ensure ?pgbouncer=true on pooler.
+ */
+function prepareUrl(url) {
+  if (!url) return "";
+  let result = url;
+  // Strip sslmode — it can override our ssl config below
+  try {
+    const parsed = new URL(result);
+    parsed.searchParams.delete("sslmode");
+    result = parsed.toString();
+  } catch {
+    // skip
+  }
+  // Auto-fix pooler URLs: ensure ?pgbouncer=true is present
+  if (result.includes(":6543/") && !result.includes("pgbouncer=true")) {
+    result += (result.includes("?") ? "&" : "?") + "pgbouncer=true";
+    console.log("  🔧 Auto-added ?pgbouncer=true to pooler connection");
+  }
+  return result;
+}
+
+/**
+ * Log a connection URL safely (password redacted).
+ */
+function redactUrl(url) {
+  return url.replace(/:[^@]+@/, ":***@");
+}
+
+const sslConfig = { rejectUnauthorized: false };
 
 /**
  * Initialize the database pool and create tables if they don't exist.
@@ -51,53 +91,66 @@ async function initDatabase() {
   if (_initPromise) {return _initPromise;}
 
   _initPromise = (async () => {
-    try {
-      const sslConfig = { rejectUnauthorized: false };
+    // Try each candidate URL in order until one works
+    for (let urlIdx = 0; urlIdx < CANDIDATE_URLS.length; urlIdx++) {
+      const rawUrl = CANDIDATE_URLS[urlIdx];
+      const connUrl = prepareUrl(rawUrl);
+      const label = CANDIDATE_KEYS[urlIdx]?.key || `candidate ${urlIdx + 1}`;
 
-      pool = new Pool({
-        connectionString: DATABASE_URL,
-        max: 5,
-        idleTimeoutMillis: 10000,
-        connectionTimeoutMillis: 5000,
+      console.log(`  🔌 Trying ${label} ... ${redactUrl(connUrl)}`);
+
+      const tempPool = new Pool({
+        connectionString: connUrl,
+        max: 3,
+        idleTimeoutMillis: 5000,
+        connectionTimeoutMillis: 8000,
         allowExitOnIdle: true,
         ssl: sslConfig,
       });
 
-      // Handle pool-level errors (idle connection drops, etc.)
-      pool.on("error", (err) => {
-        console.warn("  ⚠️  Pool error:", err.message);
-        // Don't set pool=null here — pg will auto-replace broken connections
-      });
-
-      // Test the connection (with retry) — fast fail on serverless cold starts
       let connected = false;
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
-          const client = await pool.connect();
+          const client = await tempPool.connect();
           await client.query("SELECT 1");
           client.release();
           connected = true;
           break;
         } catch (e) {
-          // Log the actual error code for debugging
-          const errCode = e.code || e.message?.match(/\b([A-Z]+)\b/)?.[0] || "";
-          console.warn(`  ⚠️  Connection attempt ${attempt}/2 failed [${errCode}]:`, e.message);
-          if (attempt < 2) {await new Promise((r) => setTimeout(r, 500));}
+          const errCode = e.code || "";
+          console.warn(`  ⚠️  ${label} attempt ${attempt}/2 failed [${errCode}]: ${e.message}`);
+          if (attempt < 2) {await new Promise((r) => setTimeout(r, 1000));}
         }
       }
-      if (!connected) {throw new Error("Failed to connect after 3 attempts");}
 
-      // Create tables
-      await createTables();
-      DB_READY = true;
-      console.log("  🗄️  PostgreSQL connected — tables ready");
-    } catch (e) {
-      console.warn("  ⚠️  PostgreSQL connection failed:", e.message);
-      console.log("  📄 Falling back to in-memory store");
-      pool = null;
-      DB_READY = false;
-      _initPromise = null; // Allow retry on next request
+      if (connected) {
+        // Success! Promote this pool and set up error handler
+        pool = tempPool;
+        pool.on("error", (err) => {
+          console.warn("  ⚠️  Pool error:", err.message);
+        });
+
+        try {
+          await createTables();
+          DB_READY = true;
+          console.log(`  🗄️  PostgreSQL connected via ${label} — tables ready`);
+          return;
+        } catch (e) {
+          console.warn(`  ⚠️  Table creation failed on ${label}:`, e.message);
+          await tempPool.end().catch(() => {});
+          pool = null;
+        }
+      } else {
+        await tempPool.end().catch(() => {});
+      }
     }
+
+    // All URLs failed
+    console.warn("  ⚠️  All connection candidates failed");
+    console.log("  📄 Falling back to in-memory store");
+    pool = null;
+    DB_READY = false;
+    _initPromise = null; // Allow retry on next request
   })();
 
   return _initPromise;
