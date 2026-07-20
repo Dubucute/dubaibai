@@ -915,16 +915,16 @@ const TASK_ROUTES = {
     endpoint: "chat",
   },
 
-  // Fast, simple responses
+  // Fast, simple responses — only models verified working from benchmarks
   fast: {
     task: "fast",
     description: "Quick responses for simple queries",
     chain: [
-      "nvidia/llama-3.3-nemotron-super-49b-v1",
-      "mistralai/mistral-nemotron",
-      "mistralai/ministral-14b-instruct-2512",
-      "deepseek-ai/deepseek-v4-flash",
+      "mistralai/mistral-small-4-119b-2603",
+      "poolside/laguna-xs-2.1",
+      "meta/llama-3.1-8b-instruct",
       "nvidia/nemotron-3-nano-30b-a3b",
+      "deepseek-ai/deepseek-v4-flash",
     ],
     endpoint: "chat",
   },

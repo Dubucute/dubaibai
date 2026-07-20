@@ -193,7 +193,10 @@ function getRankedModels(opts = {}) {
 function buildChain(taskType, opts = {}) {
   if (!_cache?.data) {return [];}
 
-  let models = _cache.data.filter((m) => m.benchmark);
+  // Only include models that PASSED benchmarking (have a valid rank).
+  // Models that returned 404/NIM errors still have a benchmark entry
+  // but won't have a rank or combinedScore.
+  let models = _cache.data.filter((m) => m.benchmark && m.benchmark.rank != null && m.benchmark.combinedScore != null);
 
   // ── Task-specific model selection strategies ──
   switch (taskType) {
