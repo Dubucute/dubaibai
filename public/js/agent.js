@@ -296,13 +296,39 @@ window.AgentAPI = {
       }),
     });
     if (r.status === 404) {
-      // Conversation was deleted — don't auto-create, just clear the stale ID
-      console.warn(`Conversation ${id} not found — clearing stale reference`);
-      if (window.currentConversationId === id) {
+      // Conversation was lost (serverless in-memory expired) — create a new one
+      console.warn(`Conversation ${id} not found — creating new conversation`);
+      try {
+        const convo = await this.createConversation(message.content?.slice(0, 50) || "New Chat");
+        if (convo && convo.id) {
+          // Guard: another concurrent call may have already fixed the ID
+          var newId = window.currentConversationId !== id
+            ? window.currentConversationId
+            : convo.id;
+          window.currentConversationId = newId;
+          localStorage.setItem("dubu_last_convo_id", newId);
+          // Retry saving this message to the new conversation
+          const retry = await fetch(`/api/conversations/${newId}/messages`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...authHeaders() },
+            body: JSON.stringify({
+              role: message.role,
+              content: message.content,
+              model: message.model,
+            }),
+          });
+          if (retry.ok) return {};
+        }
+      } catch (e) {
+        console.warn("Failed to recover from stale conversation:", e.message);
+      }
+      // Fallback: clear stale reference so next message creates fresh
+      if (!window.currentConversationId || window.currentConversationId === id) {
         window.currentConversationId = null;
         localStorage.removeItem("dubu_last_convo_id");
       }
-      throw new Error("Conversation not found");
+      // Message saving is best-effort on serverless — don't throw
+      return {};
     }
     if (!r.ok) throw new Error("Failed to add message");
     return {};
