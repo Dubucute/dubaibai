@@ -96,14 +96,16 @@ async function initDatabase() {
       const rawUrl = CANDIDATE_URLS[urlIdx];
       const connUrl = prepareUrl(rawUrl);
       const label = CANDIDATE_KEYS[urlIdx]?.key || `candidate ${urlIdx + 1}`;
+      // Aggressive timeout: first URL gets 8s, fallbacks get 3s each
+      const timeout = urlIdx === 0 ? 8000 : 3000;
 
-      console.log(`  🔌 Trying ${label} ... ${redactUrl(connUrl)}`);
+      console.log(`  🔌 Trying ${label} ... ${redactUrl(connUrl)} (timeout ${timeout}ms)`);
 
       const tempPool = new Pool({
         connectionString: connUrl,
         max: 3,
         idleTimeoutMillis: 5000,
-        connectionTimeoutMillis: 8000,
+        connectionTimeoutMillis: timeout,
         allowExitOnIdle: true,
         ssl: sslConfig,
       });
