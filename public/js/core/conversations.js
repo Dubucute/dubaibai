@@ -29,9 +29,10 @@
   window.selectConversation = async function (id, silent) {
     if (silent === undefined) silent = false;
 
-    // ── Save partial AI response before switching ──
+    // ── Save partial AI response and abort stream before switching ──
     // If the AI is still streaming and we switch conversations, save
-    // whatever partial text we have so it's not lost.
+    // whatever partial text we have so it's not lost, then abort the
+    // stream so it doesn't keep writing to the wrong conversation.
     if (window.currentAgentRequest && typeof _streamText !== "undefined" && _streamText && _streamText.trim()) {
       try {
         var currentId = window.currentConversationId;
@@ -45,6 +46,19 @@
       } catch (e) {
         // Best-effort save
       }
+      // Abort the stream and reset state so it doesn't finish in the background
+      // and save the complete response to the wrong conversation.
+      window.currentAgentRequest.abort();
+      window.currentAgentRequest = null;
+      _streamText = "";
+      // Re-enable the send button and hide stop button
+      var sendBtn = document.getElementById("agentSendBtn");
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.style.display = "flex";
+      }
+      var stopBtn = document.getElementById("agentStopBtn");
+      if (stopBtn) stopBtn.style.display = "none";
     }
 
     try {
