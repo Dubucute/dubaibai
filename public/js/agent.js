@@ -16,6 +16,11 @@ function authHeaders(extra = {}) {
   return extra;
 }
 
+// ── Check if user is authenticated (guest vs logged-in) ──
+window.isAuthenticated = function () {
+  return !!localStorage.getItem("dubu_session_token");
+};
+
 window.AgentAPI = {
   /**
    * Send a request to the unified agent orchestrator.
@@ -240,8 +245,18 @@ window.AgentAPI = {
     return await resp.json();
   },
 
+  // ── Auth check helper ──
+  _isGuest() {
+    return !localStorage.getItem("dubu_session_token");
+  },
+
   // ── Conversation CRUD ──
   async listConversations() {
+    // Guest users: use local storage (instant, no server dependency)
+    if (this._isGuest()) {
+      return await LocalStore.listConversations();
+    }
+    // Authenticated users: use server DB
     const r = await fetch("/api/conversations", {
       headers: authHeaders(),
     });
@@ -250,6 +265,9 @@ window.AgentAPI = {
   },
 
   async getConversation(id) {
+    if (this._isGuest()) {
+      return await LocalStore.getConversation(id);
+    }
     const r = await fetch(`/api/conversations/${id}`, {
       headers: authHeaders(),
     });
@@ -259,6 +277,9 @@ window.AgentAPI = {
   },
 
   async createConversation(title, model) {
+    if (this._isGuest()) {
+      return await LocalStore.createConversation(title, model);
+    }
     const r = await fetch("/api/conversations", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
@@ -269,6 +290,10 @@ window.AgentAPI = {
   },
 
   async deleteConversation(id) {
+    if (this._isGuest()) {
+      await LocalStore.deleteConversation(id);
+      return;
+    }
     const r = await fetch(`/api/conversations/${id}`, {
       method: "DELETE",
       headers: authHeaders(),
@@ -277,6 +302,10 @@ window.AgentAPI = {
   },
 
   async forkConversation(id) {
+    if (this._isGuest()) {
+      // For guests, fork isn't supported via local store — just return null
+      return null;
+    }
     const r = await fetch(`/api/conversations/${id}/fork`, {
       method: "POST",
       headers: authHeaders(),
@@ -286,6 +315,12 @@ window.AgentAPI = {
   },
 
   async conversationAddMessage(id, message) {
+    // Guest users: save to local storage (instant, always works)
+    if (this._isGuest()) {
+      await LocalStore.addMessage(id, message);
+      return {};
+    }
+
     const r = await fetch(`/api/conversations/${id}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
@@ -342,6 +377,10 @@ window.AgentAPI = {
    * Call this after the first exchange is complete.
    */
   async generateConversationTitle(conversationId) {
+    // Guest users: generate locally
+    if (this._isGuest()) {
+      return await LocalStore.generateTitle(conversationId);
+    }
     try {
       const resp = await fetch(`/api/conversations/${conversationId}/generate-title`, {
         method: "POST",
