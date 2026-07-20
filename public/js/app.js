@@ -362,7 +362,6 @@ window.sendToAgent = async function () {
 
           }
           case "error":
-            removeSkeletonLoader();
             thinkingDiv.remove();
             // Show a proper error card with retry button
             showErrorCard(data.content || "The model failed to respond.");
@@ -916,7 +915,6 @@ function retrySend(userMessage, thinkingDiv) {
           break;
         }
         case "error":
-          removeSkeletonLoader();
           thinkingDiv.remove();
           showErrorCard(data.content || "Retry failed.");
           break;
@@ -1266,41 +1264,6 @@ window.downloadImage = function (idxOrUrl, prompt) {
   document.body.removeChild(link);
   showToast("Image downloaded", "success", 1500);
 };
-
-// ── Skeleton Loader ──
-function createSkeletonMessage() {
-  const div = document.createElement("div");
-  div.className = "skeleton-msg";
-  div.id = "skeletonLoader";
-  div.innerHTML = `
-    <div class="skeleton-avatar"></div>
-    <div class="skeleton-body">
-      <div class="skeleton-name"></div>
-      <div class="skeleton-lines">
-        <div class="skeleton-line"></div>
-        <div class="skeleton-line"></div>
-        <div class="skeleton-line"></div>
-        <div class="skeleton-line"></div>
-      </div>
-    </div>
-  `;
-  return div;
-}
-
-function showSkeletonLoader() {
-  const container = document.getElementById("agentMessages");
-  removeSkeletonLoader();
-  const skeleton = createSkeletonMessage();
-  skeleton.setAttribute("aria-live", "polite");
-  skeleton.setAttribute("aria-label", "Loading response...");
-  container.appendChild(skeleton);
-  scrollToBottom(container);
-}
-
-function removeSkeletonLoader() {
-  var existing = document.getElementById("skeletonLoader");
-  if (existing) existing.remove();
-}
 
 // ── Mobile Sidebar ──
 window.toggleMobileSidebar = function () {
