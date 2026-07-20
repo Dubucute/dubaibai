@@ -163,7 +163,8 @@ function getModelBenchmark(modelId) {
 function getRankedModels(opts = {}) {
   if (!_cache?.data) {return [];}
 
-  let models = _cache.data.filter((m) => m.benchmark); // only benchmarked
+  // Only include models that PASSED benchmarking (have a valid rank/score)
+  let models = _cache.data.filter((m) => m.benchmark && m.benchmark.rank != null && m.benchmark.combinedScore != null);
 
   if (opts.tag) {
     models = models.filter((m) => m.benchmark.tags?.includes(opts.tag));
