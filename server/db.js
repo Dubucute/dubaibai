@@ -15,6 +15,14 @@ try {
 // POSTGRES_URL (pooled, port 6543) is preferred over NON_POOLING for serverless
 let DATABASE_URL = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING || process.env.DATABASE_URL || "";
 
+// Strip sslmode from the URL — it can override our ssl config below
+if (DATABASE_URL) {
+  // Remove sslmode parameter from the URL (pg v8 parses this and it can conflict with Pool ssl config)
+  DATABASE_URL = DATABASE_URL.replace(/[?&]sslmode=[^&]+/gi, "");
+  // Clean up trailing ? or & if a parameter was removed
+  DATABASE_URL = DATABASE_URL.replace(/\?$/, "").replace(/&$/, "");
+}
+
 // Auto-fix Supabase pooler URLs: ensure ?pgbouncer=true is present
 if (DATABASE_URL && DATABASE_URL.includes(":6543/") && !DATABASE_URL.includes("pgbouncer=true")) {
   DATABASE_URL += (DATABASE_URL.includes("?") ? "&" : "?") + "pgbouncer=true";
@@ -68,7 +76,9 @@ async function initDatabase() {
           connected = true;
           break;
         } catch (e) {
-          console.warn(`  ⚠️  Connection attempt ${attempt}/2 failed:`, e.message);
+          // Log the actual error code for debugging
+          const errCode = e.code || e.message?.match(/\b([A-Z]+)\b/)?.[0] || "";
+          console.warn(`  ⚠️  Connection attempt ${attempt}/2 failed [${errCode}]:`, e.message);
           if (attempt < 2) {await new Promise((r) => setTimeout(r, 500));}
         }
       }
