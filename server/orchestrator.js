@@ -203,9 +203,9 @@ class Orchestrator {
           if (fetchResult) {
             processed += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
           }
-          const searchResult = await this._processSearchRequests(processed);
+          const searchResult = await this._processSearchRequests(fullContent);
           if (searchResult) {
-            processed = searchResult;
+            processed += searchResult;
           }
           yield {
             type: "result",
@@ -262,9 +262,9 @@ class Orchestrator {
           if (fetchResult) {
             processed += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
           }
-          const searchResult = await this._processSearchRequests(processed);
+          const searchResult = await this._processSearchRequests(fullContent);
           if (searchResult) {
-            processed = searchResult;
+            processed += searchResult;
           }
           yield {
             type: "result",
@@ -315,9 +315,9 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
           if (fetchResult) {
             processed += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
           }
-          const searchResult = await this._processSearchRequests(processed);
+          const searchResult = await this._processSearchRequests(fullContent);
           if (searchResult) {
-            processed = searchResult;
+            processed += searchResult;
           }
           yield {
             type: "result",
@@ -354,9 +354,9 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
           if (fetchResult) {
             processed += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
           }
-          const searchResult = await this._processSearchRequests(processed);
+          const searchResult = await this._processSearchRequests(fullContent);
           if (searchResult) {
-            processed = searchResult;
+            processed += searchResult;
           }
           yield {
             type: "result",
@@ -500,9 +500,9 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
           if (fetchResult) {
             processed += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
           }
-          const searchResult = await this._processSearchRequests(processed);
+          const searchResult = await this._processSearchRequests(fullContent);
           if (searchResult) {
-            processed = searchResult;
+            processed += searchResult;
           }
           yield {
             type: "result",
@@ -713,31 +713,34 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
 
   // ── Search post-processing ──
   // After the model streams a response, check for <SEARCH>...</SEARCH> patterns
-  // and automatically execute the search, appending results to the response.
-  async _processSearchRequests(content) {
+  // and automatically execute the search, returning search results to append.
+  // Returns: search results block string, or null if no search requested.
+  async _processSearchRequests(originalContent) {
     const searchPattern = /<SEARCH>([\s\S]*?)<\/SEARCH>/gi;
+    // Collect all queries first (search in ORIGINAL content before tags are stripped)
+    const queries = [];
     let match;
-    while ((match = searchPattern.exec(content)) !== null) {
+    while ((match = searchPattern.exec(originalContent)) !== null) {
       const query = match[1].trim();
-      if (!query) continue;
-
-      console.log(`  🔍 Search requested by model: "${query.slice(0, 80)}"`);
-      try {
-        const searchResult = await webSearch(query, { count: 5 });
-        console.log(`  🔍 Search returned ${searchResult.results.length} results`);
-        if (searchResult.results.length > 0) {
-          // Append search results to the response
-          const resultsBlock = `\n\n---\n**Search Results for: "${query}"**\n\n${searchResult.raw}`;
-          content += resultsBlock;
-        } else {
-          content += `\n\n*No search results found for "${query}".*`;
-        }
-      } catch (e) {
-        console.warn(`  ⚠️ Search failed for "${query.slice(0, 60)}": ${e.message}`);
-        content += `\n\n*Search failed for "${query}".*`;
-      }
+      if (query) queries.push(query);
     }
-    return content;
+
+    if (queries.length === 0) return null;
+
+    // Execute first query only (at most one search per response)
+    const query = queries[0];
+    console.log(`  🔍 Search requested by model: "${query.slice(0, 80)}"`);
+    try {
+      const searchResult = await webSearch(query, { count: 5 });
+      console.log(`  🔍 Search returned ${searchResult.results.length} results`);
+      if (searchResult.results.length > 0) {
+        return `\n\n---\n**Search Results for: "${query}"**\n\n${searchResult.raw}`;
+      }
+      return `\n\n*No search results found for "${query}".*`;
+    } catch (e) {
+      console.warn(`  ⚠️ Search failed for "${query.slice(0, 60)}": ${e.message}`);
+      return `\n\n*Search failed for "${query}".*`;
+    }
   }
 
   // Strip <SEARCH>...</SEARCH> tags from the model output so they don't
