@@ -196,14 +196,20 @@ class Orchestrator {
           fullContent += update.content;
           yield { type: "token", content: update.content };
         } else if (update.type === "done") {
-          // Check if model requested a webpage fetch
+          // Check if model requested a webpage fetch or search
+          let processed = fullContent;
+          processed = this._stripSearchTags(processed);
           const fetchResult = await this._processFetchRequests(fullContent);
           if (fetchResult) {
-            fullContent += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+            processed += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+          }
+          const searchResult = await this._processSearchRequests(processed);
+          if (searchResult) {
+            processed = searchResult;
           }
           yield {
             type: "result",
-            content: fullContent,
+            content: processed,
             model: update.model,
             modelName: update.modelName,
           };
@@ -250,13 +256,19 @@ class Orchestrator {
           fullContent += update.content;
           yield { type: "token", content: update.content };
         } else if (update.type === "done") {
+          let processed = fullContent;
+          processed = this._stripSearchTags(processed);
           const fetchResult = await this._processFetchRequests(fullContent);
           if (fetchResult) {
-            fullContent += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+            processed += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+          }
+          const searchResult = await this._processSearchRequests(processed);
+          if (searchResult) {
+            processed = searchResult;
           }
           yield {
             type: "result",
-            content: fullContent,
+            content: processed,
             model: update.model,
             modelName: update.modelName,
           };
@@ -297,13 +309,19 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
           fullContent += update.content;
           yield { type: "token", content: update.content };
         } else if (update.type === "done") {
+          let processed = fullContent;
+          processed = this._stripSearchTags(processed);
           const fetchResult = await this._processFetchRequests(fullContent);
           if (fetchResult) {
-            fullContent += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+            processed += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+          }
+          const searchResult = await this._processSearchRequests(processed);
+          if (searchResult) {
+            processed = searchResult;
           }
           yield {
             type: "result",
-            content: fullContent,
+            content: processed,
             model: update.model,
             modelName: update.modelName,
           };
@@ -330,13 +348,19 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
           fullContent += update.content;
           yield { type: "token", content: update.content };
         } else if (update.type === "done") {
+          let processed = fullContent;
+          processed = this._stripSearchTags(processed);
           const fetchResult = await this._processFetchRequests(fullContent);
           if (fetchResult) {
-            fullContent += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+            processed += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+          }
+          const searchResult = await this._processSearchRequests(processed);
+          if (searchResult) {
+            processed = searchResult;
           }
           yield {
             type: "result",
-            content: fullContent,
+            content: processed,
             model: update.model,
             modelName: update.modelName,
           };
@@ -470,13 +494,19 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
           fullContent += update.content;
           yield { type: "token", content: update.content };
         } else if (update.type === "done") {
+          let processed = fullContent;
+          processed = this._stripSearchTags(processed);
           const fetchResult = await this._processFetchRequests(fullContent);
           if (fetchResult) {
-            fullContent += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+            processed += `\n\n---\n**Fetched: ${fetchResult.url}**\n\n${fetchResult.content}`;
+          }
+          const searchResult = await this._processSearchRequests(processed);
+          if (searchResult) {
+            processed = searchResult;
           }
           yield {
             type: "result",
-            content: fullContent,
+            content: processed,
             model: update.model,
             modelName: update.modelName,
           };
@@ -681,6 +711,41 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
     }
   }
 
+  // ── Search post-processing ──
+  // After the model streams a response, check for <SEARCH>...</SEARCH> patterns
+  // and automatically execute the search, appending results to the response.
+  async _processSearchRequests(content) {
+    const searchPattern = /<SEARCH>([\s\S]*?)<\/SEARCH>/gi;
+    let match;
+    while ((match = searchPattern.exec(content)) !== null) {
+      const query = match[1].trim();
+      if (!query) continue;
+
+      console.log(`  🔍 Search requested by model: "${query.slice(0, 80)}"`);
+      try {
+        const searchResult = await webSearch(query, { count: 5 });
+        console.log(`  🔍 Search returned ${searchResult.results.length} results`);
+        if (searchResult.results.length > 0) {
+          // Append search results to the response
+          const resultsBlock = `\n\n---\n**Search Results for: "${query}"**\n\n${searchResult.raw}`;
+          content += resultsBlock;
+        } else {
+          content += `\n\n*No search results found for "${query}".*`;
+        }
+      } catch (e) {
+        console.warn(`  ⚠️ Search failed for "${query.slice(0, 60)}": ${e.message}`);
+        content += `\n\n*Search failed for "${query}".*`;
+      }
+    }
+    return content;
+  }
+
+  // Strip <SEARCH>...</SEARCH> tags from the model output so they don't
+  // appear verbatim in the user-facing response.
+  _stripSearchTags(content) {
+    return content.replace(/<SEARCH>[\s\S]*?<\/SEARCH>/gi, "").trim();
+  }
+
   // ── Helpers ──
 
   _buildSystemPrompt(context) {
@@ -712,14 +777,23 @@ Use the \`\`\`reasoning block to show your step-by-step thought process before g
 - Professional translation between languages
 - Document analysis and file operations
 
-## fetch_webpage Tool (Available to ALL models)
-You have access to a built-in webpage fetching tool. To use it, output:
+## Built-in Tools (Available to ALL models)
+
+**Web Search:** To search the web for real-time information, output:
+\`\`\`
+<SEARCH>your search query here</SEARCH>
+\`\`\`
+The system will automatically search the web and append results to your response.
+Use this when the user asks about current events, news, facts, prices, or any
+information that may have changed since your training data. Only one search
+per response is executed.
+
+**Webpage Fetching:** To fetch the content of a specific webpage, output:
 \`\`\`
 !fetch[https://example.com]
 \`\`\`
-The system will automatically fetch the page content and continue your response.
-Use this when the user asks you to read a specific webpage, check a URL,
-or access online documentation. Only one URL per response is supported.
+The system will fetch the page and continue your response.
+Use this when the user asks you to read a specific URL or documentation.
 
 ## Current Context
 - Today: ${new Date().toLocaleDateString()}
