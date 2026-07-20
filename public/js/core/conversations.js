@@ -122,25 +122,39 @@
   };
 
   // ── Auto-restore conversation on load ──
-  window.autoRestoreConversation = async function () {
+  // Retries up to 5 times with 1s delay to handle serverless cold starts
+  // where the DB connection (initDatabase) may not have completed yet.
+  window.autoRestoreConversation = async function (retries) {
+    if (retries === undefined) retries = 5;
+
+    // Try restoring the last conversation ID from localStorage
     var lastId = localStorage.getItem("dubu_last_convo_id");
     if (lastId) {
-      try {
-        await selectConversation(lastId, true);
-        // Only return if the conversation was actually loaded
-        if (currentConversationId) return;
-      } catch (e) {
-        localStorage.removeItem("dubu_last_convo_id");
+      for (var attempt = 0; attempt <= retries; attempt++) {
+        try {
+          await selectConversation(lastId, true);
+          if (currentConversationId) return;
+        } catch (e) {
+          // selectConversation caught the error internally
+        }
+        if (attempt < retries) await new Promise(function(r) { setTimeout(r, 1000); });
       }
+      // All retries exhausted — clear stale ID
+      localStorage.removeItem("dubu_last_convo_id");
     }
+
     // Fallback: load the most recent from list
-    try {
-      var list = await AgentAPI.listConversations();
-      if (list.length > 0) {
-        await selectConversation(list[0].id, true);
+    for (var attempt = 0; attempt <= retries; attempt++) {
+      try {
+        var list = await AgentAPI.listConversations();
+        if (list.length > 0) {
+          await selectConversation(list[0].id, true);
+          return;
+        }
+      } catch (e) {
+        // List failed
       }
-    } catch (e) {
-      // No conversations yet
+      if (attempt < retries) await new Promise(function(r) { setTimeout(r, 1000); });
     }
   };
 
