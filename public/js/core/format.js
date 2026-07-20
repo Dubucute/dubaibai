@@ -289,8 +289,11 @@
 
   // ── Scroll to bottom ──
   window.scrollToBottom = function (el, force) {
+    // Always scroll the scrollable container (#chatMessages), NOT the inner
+    // messages div (#agentMessages). agentMessages is a flex container with
+    // no overflow style, so setting scrollTop on it does nothing.
+    if (!el || el.id === "agentMessages") el = document.getElementById("chatMessages");
     if (!el) el = document.getElementById("agentMessages");
-    if (!el) el = document.getElementById("chatMessages");
     if (!el) return;
     // Force scroll always (first token, conversation load, etc.)
     if (force) {
