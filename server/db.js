@@ -13,7 +13,13 @@ try {
 
 // Try DATABASE_URL first, then fall back to Supabase's auto-injected env vars
 // POSTGRES_URL (pooled, port 6543) is preferred over NON_POOLING for serverless
-const DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING || "";
+let DATABASE_URL = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING || process.env.DATABASE_URL || "";
+
+// Auto-fix Supabase pooler URLs: ensure ?pgbouncer=true is present
+if (DATABASE_URL && DATABASE_URL.includes(":6543/") && !DATABASE_URL.includes("pgbouncer=true")) {
+  DATABASE_URL += (DATABASE_URL.includes("?") ? "&" : "?") + "pgbouncer=true";
+  console.log("  🔧 Auto-added ?pgbouncer=true to pooler connection URL");
+}
 const DB_ENABLED = !!DATABASE_URL;
 
 let pool = null;
