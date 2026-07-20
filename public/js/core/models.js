@@ -1,29 +1,28 @@
 // ===== Model Selector Dropdown =====
 (function() {
   var GROUP_ORDER = { "Smart": 1, "Fast": 2, "Vision": 3, "Image Gen": 4, "Embeddings": 5, "Safety": 6, "Code": 7, "Chat": 8, "Finance": 9, "Medical": 10, "Creative": 11, "Other": 12 };
+  // ── SVG model icons (Lucide-style, no emoji) ──
   var MODEL_ICONS = {
-    "nvidia/llama-3.3-nemotron-super-49b": "\uD83E\uDDE0",
-    "nvidia/llama-3.3-nemotron-super-49b-v1.5": "\uD83E\uDDE0",
-    "deepseek-ai/deepseek-v4": "\uD83D\uDE80",
-    "meta/llama": "\uD83E\uDD16",
-    "mistralai/mistral": "\uD83C\uDF2C",
-    "google/gemma": "\uD83D\uDC8E",
-    "qwen/qwen": "\uD83D\uDD2D",
-    "microsoft/phi": "\uD83D\uDCA1",
-    "black-forest-labs/flux": "\uD83C\uDFA8",
-    "stabilityai/stable-diffusion": "\uD83C\uDFA8",
-    "google/diffusiongemma": "\uD83C\uDFA8",
-    "nvidia/nv-embed": "\uD83D\uDCCA",
-    "baai/bge": "\uD83D\uDCCA",
-    "snowflake/arctic": "\uD83D\uDCCA",
+    "nvidia/": "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><rect x='3' y='3' width='10' height='10' rx='2' stroke='currentColor' stroke-width='1.3'/><rect x='6' y='6' width='4' height='4' rx='0.5' stroke='currentColor' stroke-width='1'/><path d='M5 2V1M11 2V1M5 15V14M11 15V14M2 5H1M2 11H1M15 5H14M15 11H14' stroke='currentColor' stroke-width='1' stroke-linecap='round'/></svg>",
+    "deepseek-ai/deepseek": "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><path d='M8 2l2.5 3H14l-3 3 3 3h-3.5L8 14l-2.5-3H2l3-3-3-3h3.5L8 2z' stroke='currentColor' stroke-width='1.3' stroke-linejoin='round'/></svg>",
+    "meta/": "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><circle cx='8' cy='8' r='5' stroke='currentColor' stroke-width='1.3'/><path d='M5.5 6.5h5M5.5 8h4M5.5 9.5h3' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/></svg>",
+    "mistralai/": "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><path d='M2 12c0-4 3-8 6-8s6 4 6 8M2 12h12M6 12V8M10 12V8' stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/></svg>",
+    "google/": "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><path d='M7.5 2l5.5 3v6l-5.5 3L2 11V5l5.5-3z' stroke='currentColor' stroke-width='1.3' stroke-linejoin='round'/><circle cx='7.5' cy='8' r='2' stroke='currentColor' stroke-width='1.3'/></svg>",
+    "qwen/": "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><circle cx='7' cy='7' r='4.5' stroke='currentColor' stroke-width='1.3'/><path d='M10.5 10.5l3 3' stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/></svg>",
+    "microsoft/": "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><path d='M8 2l4 2v4l-4 2-4-2V4l4-2z' stroke='currentColor' stroke-width='1.3' stroke-linejoin='round'/><circle cx='8' cy='5' r='1' stroke='currentColor' stroke-width='1'/></svg>",
+    "black-forest-labs/": "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><circle cx='8' cy='7' r='4' stroke='currentColor' stroke-width='1.3'/><path d='M5 12l1-3h4l1 3' stroke='currentColor' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+    "stabilityai/": "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><circle cx='8' cy='7' r='4' stroke='currentColor' stroke-width='1.3'/><path d='M5 12l1-3h4l1 3' stroke='currentColor' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+    "nvidia/nv-embed": "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><rect x='2' y='4' width='3' height='8' rx='1' stroke='currentColor' stroke-width='1.2'/><rect x='6.5' y='2' width='3' height='12' rx='1' stroke='currentColor' stroke-width='1.2'/><rect x='11' y='5' width='3' height='6' rx='1' stroke='currentColor' stroke-width='1.2'/></svg>",
+    "baai/": "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><rect x='2' y='4' width='3' height='8' rx='1' stroke='currentColor' stroke-width='1.2'/><rect x='6.5' y='2' width='3' height='12' rx='1' stroke='currentColor' stroke-width='1.2'/><rect x='11' y='5' width='3' height='6' rx='1' stroke='currentColor' stroke-width='1.2'/></svg>",
+    "snowflake/": "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><rect x='2' y='4' width='3' height='8' rx='1' stroke='currentColor' stroke-width='1.2'/><rect x='6.5' y='2' width='3' height='12' rx='1' stroke='currentColor' stroke-width='1.2'/><rect x='11' y='5' width='3' height='6' rx='1' stroke='currentColor' stroke-width='1.2'/></svg>",
   };
 
   function getModelIcon(modelId) {
-    if (!modelId) return "\u26A1";
+    if (!modelId) return "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><path d='M8 1l3 5 5 1-4 4 1 5-5-3-5 3 1-5-4-4 5-1 3-5z' stroke='currentColor' stroke-width='1.3' stroke-linejoin='round'/></svg>";
     for (var prefix in MODEL_ICONS) {
       if (modelId.indexOf(prefix) === 0) return MODEL_ICONS[prefix];
     }
-    return "\uD83E\uDD16";
+    return "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><circle cx='8' cy='8' r='5' stroke='currentColor' stroke-width='1.3'/><path d='M5.5 6.5h5M5.5 8h4M5.5 9.5h3' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/></svg>";
   }
 
   function getModelGroup(info) {
@@ -77,12 +76,12 @@
     if (!nameEl || !iconEl) return;
     if (!selected) {
       nameEl.textContent = "Auto-Select";
-      iconEl.textContent = "\u26A1";
+      iconEl.innerHTML = "<svg viewBox='0 0 16 16' fill='none' width='14' height='14'><path d='M8 1l3 5 5 1-4 4 1 5-5-3-5 3 1-5-4-4 5-1 3-5z' stroke='currentColor' stroke-width='1.3' stroke-linejoin='round'/></svg>";
       return;
     }
     var model = loadedModels.find(function(m) { return m.id === selected; });
     nameEl.textContent = model ? model.name : selected.split("/").pop();
-    iconEl.textContent = getModelIcon(selected);
+    iconEl.innerHTML = getModelIcon(selected);
   }
 
   // ── Toggle model dropdown ──
@@ -153,6 +152,17 @@
       if (!groups[m.group]) groups[m.group] = [];
       groups[m.group].push(m);
     });
+
+    // Prepend "Auto-Select" option at the top
+    var isAutoSelected = !selected;
+    html += '<div class="md-item ' + (isAutoSelected ? "active" : "") + '" data-model-id="auto" tabindex="0" role="option" aria-selected="' + (isAutoSelected ? "true" : "false") + '">' +
+      '<div class="md-item-icon"><svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M8 1l3 5 5 1-4 4 1 5-5-3-5 3 1-5-4-4 5-1 3-5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg></div>' +
+      '<div class="md-item-info">' +
+      '<div class="md-item-name">Auto-Select</div>' +
+      '<div class="md-item-id">Automatic model selection</div>' +
+      '</div>' +
+      '<div class="md-item-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
+      '</div>';
 
     var sortedGroups = Object.keys(groups).sort(function(a, b) {
       return (GROUP_ORDER[a] || 99) - (GROUP_ORDER[b] || 99);
@@ -233,7 +243,7 @@
     var badgesEl = document.getElementById("mdtBadges");
     var capsEl = document.getElementById("mdtCaps");
     if (nameEl) nameEl.textContent = model.name || model.id.split("/").pop();
-    if (iconEl) iconEl.textContent = getModelIcon(model.id);
+    if (iconEl) iconEl.innerHTML = getModelIcon(model.id);
     if (descEl) descEl.textContent = model.id + (model.capabilities && model.capabilities.length > 0 ? " \u2022 " + model.capabilities.slice(0, 4).join(", ") : "");
     if (badgesEl) {
       badgesEl.innerHTML = "";
