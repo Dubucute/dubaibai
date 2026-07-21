@@ -163,8 +163,8 @@ function getModelBenchmark(modelId) {
 function getRankedModels(opts = {}) {
   if (!_cache?.data) {return [];}
 
-  // Only include models that PASSED benchmarking (have a valid rank/score)
-  let models = _cache.data.filter((m) => m.benchmark && m.benchmark.rank != null && m.benchmark.combinedScore != null);
+  // Only include models that PASSED benchmarking (non-zero combinedScore)
+  let models = _cache.data.filter((m) => m.benchmark && m.benchmark.rank != null && m.benchmark.combinedScore > 0);
 
   if (opts.tag) {
     models = models.filter((m) => m.benchmark.tags?.includes(opts.tag));
@@ -194,10 +194,10 @@ function getRankedModels(opts = {}) {
 function buildChain(taskType, opts = {}) {
   if (!_cache?.data) {return [];}
 
-  // Only include models that PASSED benchmarking (have a valid rank).
-  // Models that returned 404/NIM errors still have a benchmark entry
-  // but won't have a rank or combinedScore.
-  let models = _cache.data.filter((m) => m.benchmark && m.benchmark.rank != null && m.benchmark.combinedScore != null);
+  // Only include models that PASSED benchmarking (non-zero combinedScore).
+  // Models that returned 404/NIM errors have combinedScore: 0 but still
+  // have a rank, so we check for > 0 to exclude broken models.
+  let models = _cache.data.filter((m) => m.benchmark && m.benchmark.rank != null && m.benchmark.combinedScore > 0);
 
   // ── Task-specific model selection strategies ──
   switch (taskType) {
