@@ -145,18 +145,30 @@ window.sendToAgent = async function () {
   addMessage("user", isImagineCommand ? `/imagine ${imaginePrompt}` : msg, "You");
   agentHistory.push({ role: "user", content: userMessage });
 
-  // Show attached image previews in the user's message bubble
-  const imagePreviews = attachedFiles.filter((f) => f.type === "image");
-  if (imagePreviews.length > 0) {
+  // Show attached file previews in the user's message bubble (images + document badges)
+  const attachPreviews = attachedFiles.filter((f) => f.type === "image" || f.type === "document");
+  if (attachPreviews.length > 0) {
     const userMsgEl = document.querySelector(".msg-user:last-child .msg-body");
     if (userMsgEl) {
-      const previewsHtml = imagePreviews.map(function(f, i) {
-        var previewIdx = Date.now() + '_' + i;
-        window._userPreviewCache = window._userPreviewCache || {};
-        window._userPreviewCache[previewIdx] = { src: f.data, name: f.name };
-        return '<div class="msg-attachment-preview" data-preview="' + previewIdx + '" onclick="openUserAttachment(this.dataset.preview)"><img src="' + f.data + '" alt="' + escHtml(f.name) + '" class="msg-attachment-img" loading="lazy"></div>';
-      }).join("");
-      userMsgEl.insertAdjacentHTML("afterbegin", '<div class="msg-attachments">' + previewsHtml + '</div>');
+      var allAttachHtml = "";
+      var attachCounter = 0;
+      for (var ai = 0; ai < attachPreviews.length; ai++) {
+        var f = attachPreviews[ai];
+        if (f.type === "image") {
+          var previewIdx = Date.now() + '_p' + ai;
+          window._userPreviewCache = window._userPreviewCache || {};
+          window._userPreviewCache[previewIdx] = { src: f.data, name: f.name };
+          allAttachHtml += '<div class="msg-attachment-preview" data-preview="' + previewIdx + '" onclick="openUserAttachment(this.dataset.preview)"><img src="' + f.data + '" alt="' + escHtml(f.name) + '" class="msg-attachment-img" loading="lazy"></div>';
+        } else {
+          var ext = f.name.split('.').pop().toLowerCase() || "";
+          var fileIcon = "";
+          if (ext === "pdf") fileIcon = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 1h5l3 3v8.5a.5.5 0 01-.5.5h-7A.5.5 0 013 12.5V1z" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M8 1v3h3" stroke="currentColor" stroke-width="1.2" fill="none"/><text x="2.5" y="9.5" font-size="4" fill="currentColor" font-weight="bold">PDF</text></svg>';
+          else if (["js","ts","jsx","tsx","py","rb","go","rs","java","c","cpp","h","hpp","swift","kt","scala","php","pl","sh","bash","sql"] .includes(ext)) fileIcon = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 1h5l3 3v8.5a.5.5 0 01-.5.5h-7A.5.5 0 013 12.5V1z" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M8 1v3h3" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M4.5 6.5h5M4.5 8.5h5M4.5 10.5h3" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>';
+          else fileIcon = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 2h4l3 3v6.5a.5.5 0 01-.5.5h-6A.5.5 0 014 11.5V2z" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M8 2v3h3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>';
+          allAttachHtml += '<div class="msg-doc-badge" title="' + escHtml(f.name) + '">' + fileIcon + '<span class="msg-doc-name">' + escHtml(f.name) + '</span></div>';
+        }
+      }
+      userMsgEl.insertAdjacentHTML("afterbegin", '<div class="msg-attachments">' + allAttachHtml + '</div>');
     }
   }
 

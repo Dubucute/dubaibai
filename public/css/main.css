@@ -726,6 +726,43 @@ body {
   display: block;
 }
 
+/* Document file badges */
+.msg-doc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--tag-bg);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  flex-shrink: 0;
+  transition: var(--transition);
+  cursor: default;
+  max-width: 200px;
+}
+
+.msg-doc-badge:hover {
+  border-color: var(--border-color-strong);
+  color: var(--text-primary);
+  background: var(--hover-bg);
+}
+
+.msg-doc-badge svg {
+  flex-shrink: 0;
+}
+
+.msg-doc-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
 /* Generated images */
 .msg-image {
   max-width: 100%;
