@@ -29,17 +29,21 @@
     if (e.key === "Escape") closeLightbox();
   }
 
-  // Open lightbox for user-attached images (not from gallery)
-  window.openUserAttachment = function (src, name) {
+  // Open lightbox for user-attached images (looks up data from a global cache)
+  // The preview div stores a cache key in data-preview attribute
+  window.openUserAttachment = function (cacheKey) {
+    var cache = window._userPreviewCache || {};
+    var entry = cache[cacheKey];
+    if (!entry) return;
     var lightbox = document.getElementById("lightbox");
     var img = lightbox.querySelector(".lightbox-img");
     var info = lightbox.querySelector(".lightbox-info");
     var dlBtn = lightbox.querySelector(".lightbox-dl");
-    img.src = src;
-    img.alt = name || "Attached image";
-    info.innerHTML = "<strong>Attached:</strong> " + escHtml(name || "Image");
-    dlBtn.setAttribute("data-url", src);
-    dlBtn.setAttribute("data-prompt", name || "image");
+    img.src = entry.src;
+    img.alt = entry.name || "Attached image";
+    info.innerHTML = "<strong>Attached:</strong> " + escHtml(entry.name || "Image");
+    dlBtn.setAttribute("data-url", entry.src);
+    dlBtn.setAttribute("data-prompt", entry.name || "image");
     lightbox.classList.add("visible");
     document.addEventListener("keydown", lightboxKeyHandler);
   };

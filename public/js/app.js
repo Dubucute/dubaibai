@@ -151,7 +151,11 @@ window.sendToAgent = async function () {
     const userMsgEl = document.querySelector(".msg-user:last-child .msg-body");
     if (userMsgEl) {
       const previewsHtml = imagePreviews.map(function(f, i) {
-        return '<div class="msg-attachment-preview" onclick="openUserAttachment(\'' + f.data + '\', \'' + escHtml(f.name) + '\')"><img src="' + f.data + '" alt="' + escHtml(f.name) + '" class="msg-attachment-img" loading="lazy"></div>';
+        var safeName = f.name.replace(/'/g, "\\'");
+        var previewIdx = Date.now() + '_' + i;
+        window._userPreviewCache = window._userPreviewCache || {};
+        window._userPreviewCache[previewIdx] = { src: f.data, name: f.name };
+        return '<div class="msg-attachment-preview" data-preview="' + previewIdx + '" onclick="openUserAttachment(this.dataset.preview)"><img src="' + f.data + '" alt="' + escHtml(f.name) + '" class="msg-attachment-img" loading="lazy"></div>';
       }).join("");
       userMsgEl.insertAdjacentHTML("afterbegin", '<div class="msg-attachments">' + previewsHtml + '</div>');
     }
