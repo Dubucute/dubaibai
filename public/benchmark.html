@@ -21,22 +21,23 @@
       --bench-orange: #f97316;
     }
 
-html.benchmark-page body {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  height: auto !important;
-  min-height: 100vh !important;
-  background: var(--bg-primary, #0a0a0f) !important;
-}
-html.benchmark-page #app {
-  display: block !important;
-  height: auto !important;
-  overflow: visible !important;
-  flex: none !important;
-  background: transparent !important;
-  max-width: 1400px !important;
-  margin: 0 auto !important;
-  padding: 24px 32px 64px !important;
+    html.benchmark-page body {
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      height: auto !important;
+      min-height: 100vh !important;
+      background: var(--bg-primary, #0a0a0f) !important;
+    }
+
+    html.benchmark-page #app {
+      display: block !important;
+      height: auto !important;
+      overflow: visible !important;
+      flex: none !important;
+      background: transparent !important;
+      max-width: 1400px !important;
+      margin: 0 auto !important;
+      padding: 24px 32px 64px !important;
     }
 
     /* ── Header ── */
@@ -126,14 +127,21 @@ html.benchmark-page #app {
       font-weight: 600;
     }
 
+    .stat-card .stat-sub {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      font-family: var(--font-mono);
+    }
+
     .stat-card.green .stat-value { color: var(--bench-green); }
-    .stat-card.red .stat-value { color: var(--bench-red); }
     .stat-card.blue .stat-value { color: var(--bench-blue); }
     .stat-card.yellow .stat-value { color: var(--bench-yellow); }
     .stat-card.purple .stat-value { color: var(--bench-purple); }
+    .stat-card.cyan .stat-value { color: var(--bench-cyan); }
 
-    /* ── Scoring Legend ── */
-    .scoring-legend {
+    /* ── Scoring Guide ── */
+    .scoring-guide {
       display: flex;
       gap: 12px;
       flex-wrap: wrap;
@@ -145,7 +153,7 @@ html.benchmark-page #app {
       border-radius: var(--radius-md);
     }
 
-    .scoring-legend .legend-item {
+    .scoring-guide .guide-item {
       display: flex;
       align-items: center;
       gap: 6px;
@@ -153,14 +161,14 @@ html.benchmark-page #app {
       color: var(--text-secondary);
     }
 
-    .legend-dot {
+    .guide-dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
       flex-shrink: 0;
     }
 
-    .legend-bar {
+    .guide-bar {
       width: 24px;
       height: 8px;
       border-radius: 4px;
@@ -239,8 +247,8 @@ html.benchmark-page #app {
       color: var(--text-primary);
     }
 
-    .bench-table th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
-    .bench-table th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
+    .bench-table th.sorted-asc::after { content: ' \u2191'; color: var(--accent); }
+    .bench-table th.sorted-desc::after { content: ' \u2193'; color: var(--accent); }
 
     .bench-table td {
       padding: 12px 16px;
@@ -254,14 +262,6 @@ html.benchmark-page #app {
 
     .bench-table tbody tr:hover {
       background: var(--hover-bg);
-    }
-
-    .bench-table tbody tr.failed {
-      opacity: 0.45;
-    }
-
-    .bench-table tbody tr.failed:hover {
-      opacity: 0.7;
     }
 
     /* ── Rank Cell ── */
@@ -323,13 +323,10 @@ html.benchmark-page #app {
       font-weight: 500;
     }
 
-    .tag-fast { background: rgba(34,197,94,0.12); color: #22c55e; }
-    .tag-smart { background: rgba(99,102,241,0.12); color: #6366f1; }
-    .tag-coding { background: rgba(59,130,246,0.12); color: #3b82f6; }
+    .tag-tool-calling { background: rgba(34,197,94,0.12); color: #22c55e; }
     .tag-vision { background: rgba(139,92,246,0.12); color: #8b5cf6; }
     .tag-reasoning { background: rgba(6,182,212,0.12); color: #06b6d4; }
-    .tag-failed { background: rgba(239,68,68,0.12); color: #ef4444; }
-    .tag-safety { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .tag-code { background: rgba(59,130,246,0.12); color: #3b82f6; }
 
     /* ── Score Bar ── */
     .score-cell {
@@ -358,10 +355,10 @@ html.benchmark-page #app {
     }
 
     .score-bar-fill.s90 { background: linear-gradient(90deg, #22c55e, #4ade80); }
-    .score-bar-fill.s85 { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-    .score-bar-fill.s80 { background: linear-gradient(90deg, #6366f1, #818cf8); }
-    .score-bar-fill.s75 { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
-    .score-bar-fill.s70 { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .score-bar-fill.s80 { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .score-bar-fill.s70 { background: linear-gradient(90deg, #6366f1, #818cf8); }
+    .score-bar-fill.s60 { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+    .score-bar-fill.s50 { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
     .score-bar-fill.s40 { background: linear-gradient(90deg, #f97316, #fb923c); }
     .score-bar-fill.s0 { background: linear-gradient(90deg, #ef4444, #f87171); }
 
@@ -400,42 +397,71 @@ html.benchmark-page #app {
     .speed-fast { background: rgba(34,197,94,0.12); color: #22c55e; }
     .speed-medium { background: rgba(245,158,11,0.12); color: #f59e0b; }
     .speed-slow { background: rgba(239,68,68,0.12); color: #ef4444; }
-    .speed-very_slow { background: rgba(239,68,68,0.18); color: #ef4444; }
+    .speed-unknown { background: rgba(107,114,128,0.12); color: #6b7280; }
 
-    /* ── TPS Cell ── */
-    .tps-cell {
+    /* ── Coding / Tool Calling Cell ── */
+    .coding-cell {
       font-family: var(--font-mono);
       font-weight: 600;
       font-size: 0.82rem;
     }
 
-    /* ── Token Cells ── */
-    .token-cell {
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      color: var(--text-secondary);
+    .coding-bar-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    /* ── Status Cell ── */
-    .status-cell {
+    .coding-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--surface-strong);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .coding-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .coding-bar-fill.high { background: linear-gradient(90deg, #22c55e, #4ade80); }
+    .coding-bar-fill.med { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .coding-bar-fill.low { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+    .pct-number {
+      min-width: 32px;
+      text-align: right;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    /* ── Tasks Cell ── */
+    .tasks-cell {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 600;
       text-align: center;
     }
 
-    .status-icon {
-      font-size: 1.1rem;
+    /* ── Capabilities Cell ── */
+    .caps-cell {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
     }
 
-    .status-working { color: var(--bench-green); }
-    .status-failed { color: var(--bench-red); }
-
-    .error-msg {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      max-width: 200px;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .cap-badge {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
       white-space: nowrap;
     }
+
+    .cap-tools { background: rgba(34,197,94,0.12); color: #22c55e; }
+    .cap-vision { background: rgba(139,92,246,0.12); color: #8b5cf6; }
 
     /* ── Chart Section ── */
     .charts-grid {
@@ -462,7 +488,7 @@ html.benchmark-page #app {
     .bar-chart {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
     .bar-row {
@@ -472,7 +498,7 @@ html.benchmark-page #app {
     }
 
     .bar-label {
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-family: var(--font-mono);
       color: var(--text-secondary);
       min-width: 160px;
@@ -484,7 +510,7 @@ html.benchmark-page #app {
 
     .bar-track {
       flex: 1;
-      height: 22px;
+      height: 20px;
       background: var(--surface-strong);
       border-radius: 4px;
       overflow: hidden;
@@ -497,7 +523,7 @@ html.benchmark-page #app {
       display: flex;
       align-items: center;
       padding-left: 8px;
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       font-weight: 600;
       font-family: var(--font-mono);
       color: #fff;
@@ -505,65 +531,16 @@ html.benchmark-page #app {
       min-width: fit-content;
     }
 
-    /* ── Failure Reasons ── */
-    .failure-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-top: 40px;
-    }
-
-    .failure-card {
-      background: var(--surface-bg);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 16px;
-    }
-
-    .failure-card h4 {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--bench-red);
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .failure-card .count {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--text-muted);
-    }
-
-    .failure-models {
-      list-style: none;
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      font-family: var(--font-mono);
-    }
-
-    .failure-models li {
-      padding: 3px 0;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .failure-models li:last-child {
-      border-bottom: none;
-    }
-
     /* ── Responsive ── */
     @media (max-width: 1200px) {
       .stats-row { grid-template-columns: repeat(3, 1fr); }
       .charts-grid { grid-template-columns: 1fr; }
-      .failure-grid { grid-template-columns: 1fr 1fr; }
     }
 
     @media (max-width: 768px) {
       .bench-container { padding: 16px; }
       .bench-header h1 { font-size: 1.8rem; }
       .stats-row { grid-template-columns: 1fr 1fr; }
-      .failure-grid { grid-template-columns: 1fr; }
       .bench-table { font-size: 0.78rem; }
       .bench-table th, .bench-table td { padding: 8px 10px; }
     }
@@ -574,9 +551,9 @@ html.benchmark-page #app {
     <div class="bench-container">
       <!-- Header -->
       <div class="bench-header">
-        <h1>🏆 Model Benchmark</h1>
-        <div class="subtitle">Copilot-Style Tool-Calling & Coding Assessment — 55 Tools × 6 Turns</div>
-        <div class="date">Generated: 19 Jul 2026, 19:31:44 · Scoring: 40pt tools + 15pt context + 20pt speed + 15pt output + 10pt text</div>
+        <h1>Model Benchmark</h1>
+        <div class="subtitle">NVIDIA NIM Model Rankings — Tool Calling &amp; Speed Evaluation</div>
+        <div class="date">Generated: 21 Jul 2026, 08:23 UTC &middot; Scoring: 50% tools + 30% quality + 20% speed</div>
       </div>
 
       <!-- Stats Row -->
@@ -589,52 +566,63 @@ html.benchmark-page #app {
           <div class="stat-value" id="stat-working">0</div>
           <div class="stat-label">Working</div>
         </div>
-        <div class="stat-card red">
-          <div class="stat-value" id="stat-failed">0</div>
-          <div class="stat-label">Failed</div>
-        </div>
         <div class="stat-card blue">
           <div class="stat-value" id="stat-top-score">0</div>
           <div class="stat-label">Top Score</div>
+          <div class="stat-sub" id="stat-top-model"></div>
+        </div>
+        <div class="stat-card cyan">
+          <div class="stat-value" id="stat-fastest">0</div>
+          <div class="stat-label">Fastest (TTFT)</div>
+          <div class="stat-sub" id="stat-fastest-model"></div>
         </div>
         <div class="stat-card yellow">
-          <div class="stat-value" id="stat-best-tps">0</div>
-          <div class="stat-label">Best TPS</div>
+          <div class="stat-value" id="stat-tools">0</div>
+          <div class="stat-label">Tool-Calling</div>
+          <div class="stat-sub">models with tool support</div>
         </div>
       </div>
 
-      <!-- Scoring Legend -->
-      <div class="scoring-legend">
-        <div class="legend-item">
-          <div class="legend-bar" style="background: rgba(99,102,241,0.4);"></div>
-          Tool Calling: 40pt
+      <!-- Scoring Guide -->
+      <div class="scoring-guide">
+        <div class="guide-item">
+          <div class="guide-bar" style="background: linear-gradient(90deg, #22c55e, #4ade80);"></div>
+          Score 80-100: Top tier
         </div>
-        <div class="legend-item">
-          <div class="legend-bar" style="background: rgba(59,130,246,0.4);"></div>
-          Context: 15pt
+        <div class="guide-item">
+          <div class="guide-bar" style="background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+          Score 60-79: Solid
         </div>
-        <div class="legend-item">
-          <div class="legend-bar" style="background: rgba(34,197,94,0.4);"></div>
-          Speed: 20pt
+        <div class="guide-item">
+          <div class="guide-bar" style="background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+          Score 40-59: Moderate
         </div>
-        <div class="legend-item">
-          <div class="legend-bar" style="background: rgba(245,158,11,0.4);"></div>
-          Output: 15pt
+        <div class="guide-item">
+          <div class="guide-bar" style="background: linear-gradient(90deg, #f97316, #fb923c);"></div>
+          Score 25-39: Basic
         </div>
-        <div class="legend-item">
-          <div class="legend-bar" style="background: rgba(139,92,246,0.4);"></div>
-          Text Bonus: 10pt
+        <div class="guide-item">
+          <span class="speed-badge speed-fast">fast</span>
+          &lt;1s response
+        </div>
+        <div class="guide-item">
+          <span class="speed-badge speed-medium">medium</span>
+          1-5s response
+        </div>
+        <div class="guide-item">
+          <span class="speed-badge speed-slow">slow</span>
+          &gt;5s response
         </div>
       </div>
 
       <!-- Filter Bar -->
       <div class="filter-bar">
-        <button class="filter-btn active" data-filter="all">All (36)</button>
-        <button class="filter-btn" data-filter="working">✅ Working (20)</button>
-        <button class="filter-btn" data-filter="failed">❌ Failed (16)</button>
-        <button class="filter-btn" data-filter="top">🏆 Top Tier (85+)</button>
-        <button class="filter-btn" data-filter="fast">⚡ Fast (&lt;5s)</button>
-        <button class="filter-btn" data-filter="tools">🛠 Tool-Calling</button>
+        <button class="filter-btn active" data-filter="all">All (32)</button>
+        <button class="filter-btn" data-filter="top">Top Tier (80+)</button>
+        <button class="filter-btn" data-filter="fast">Fast (&lt;1s)</button>
+        <button class="filter-btn" data-filter="tools">Tool-Calling</button>
+        <button class="filter-btn" data-filter="vision">Vision</button>
+        <button class="filter-btn" data-filter="coding100">100% Coding</button>
       </div>
 
       <!-- Main Table -->
@@ -644,12 +632,11 @@ html.benchmark-page #app {
             <tr>
               <th data-sort="rank" class="sorted-asc">Rank</th>
               <th data-sort="model">Model</th>
-              <th data-sort="score">Score</th>
-              <th data-sort="duration">Duration</th>
-              <th data-sort="tps">TPS</th>
-              <th data-sort="input">Input</th>
-              <th data-sort="output">Output</th>
-              <th data-sort="status">Status</th>
+              <th data-sort="score">Combined Score</th>
+              <th data-sort="speed">Speed (s)</th>
+              <th data-sort="codingPct">Coding %</th>
+              <th data-sort="tasks">Tasks</th>
+              <th data-sort="caps">Capabilities</th>
             </tr>
           </thead>
           <tbody id="benchBody"></tbody>
@@ -658,21 +645,15 @@ html.benchmark-page #app {
 
       <!-- Charts -->
       <div class="charts-grid">
-        <!-- Score Chart -->
         <div class="chart-card">
-          <h3>📊 Score Distribution (Working Models)</h3>
+          <h3>Score Distribution</h3>
           <div class="bar-chart" id="scoreChart"></div>
         </div>
-
-        <!-- Speed Chart -->
         <div class="chart-card">
-          <h3>⚡ Tokens Per Second (TPS)</h3>
-          <div class="bar-chart" id="tpsChart"></div>
+          <h3>Response Time (lower is faster)</h3>
+          <div class="bar-chart" id="speedChart"></div>
         </div>
       </div>
-
-      <!-- Failure Analysis -->
-      <div class="failure-grid" id="failureGrid"></div>
     </div>
   </div>
 
@@ -681,29 +662,24 @@ html.benchmark-page #app {
     let BENCHMARK_DATA = [];
     async function loadBenchmarkData() {
       try {
-        console.log('Loading benchmark data...');
         const response = await fetch('/api/benchmark');
-        console.log('Response status:', response.status);
         if (!response.ok) throw new Error('Failed to load benchmark data: ' + response.status);
         const json = await response.json();
-        console.log('Loaded data:', json.data?.length || 0, 'models');
-        // json is { data: [...], total, benchmarkedCount, ... }
-        const list = json.data || json;
-        // Transform the JSON data to match the expected format
+        const list = json.data || [];
         BENCHMARK_DATA = list.map((model, index) => {
           const b = model.benchmark || {};
           return {
             rank: b.rank || index + 1,
             id: model.id || '',
             name: model.id ? model.id.split('/').pop() : 'Unknown',
-            score: b.score || 0,
-            duration: b.duration || null,
-            tps: b.tps || null,
-            input: b.inputTokens || null,
-            output: b.outputTokens || null,
-            tools: b.toolsWorked || false,
-            tags: b.tags || [],
-            error: b.error || null
+            score: b.combinedScore || 0,
+            speed: b.speed != null ? b.speed : null,
+            speedRank: b.speedRank || 'unknown',
+            codingPct: b.codingPercentage || 0,
+            tasksPassed: b.tasksPassed || 0,
+            cScore: b.codingScore || '0/0',
+            toolCalling: model.capabilities?.toolCalling || false,
+            vision: model.capabilities?.vision || false,
           };
         });
         return BENCHMARK_DATA;
@@ -717,102 +693,82 @@ html.benchmark-page #app {
     function renderTable(data) {
       const tbody = document.getElementById('benchBody');
       tbody.innerHTML = data.map(m => {
-        const isFailed = m.score === 0;
-        const rankClass = m.rank <= 3 ? `rank-${m.rank}` : 'rank-other';
-        const scoreClass = m.score >= 90 ? 's90' : m.score >= 85 ? 's85' : m.score >= 80 ? 's80' : m.score >= 75 ? 's75' : m.score >= 70 ? 's70' : m.score >= 40 ? 's40' : 's0';
-        const speedClass = m.duration ? (m.duration < 5 ? 'speed-fast' : m.duration < 15 ? 'speed-medium' : 'speed-slow') : '';
-        const tags = m.tags.map(t => `<span class="model-tag tag-${t}">${t}</span>`).join('');
+        const rankClass = m.rank <= 3 ? 'rank-' + m.rank : 'rank-other';
+        const scoreClass = m.score >= 90 ? 's90' : m.score >= 80 ? 's80' : m.score >= 70 ? 's70' : m.score >= 60 ? 's60' : m.score >= 50 ? 's50' : m.score >= 40 ? 's40' : 's0';
+        const speedBadge = 'speed-' + (m.speedRank || 'unknown');
+        const speedLabel = m.speed != null ? m.speed.toFixed(2) : '\u2014';
+        const scoreColor = m.score >= 80 ? '#22c55e' : m.score >= 60 ? '#3b82f6' : m.score >= 40 ? '#f59e0b' : '#ef4444';
+        const pctClass = m.codingPct >= 80 ? 'high' : m.codingPct >= 40 ? 'med' : 'low';
 
-        return `<tr class="${isFailed ? 'failed' : ''}">
-          <td class="rank-cell"><span class="rank-badge ${rankClass}">${m.rank}</span></td>
-          <td class="model-cell">
-            <span class="model-name">${m.name}</span>
-            <span class="model-id">${m.id}</span>
-            ${tags ? `<div class="model-tags">${tags}</div>` : ''}
-          </td>
-          <td class="score-cell">
-            <div class="score-bar-wrapper">
-              <div class="score-bar"><div class="score-bar-fill ${scoreClass}" style="width:${m.score}%"></div></div>
-              <span class="score-number" style="color:${m.score >= 75 ? '#22c55e' : m.score >= 40 ? '#f59e0b' : '#ef4444'}">${m.score}</span>
-            </div>
-          </td>
-          <td class="speed-cell">
-            ${m.duration ? `<span class="speed-value">${m.duration}</span><span class="speed-unit">s</span><span class="speed-badge ${speedClass}">${m.duration < 5 ? 'fast' : m.duration < 15 ? 'med' : 'slow'}</span>` : '<span style="color:var(--text-muted)">—</span>'}
-          </td>
-          <td class="tps-cell">
-            ${m.tps ? `<span style="color:${m.tps > 50 ? '#22c55e' : m.tps > 10 ? '#f59e0b' : '#ef4444'}">${m.tps.toLocaleString()}</span>` : '<span style="color:var(--text-muted)">—</span>'}
-          </td>
-          <td class="token-cell">${m.input ? m.input.toLocaleString() : '—'}</td>
-          <td class="token-cell">${m.output ? m.output.toLocaleString() : '—'}</td>
-          <td class="status-cell">
-            ${m.tools ? '<span class="status-icon status-working" title="Tool-calling works">✅🛠</span>' :
-              m.score > 0 ? `<span class="status-icon" title="${m.error}" style="color:#f59e0b">⚠️</span>` :
-              `<span class="status-icon status-failed" title="${m.error}">❌</span>`}
-            ${m.error ? `<div class="error-msg" title="${m.error}">${m.error}</div>` : ''}
-          </td>
-        </tr>`;
+        const tags = [];
+        if (m.toolCalling) tags.push('<span class="model-tag tag-tool-calling">Tools</span>');
+        if (m.vision) tags.push('<span class="model-tag tag-vision">Vision</span>');
+
+        const caps = [];
+        if (m.toolCalling) caps.push('<span class="cap-badge cap-tools">Tool Calling</span>');
+        if (m.vision) caps.push('<span class="cap-badge cap-vision">Vision</span>');
+
+        return '<tr>' +
+          '<td class="rank-cell"><span class="rank-badge ' + rankClass + '">' + m.rank + '</span></td>' +
+          '<td class="model-cell">' +
+            '<span class="model-name">' + m.name + '</span>' +
+            '<span class="model-id">' + m.id + '</span>' +
+            (tags.length ? '<div class="model-tags">' + tags.join('') + '</div>' : '') +
+          '</td>' +
+          '<td class="score-cell">' +
+            '<div class="score-bar-wrapper">' +
+              '<div class="score-bar"><div class="score-bar-fill ' + scoreClass + '" style="width:' + m.score + '%"></div></div>' +
+              '<span class="score-number" style="color:' + scoreColor + '">' + m.score + '</span>' +
+            '</div>' +
+          '</td>' +
+          '<td class="speed-cell">' +
+            '<span class="speed-value">' + speedLabel + '</span>' +
+            '<span class="speed-unit">s</span>' +
+            '<span class="speed-badge ' + speedBadge + '">' + m.speedRank + '</span>' +
+          '</td>' +
+          '<td class="coding-cell">' +
+            '<div class="coding-bar-wrapper">' +
+              '<div class="coding-bar"><div class="coding-bar-fill ' + pctClass + '" style="width:' + m.codingPct + '%"></div></div>' +
+              '<span class="pct-number" style="color:' + (m.codingPct >= 80 ? '#22c55e' : m.codingPct >= 40 ? '#f59e0b' : '#ef4444') + '">' + m.codingPct + '%</span>' +
+            '</div>' +
+          '</td>' +
+          '<td class="tasks-cell">' + m.tasksPassed + '</td>' +
+          '<td class="caps-cell">' + (caps.length ? caps.join('') : '<span style="color:var(--text-muted);font-size:0.7rem">Chat</span>') + '</td>' +
+        '</tr>';
       }).join('');
     }
 
     // ── Score Chart ──
     function renderScoreChart() {
-      const working = BENCHMARK_DATA.filter(m => m.score > 0).sort((a, b) => b.score - a.score);
+      const sorted = [...BENCHMARK_DATA].sort((a, b) => b.score - a.score);
       const chart = document.getElementById('scoreChart');
-      chart.innerHTML = working.map(m => {
-        const color = m.score >= 90 ? '#22c55e' : m.score >= 85 ? '#3b82f6' : m.score >= 80 ? '#6366f1' : m.score >= 75 ? '#8b5cf6' : '#f59e0b';
-        return `<div class="bar-row">
-          <div class="bar-label" title="${m.id}">${m.name}</div>
-          <div class="bar-track">
-            <div class="bar-fill" style="width:${m.score}%;background:${color}">${m.score}/100</div>
-          </div>
-        </div>`;
+      chart.innerHTML = sorted.map(m => {
+        const color = m.score >= 90 ? '#22c55e' : m.score >= 80 ? '#3b82f6' : m.score >= 70 ? '#6366f1' : m.score >= 60 ? '#8b5cf6' : m.score >= 40 ? '#f59e0b' : '#f97316';
+        return '<div class="bar-row">' +
+          '<div class="bar-label" title="' + m.id + '">' + m.name + '</div>' +
+          '<div class="bar-track">' +
+            '<div class="bar-fill" style="width:' + m.score + '%;background:' + color + '">' + m.score + '</div>' +
+          '</div>' +
+        '</div>';
       }).join('');
     }
 
-    // ── TPS Chart ──
-    function renderTPSChart() {
-      const withTPS = BENCHMARK_DATA.filter(m => m.tps && m.tps > 0).sort((a, b) => b.tps - a.tps);
-      const maxTPS = Math.max(...withTPS.map(m => m.tps));
-      const chart = document.getElementById('tpsChart');
-      chart.innerHTML = withTPS.map(m => {
-        const pct = (m.tps / maxTPS) * 100;
-        const color = m.tps > 50 ? '#22c55e' : m.tps > 10 ? '#f59e0b' : '#ef4444';
-        return `<div class="bar-row">
-          <div class="bar-label" title="${m.id}">${m.name}</div>
-          <div class="bar-track">
-            <div class="bar-fill" style="width:${pct}%;background:${color}">${m.tps.toLocaleString()} TPS</div>
-          </div>
-        </div>`;
+    // ── Speed Chart ──
+    function renderSpeedChart() {
+      const withSpeed = BENCHMARK_DATA.filter(m => m.speed != null && m.speed > 0).sort((a, b) => a.speed - b.speed);
+      const maxSpeed = Math.max(...withSpeed.map(m => m.speed));
+      const chart = document.getElementById('speedChart');
+      chart.innerHTML = withSpeed.map(m => {
+        // Invert: lower response time = faster = wider bar
+        const pct = maxSpeed > 0 ? ((1 - (m.speed / maxSpeed)) * 85 + 15) : 100;
+        const color = m.speed < 1 ? '#22c55e' : m.speed < 5 ? '#f59e0b' : '#ef4444';
+        return '<div class="bar-row">' +
+          '<div class="bar-label" title="' + m.id + '">' + m.name + '</div>' +
+          '<div class="bar-track">' +
+            '<div class="bar-fill" style="width:' + pct + '%;background:' + color + '">' + m.speed.toFixed(2) + 's</div>' +
+          '</div>' +
+        '</div>';
       }).join('');
-    }
-
-    // ── Failure Analysis ──
-    function renderFailures() {
-      const failed = BENCHMARK_DATA.filter(m => m.score === 0);
-      const categories = {};
-      failed.forEach(m => {
-        let cat = 'Other';
-        if (m.error?.includes('safety') || m.error?.includes('Safety') || m.error?.includes('topic') || m.error?.includes('enable-auto-tool-choice')) cat = 'Safety Models';
-        else if (m.error?.includes('timeout') || m.error?.includes('Timeout')) cat = 'Timeouts';
-        else if (m.error?.includes('400')) cat = 'HTTP 400 (Incompatible)';
-        else if (m.error?.includes('404')) cat = 'HTTP 404 (Not Found)';
-        else if (m.error?.includes('422')) cat = 'HTTP 422 (Validation)';
-        else if (m.error?.includes('502')) cat = 'HTTP 502 (Empty)';
-        else if (m.error?.includes('PII') || m.error?.includes('pii') || m.error?.includes('NER')) cat = 'Specialty Models';
-        else if (m.error?.includes('Translation') || m.error?.includes('translation')) cat = 'Specialty Models';
-        if (!categories[cat]) categories[cat] = [];
-        categories[cat].push(m);
-      });
-
-      const grid = document.getElementById('failureGrid');
-      grid.innerHTML = Object.entries(categories).map(([cat, models]) => `
-        <div class="failure-card">
-          <h4>❌ ${cat} <span class="count">(${models.length})</span></h4>
-          <ul class="failure-models">
-            ${models.map(m => `<li title="${m.error}">${m.name}</li>`).join('')}
-          </ul>
-        </div>
-      `).join('');
     }
 
     // ── Filtering ──
@@ -829,11 +785,12 @@ html.benchmark-page #app {
     function applyFilter() {
       let data = [...BENCHMARK_DATA];
       switch (currentFilter) {
-        case 'working': data = data.filter(m => m.score > 0); break;
-        case 'failed': data = data.filter(m => m.score === 0); break;
-        case 'top': data = data.filter(m => m.score >= 85); break;
-        case 'fast': data = data.filter(m => m.duration && m.duration < 5); break;
-        case 'tools': data = data.filter(m => m.tools); break;
+        case 'all': break;
+        case 'top': data = data.filter(m => m.score >= 80); break;
+        case 'fast': data = data.filter(m => m.speed != null && m.speed < 1); break;
+        case 'tools': data = data.filter(m => m.toolCalling); break;
+        case 'vision': data = data.filter(m => m.vision); break;
+        case 'coding100': data = data.filter(m => m.codingPct >= 100); break;
       }
       renderTable(data);
     }
@@ -841,28 +798,30 @@ html.benchmark-page #app {
     // ── Update Stats ──
     function updateStats() {
       const total = BENCHMARK_DATA.length;
-      const working = BENCHMARK_DATA.filter(m => m.score > 0).length;
-      const failed = total - working;
-      const fast = BENCHMARK_DATA.filter(m => m.duration && m.duration < 5).length;
-      const tools = BENCHMARK_DATA.filter(m => m.tools).length;
-      const top = BENCHMARK_DATA.filter(m => m.score >= 85).length;
+      const working = total;
       const topScore = Math.max(...BENCHMARK_DATA.map(m => m.score || 0));
-      const bestTPS = Math.max(...BENCHMARK_DATA.map(m => m.tps || 0));
+      const topModel = BENCHMARK_DATA.find(m => m.score === topScore);
+      const withSpeed = BENCHMARK_DATA.filter(m => m.speed != null && m.speed > 0);
+      const fastestSpeed = Math.min(...withSpeed.map(m => m.speed));
+      const fastestModel = withSpeed.find(m => m.speed === fastestSpeed);
+      const toolCount = BENCHMARK_DATA.filter(m => m.toolCalling).length;
 
       document.getElementById('stat-total').textContent = total;
       document.getElementById('stat-working').textContent = working;
-      document.getElementById('stat-failed').textContent = failed;
-      document.getElementById('stat-top-score').textContent = Math.round(topScore);
-      document.getElementById('stat-best-tps').textContent = bestTPS.toFixed(1);
+      document.getElementById('stat-top-score').textContent = topScore;
+      document.getElementById('stat-top-model').textContent = topModel ? topModel.name : '';
+      document.getElementById('stat-fastest').textContent = fastestSpeed.toFixed(2) + 's';
+      document.getElementById('stat-fastest-model').textContent = fastestModel ? fastestModel.name : '';
+      document.getElementById('stat-tools').textContent = toolCount;
 
       // Update filter button labels
       const filterBtns = {
-        'all': `All (${total})`,
-        'working': `✅ Working (${working})`,
-        'failed': `❌ Failed (${failed})`,
-        'top': `🏆 Top Tier (${top})`,
-        'fast': `⚡ Fast (${fast})`,
-        'tools': `🛠 Tool-Calling (${tools})`
+        'all': 'All (' + total + ')',
+        'top': 'Top Tier (' + BENCHMARK_DATA.filter(m => m.score >= 80).length + ')',
+        'fast': 'Fast (' + BENCHMARK_DATA.filter(m => m.speed != null && m.speed < 1).length + ')',
+        'tools': 'Tool-Calling (' + toolCount + ')',
+        'vision': 'Vision (' + BENCHMARK_DATA.filter(m => m.vision).length + ')',
+        'coding100': '100% Coding (' + BENCHMARK_DATA.filter(m => m.codingPct >= 100).length + ')',
       };
       document.querySelectorAll('.filter-btn').forEach(btn => {
         const key = btn.dataset.filter;
@@ -888,16 +847,12 @@ html.benchmark-page #app {
         th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
 
         let data = [...BENCHMARK_DATA];
-        if (currentFilter === 'working') data = data.filter(m => m.score > 0);
-        else if (currentFilter === 'failed') data = data.filter(m => m.score === 0);
-        else if (currentFilter === 'top') data = data.filter(m => m.score >= 85);
-        else if (currentFilter === 'fast') data = data.filter(m => m.duration && m.duration < 5);
-        else if (currentFilter === 'tools') data = data.filter(m => m.tools);
+        applyFilterToData(data);
 
         data.sort((a, b) => {
           let va = a[col], vb = b[col];
-          if (va === null || va === undefined) va = sortDir === 'asc' ? Infinity : -Infinity;
-          if (vb === null || vb === undefined) vb = sortDir === 'asc' ? Infinity : -Infinity;
+          if (va === null || va === undefined) va = sortDir === 'asc' ? 99999 : -99999;
+          if (vb === null || vb === undefined) vb = sortDir === 'asc' ? 99999 : -99999;
           if (typeof va === 'string') return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
           return sortDir === 'asc' ? va - vb : vb - va;
         });
@@ -906,15 +861,25 @@ html.benchmark-page #app {
       });
     });
 
+    function applyFilterToData(data) {
+      switch (currentFilter) {
+        case 'all': break;
+        case 'top': return data.filter(m => m.score >= 80);
+        case 'fast': return data.filter(m => m.speed != null && m.speed < 1);
+        case 'tools': return data.filter(m => m.toolCalling);
+        case 'vision': return data.filter(m => m.vision);
+        case 'coding100': return data.filter(m => m.codingPct >= 100);
+      }
+    }
+
     // ── Init ──
     document.addEventListener('DOMContentLoaded', async () => {
       await loadBenchmarkData();
       updateStats();
       renderTable(BENCHMARK_DATA);
       renderScoreChart();
-      renderTPSChart();
-      renderFailures();
+      renderSpeedChart();
     });
-</script>
+  </script>
 </body>
 </html>
