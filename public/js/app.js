@@ -176,10 +176,14 @@ window.sendToAgent = async function () {
   const images = attachedFiles.filter((f) => f.type === "image");
   const docs = attachedFiles.filter((f) => f.type === "document");
 
+  // Store for use in AI response bubble (vision analysis shows the original image)
+  var pendingAttachedImage = null;
+
   if (images.length > 0) {
     context.hasImage = true;
     context.imageData = images[0].data;
     context.imageDescription = images[0].name;
+    pendingAttachedImage = images[0].data;
   }
   if (docs.length > 0) {
     context.hasDocuments = true;
@@ -346,11 +350,12 @@ window.sendToAgent = async function () {
                 })
                 .catch(() => {});
             } else {
-              // ── Non-streamed text response (fallback or no tokens received) ──
+              // ── Non-streamed text response (fallback, vision analysis, or no tokens) ──
               thinkingDiv.remove();
               addMessage("agent", fullResponse, modelName || "Dubu AI", {
                 typewriter: !fallbackUsed,
                 typewriterSpeed: 18,
+                attachedImage: pendingAttachedImage,
               });
               agentHistory.push({ role: "assistant", content: fullResponse });
 
@@ -558,6 +563,16 @@ function addMessage(role, content, authorOverride, options = {}) {
   const timestamp = new Date();
   const timeStr = timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+  // If there's an attached image to show in the agent response (vision analysis),
+  // render a clickable thumbnail above the text
+  var attachedImageHtml = "";
+  if (options.attachedImage && role === "agent") {
+    var imgKey = Date.now() + "_att";
+    window._userPreviewCache = window._userPreviewCache || {};
+    window._userPreviewCache[imgKey] = { src: options.attachedImage, name: "Attached image" };
+    attachedImageHtml = '<div class="msg-attachments"><div class="msg-attachment-preview" data-preview="' + imgKey + '" onclick="openUserAttachment(this.dataset.preview)"><img src="' + options.attachedImage + '" alt="Attached image" class="msg-attachment-img" loading="lazy"></div></div>';
+  }
+
   const formattedHtml = formatMessageHtml(content);    // Build action buttons — regenerate only for assistant, edit for user
   let actionsHtml;
   if (role === "user") {
@@ -577,7 +592,7 @@ function addMessage(role, content, authorOverride, options = {}) {
     typewriterEffect(contentEl, formattedHtml, content, options.typewriterSpeed || 20);
   } else {
     // Normal mode
-    div.innerHTML = `${avatarHtml}<div class="msg-body"><div class="msg-name">${author} <span class="msg-time">${timeStr}</span></div><div class="msg-content">${formattedHtml}</div>${actionsHtml}</div>`;
+    div.innerHTML = `${avatarHtml}<div class="msg-body"><div class="msg-name">${author} <span class="msg-time">${timeStr}</span></div>${attachedImageHtml}<div class="msg-content">${formattedHtml}</div>${actionsHtml}</div>`;
     container.appendChild(div);
     scrollToBottom(container);
     setTimeout(() => {
