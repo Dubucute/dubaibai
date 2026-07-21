@@ -18,6 +18,7 @@ const db = require("./db");
 const Orchestrator = require("./orchestrator");
 const NIMClient = require("./nim");
 const { getTaskRoute, getModelInfo, getAllModels, initBenchmarks } = require("./models");
+const { getRankedData, getRankedModels, getModelBenchmark, buildChain } = require("./benchmark");
 const { detectIntent } = require("./router");
 const { listTools, getTool } = require("./tools/index");
 const { signIn, getSessionUser, authMiddleware, AUTH_ENABLED } = require("./auth");
@@ -59,6 +60,84 @@ app.get("/api/benchmark", (req, res) => {
   } catch (e) {
     res.status(500).json({ error: "Failed to load benchmark data" });
   }
+});
+
+// ── API: Routing Debug (public, no auth required) ──
+// GET /api/routing/debug — Show current model chains and benchmark status
+app.get("/api/routing/debug", (req, res) => {
+  const fs = require("fs");
+  const path = require("path");
+
+  // Load benchmark file
+  let benchmarkData = null;
+  try {
+    const filePath = path.join(__dirname, "..", "ranked_models_clean.json");
+    const raw = fs.readFileSync(filePath, "utf-8");
+    benchmarkData = JSON.parse(raw);
+  } catch (e) {
+    // File not available
+  }
+
+  // Get in-memory cached data
+  const cached = getRankedData();
+  const rankedData = cached || benchmarkData;
+
+  // Build task chains (both benchmark-driven and hardcoded fallbacks)
+  const tasks = ["fast", "chat", "code", "reasoning", "websearch", "vision", "image", "translate", "safety", "embedding"];
+  const chains = {};
+  for (const task of tasks) {
+    const route = getTaskRoute(task);
+    chains[task] = {
+      description: route.description,
+      chain: route.chain.map((id) => {
+        const info = getModelInfo(id);
+        const bench = getModelBenchmark(id);
+        return {
+          id,
+          name: info?.name || id.split("/").pop(),
+          benchmarkScore: bench?.combinedScore || null,
+          benchmarkRank: bench?.rank || null,
+          speedRank: bench?.speedRank || null,
+        };
+      }),
+    };
+  }
+
+  // Top models from rankings
+  const topFast = buildChain("fast", { limit: 5 });
+  const topCode = buildChain("code", { limit: 5 });
+  const topChat = buildChain("chat", { limit: 5 });
+
+  res.json({
+    timestamp: new Date().toISOString(),
+    benchmark: {
+      totalModels: rankedData?.data?.length || 0,
+      benchmarkedCount: rankedData?.benchmarkedCount || 0,
+      lastUpdated: rankedData?.data?.[0]?.created
+        ? new Date(rankedData.data[0].created * 1000).toISOString()
+        : null,
+      cacheActive: !!cached,
+      cacheSource: cached ? "in-memory" : benchmarkData ? "file" : "none",
+    },
+    taskRoutes: {
+      benchmarkDriven: chains,
+      hardcoded: Object.fromEntries(
+        Object.entries(require("./models").TASK_ROUTES).map(([task, route]) => [
+          task,
+          {
+            description: route.description,
+            chain: route.chain,
+          },
+        ]),
+      ),
+    },
+    topModels: {
+      fast: topFast,
+      code: topCode,
+      chat: topChat,
+    },
+    quickNodeNative: true,
+  });
 });
 
 // Apply auth middleware to all API routes (attaches req.user if authenticated)
