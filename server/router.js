@@ -14,36 +14,37 @@ const INTENT_PATTERNS = [
       /^search\s+(for|the|about|on|in)?\s/i,
       /\b(search\s+the\s+web|look\s+up|find\s+information|find\s+(out|more)|google\s+(it|this|for))\b/i,
       /\b(what\s+is\s+the\s+(latest|current|recent|newest|trending))\b/i,
-      /\b(news\s+(about|on|regarding|of)|latest\s+(news|update|trends))\b/i,
+      /\b(news\s+(about|on|regarding|of)|latest\s+(news|update|updates|trends|headlines|developments))\b/i,
       /\b(price|cost|how\s+much\s+(is|are|does|do))\b/i,
       /\b(weather|forecast|temperature)\s+(in|for|at|today|tomorrow)\b/i,
       /^(how\s+(much|many|long|far|old|tall|heavy|big|fast))\s/is,
     ],
-  },
-  {
+  },    {
     task: "code",
     weight: 10,
     patterns: [
-      /\b(code|script|function|algorithm|program|debug|implement)\b/i,
+      /\b(code|script|function|algorithm|program|debug|implement|build|compile|deploy)\b/i,
       /```[\s\S]*```/,
-      /\b(javascript|python|typescript|java|c\+\+|rust|golang)\b/i,
-      /\b(write|create|generate)\s.*(function|class|method|app|script)\b/i,
-      /\b(refactor|optimize|complexity|O\(n|recursion|iteration)\b/i,
-      /\b(leetcode|hackerrank|coding|programming)\s+(challenge|problem|question)\b/i,
-      /^(run|execute)\s/i,
+      /\b(javascript|python|typescript|java|c\+\+|rust|golang|php|ruby|swift|kotlin|go|sql|bash)\b/i,
+      /\b(write|create|generate|build|make)\s.*(function|class|method|app|script|component|endpoint|api|module|route|service|middleware|hook|handler)\b/i,
+      /\b(react|vue|angular|svelte|node|express|django|flask|spring|docker|kubernetes|aws|git)\b/i,
+      /\b(refactor|optimize|complexity|O\(n|recursion|iteration|timeout|memory.leak|race.condition)\b/i,
+      /\b(leetcode|hackerrank|coding|programming|codeforces)\s+(challenge|problem|question|solution)\b/i,
+      /^(run|execute|install)\s/i,
+      /\b(debug|fix|help)\s.*(code|bug|program|script|function|error|issue|problem)\b/i,
     ],
-  },
-  {
+  },    {
     task: "reasoning",
-    weight: 8,
+    weight: 9,
     patterns: [
       /\b(reason|logic|puzzle|riddle|brain.teaser|think step|chain.of.thought)\b/i,
-      /\b(math|equation|calculus|theorem|proof|derivative|integral)\b/i,
-      /\b(quantum|physics|philosophy|consciousness|existential)\b/i,
-      /\b(prove|demonstrate|derive|verify)\b/i,
-      /^(why|how\s+(does|can|would|should|could|is|are))\s/i,
-      /\b(thought.experiment|what.if|hypothetical)\b/i,
-      /solve\s.*(problem|puzzle|equation)/i,
+      /\b(math|equation|calculus|theorem|proof|derivative|integral|algebra|geometry|trigonometry)\b/i,
+      /\b(quantum|physics|philosophy|consciousness|existential|metaphysics|epistemology)\b/i,
+      /\b(theory|relativity|gravity|entanglement|evolution|cosmology|biology|psychology|phenomenon|paradox)\b/i,
+      /\b(prove|demonstrate|derive|verify|validate)\b/i,
+      /^(why|how\s+(does|can|would|should|could|is|are|do))\s/i,
+      /\b(thought.experiment|what.if|hypothetical|gedanken)\b/i,
+      /solve\s.*(problem|puzzle|equation|riddle|mystery)/i,
     ],
   },
   {
@@ -68,15 +69,15 @@ const INTENT_PATTERNS = [
       /^(quick|fast|simple|short)\s/i,
       /^.{21,60}$/, // Short factual queries (not ultra-short)
     ],
-  },
-  {
+  },    {
     task: "vision",
-    weight: 9,
+    weight: 10,
     patterns: [
-      /\b(analyze|describe|examine|look.at)\s.*(image|picture|photo|screenshot|chart|graph|diagram)\b/i,
-      /\b(what|what's|whats)\s.*(in|on|see|showing)\s.*(image|picture|photo)\b/i,
-      /\b(image|picture|photo|screenshot|chart|graph)\s.*(analysis|description|explanation)\b/i,
-      /^(describe|analyze|explain)\s+(this|the|an|that)/i,
+      /\b(analyze|describe|examine|look.at)\s.*(image|picture|photo|screenshot|chart|graph|diagram|figure|plot)\b/i,
+      /\b(what|what's|whats)\s.*(in|on|see|showing)\s.*(image|picture|photo|screenshot|diagram|chart)\b/i,
+      /\b(image|picture|photo|screenshot|chart|graph|diagram|figure|plot)\s.*(analysis|description|explanation|interpretation)\b/i,
+      /^(describe|analyze|explain|interpret|read)\s+(this|the|an|that)\s*(image|picture|photo|screenshot|chart|graph|diagram)?/i,
+      /\b(can you|could you|please)\s.*(analyze|describe|explain|read)\s.*(image|picture|photo|screenshot|chart|graph|diagram)\b/i,
     ],
   },
   {
@@ -90,31 +91,30 @@ const INTENT_PATTERNS = [
       /\bimagine\s+(a|an|the|me|this)\b/i,
       /\b(make|create|generate)\s+(me\s+)?(a|an)\s+(picture|art|image|drawing|illustration|painting)\b/i,
     ],
-  },
-  {
+  },    {
     task: "translate",
-    weight: 8,
+    weight: 9,
     patterns: [
-      /\b(translate|translation|interpret)\s/i,
+      /\b(translate|translation|translator|interpret)\s/i,
       /\b(how\s+do\s+you\s+say|what\s+is\s+the\s+word\s+for)\b/i,
-      /\b(english|spanish|french|german|japanese|chinese|korean|russian|arabic)\s*(to|->|>)\s*(english|spanish|french|german|japanese|chinese|korean|russian|arabic)\b/i,
+      /\b(english|spanish|french|german|japanese|chinese|korean|russian|arabic|italian|portuguese|hindi)\s*(to|->|>)\s*(english|spanish|french|german|japanese|chinese|korean|russian|arabic|italian|portuguese|hindi)\b/i,
+      /\b(say|mean|write|speak)\s.*(in|to)\s+(english|spanish|french|german|japanese|chinese|korean|russian|arabic|italian|portuguese|hindi)\b/i,
     ],
-  },
-  {
+  },    {
     task: "safety",
     weight: 8,
     patterns: [
-      /\b(safety|harmful|toxic|offensive|dangerous|inappropriate)\s.*(check|analyze|test|scan|evaluate)\b/i,
-      /\b(check|analyze|test)\s.*(safety|harmful|toxic|offensive)\b/i,
-      /^is\s+this\s+(safe|harmful|appropriate|ok)\b/i,
+      /\b(safety|safe|harmful|toxic|offensive|dangerous|inappropriate|abusive|hateful)\s.*(check|analyze|test|scan|evaluate|rate|review)\b/i,
+      /\b(check|analyze|test|scan|evaluate)\s.*(safety|safe|harmful|toxic|offensive|appropriate|inappropriate)\b/i,
+      /^is\s+this\s+(safe|harmful|appropriate|inappropriate|ok|offensive)\b/i,
+      /\b(content.safety|moderation|toxicity)\b/i,
     ],
-  },
-  {
+  },    {
     task: "embedding",
-    weight: 6,
+    weight: 7,
     patterns: [
-      /\b(embed|embedding|vectorize|vector\s+representation)\b/i,
-      /\b(generate|create)\s.*(embedding|vector)\b/i,
+      /\b(embed|embedding|vectorize|vector\s+representation|embeddings)\b/i,
+      /\b(generate|create|get|compute)\s.*(embedding|embed|vector)\b/i,
     ],
   },
 ];
