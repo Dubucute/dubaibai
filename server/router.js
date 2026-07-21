@@ -87,6 +87,8 @@ const INTENT_PATTERNS = [
       /\b(draw|paint|illustrate|design)\s/i,
       /\b(image|picture|art|illustration|photo)\s.*(of|with|showing|depicting)\b/i,
       /^(generate|create|make|draw|paint)\s+(a|an|the)\s/i,
+      /\bimagine\s+(a|an|the|me|this)\b/i,
+      /\b(make|create|generate)\s+(me\s+)?(a|an)\s+(picture|art|image|drawing|illustration|painting)\b/i,
     ],
   },
   {
@@ -152,6 +154,11 @@ function detectIntent(message, context = {}) {
     if (!scores.vision) {
       scores.vision = 5;
     }
+  }
+
+  // Force image generation when the frontend sets forceImageGeneration (from /imagine command)
+  if (context.forceImageGeneration) {
+    scores.image = (scores.image || 0) + 50;
   }
 
   // Check if user wants image generation (look for art/visual keywords)

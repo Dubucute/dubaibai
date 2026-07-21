@@ -65,6 +65,21 @@ class Orchestrator {
       context.webSearch = true;
     }
 
+    // ── Image generation override: when forceImageGeneration is set
+    // (from /imagine command in the frontend), route directly to image gen
+    // regardless of what the message text alone would suggest.
+    if (context.forceImageGeneration) {
+      effectiveTask = "image";
+      yield {
+        type: "intent",
+        task: "image",
+        confidence: 1,
+        label: "Image Generation",
+        content: "Image generation requested — generating image from prompt",
+        reasoning: `forceImageGeneration active, overriding "${task}" route to image chain`,
+      };
+    }
+
     // ── Web Search override: when web search is enabled, force the websearch
     // model chain (smart models that can synthesize search results).
     let effectiveTask = task;
