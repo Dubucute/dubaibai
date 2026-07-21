@@ -41,6 +41,7 @@ const INTENT_PATTERNS = [
       /\b(math|equation|calculus|theorem|proof|derivative|integral|algebra|geometry|trigonometry)\b/i,
       /\b(quantum|physics|philosophy|consciousness|existential|metaphysics|epistemology)\b/i,
       /\b(theory|relativity|gravity|entanglement|evolution|cosmology|biology|psychology|phenomenon|paradox)\b/i,
+      /\b(meaning|purpose|origin|nature|essence)\s+(of|behind)\b/i,
       /\b(prove|demonstrate|derive|verify|validate)\b/i,
       /^(why|how\s+(does|can|would|should|could|is|are|do))\s/i,
       /\b(thought.experiment|what.if|hypothetical|gedanken)\b/i,
@@ -56,7 +57,6 @@ const INTENT_PATTERNS = [
       /\b(how do|how can|how does|how would|how should)\b/i,
       /\b(I want|I need|can you|could you|please|would you)\b/i,
       /\b(hello|hi|hey|what's up|sup|greetings)\b/i,
-      /^.{1,20}$/, // Very short messages → chat, not fast
       /\b(yes|no|maybe|thanks|ok|okay|sure|good|great|nice)\b/i,
     ],
   },
@@ -67,7 +67,7 @@ const INTENT_PATTERNS = [
       /^(when|where)\s+(is|was|are|were)\s/i,
       /\b(weather|time|date|news)\b/i,
       /^(quick|fast|simple|short)\s/i,
-      /^.{21,60}$/, // Short factual queries (not ultra-short)
+      /^.{46,60}$/, // Medium factual queries only (not short messages)
     ],
   },    {
     task: "vision",
@@ -99,15 +99,18 @@ const INTENT_PATTERNS = [
       /\b(how\s+do\s+you\s+say|what\s+is\s+the\s+word\s+for)\b/i,
       /\b(english|spanish|french|german|japanese|chinese|korean|russian|arabic|italian|portuguese|hindi)\s*(to|->|>)\s*(english|spanish|french|german|japanese|chinese|korean|russian|arabic|italian|portuguese|hindi)\b/i,
       /\b(say|mean|write|speak)\s.*(in|to)\s+(english|spanish|french|german|japanese|chinese|korean|russian|arabic|italian|portuguese|hindi)\b/i,
+      /\b(can you|could you|please|i need|i want)\s+(translate|interpret)\b/i,
+      /\b(in|to)\s+(english|spanish|french|german|japanese|chinese|korean|russian|arabic|italian|portuguese|hindi)\s*$/i,
     ],
   },    {
     task: "safety",
     weight: 8,
     patterns: [
-      /\b(safety|safe|harmful|toxic|offensive|dangerous|inappropriate|abusive|hateful)\s.*(check|analyze|test|scan|evaluate|rate|review)\b/i,
-      /\b(check|analyze|test|scan|evaluate)\s.*(safety|safe|harmful|toxic|offensive|appropriate|inappropriate)\b/i,
-      /^is\s+this\s+(safe|harmful|appropriate|inappropriate|ok|offensive)\b/i,
+      /\b(safety|safe|harmful|toxic|toxicity|offensive|dangerous|inappropriate|abusive|hateful)\s.*(check|analyze|test|scan|evaluate|rate|review)\b/i,
+      /\b(check|analyze|test|scan|evaluate)\s.*(safety|safe|harmful|toxic|toxicity|offensive|appropriate|inappropriate)\b/i,
+      /^is\s+this\s+.*\b(safe|harmful|appropriate|inappropriate|ok|offensive)\b/i,
       /\b(content.safety|moderation|toxicity)\b/i,
+      /\b(check|see|find)\s+(if|whether)\s.*\b(safe|harmful|offensive|appropriate|toxic)\b/i,
     ],
   },    {
     task: "embedding",
