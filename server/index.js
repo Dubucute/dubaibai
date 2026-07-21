@@ -18,7 +18,7 @@ const db = require("./db");
 const Orchestrator = require("./orchestrator");
 const NIMClient = require("./nim");
 const { getTaskRoute, getModelInfo, getAllModels, initBenchmarks } = require("./models");
-const { getRankedData, getRankedModels, getModelBenchmark, buildChain } = require("./benchmark");
+const { getRankedData, getModelBenchmark, buildChain } = require("./benchmark");
 const { detectIntent } = require("./router");
 const { listTools, getTool } = require("./tools/index");
 const { signIn, getSessionUser, authMiddleware, AUTH_ENABLED } = require("./auth");
@@ -136,7 +136,6 @@ app.get("/api/routing/debug", (req, res) => {
       code: topCode,
       chat: topChat,
     },
-    quickNodeNative: true,
   });
 });
 
