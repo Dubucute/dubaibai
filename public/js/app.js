@@ -151,7 +151,6 @@ window.sendToAgent = async function () {
     const userMsgEl = document.querySelector(".msg-user:last-child .msg-body");
     if (userMsgEl) {
       const previewsHtml = imagePreviews.map(function(f, i) {
-        var safeName = f.name.replace(/'/g, "\\'");
         var previewIdx = Date.now() + '_' + i;
         window._userPreviewCache = window._userPreviewCache || {};
         window._userPreviewCache[previewIdx] = { src: f.data, name: f.name };
