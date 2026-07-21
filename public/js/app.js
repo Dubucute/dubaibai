@@ -145,6 +145,18 @@ window.sendToAgent = async function () {
   addMessage("user", isImagineCommand ? `/imagine ${imaginePrompt}` : msg, "You");
   agentHistory.push({ role: "user", content: userMessage });
 
+  // Show attached image previews in the user's message bubble
+  const imagePreviews = attachedFiles.filter((f) => f.type === "image");
+  if (imagePreviews.length > 0) {
+    const userMsgEl = document.querySelector(".msg-user:last-child .msg-body");
+    if (userMsgEl) {
+      const previewsHtml = imagePreviews.map(function(f, i) {
+        return '<div class="msg-attachment-preview"><img src="' + f.data + '" alt="' + escHtml(f.name) + '" class="msg-attachment-img" loading="lazy"></div>';
+      }).join("");
+      userMsgEl.insertAdjacentHTML("afterbegin", '<div class="msg-attachments">' + previewsHtml + '</div>');
+    }
+  }
+
   // Save user message to server conversation (auto-created above if needed)
   AgentAPI.conversationAddMessage(currentConversationId, {
     role: "user",

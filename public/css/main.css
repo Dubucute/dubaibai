@@ -695,6 +695,37 @@ body {
   color: var(--accent);
 }
 
+/* User attached image previews */
+.msg-attachments {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.msg-attachment-preview {
+  width: 120px;
+  height: 90px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: var(--tag-bg);
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.msg-attachment-preview:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 8px var(--accent-glow);
+}
+
+.msg-attachment-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 /* Generated images */
 .msg-image {
   max-width: 100%;
