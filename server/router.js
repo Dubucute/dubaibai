@@ -76,7 +76,7 @@ const INTENT_PATTERNS = [
       /\b(analyze|describe|examine|look.at)\s.*(image|picture|photo|screenshot|chart|graph|diagram|figure|plot)\b/i,
       /\b(what|what's|whats)\s.*(in|on|see|showing)\s.*(image|picture|photo|screenshot|diagram|chart)\b/i,
       /\b(image|picture|photo|screenshot|chart|graph|diagram|figure|plot)\s.*(analysis|description|explanation|interpretation)\b/i,
-      /^(describe|analyze|explain|interpret|read)\s+(this|the|an|that)\s*(image|picture|photo|screenshot|chart|graph|diagram)?/i,
+      /^(describe|analyze|explain|interpret|read)\s+(this|the|an|that)\s+(image|picture|photo|screenshot|chart|graph|diagram|figure|plot)\b/i,
       /\b(can you|could you|please)\s.*(analyze|describe|explain|read)\s.*(image|picture|photo|screenshot|chart|graph|diagram)\b/i,
     ],
   },
