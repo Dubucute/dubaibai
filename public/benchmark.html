@@ -631,12 +631,12 @@
           <thead>
             <tr>
               <th data-sort="rank" class="sorted-asc">Rank</th>
-              <th data-sort="model">Model</th>
+              <th data-sort="name">Model</th>
               <th data-sort="score">Combined Score</th>
               <th data-sort="speed">Speed (s)</th>
               <th data-sort="codingPct">Coding %</th>
-              <th data-sort="tasks">Tasks</th>
-              <th data-sort="caps">Capabilities</th>
+              <th data-sort="tasksPassed">Tasks</th>
+              <th>Capabilities</th>
             </tr>
           </thead>
           <tbody id="benchBody"></tbody>
@@ -677,7 +677,7 @@
             speedRank: b.speedRank || 'unknown',
             codingPct: b.codingPercentage || 0,
             tasksPassed: b.tasksPassed || 0,
-            cScore: b.codingScore || '0/0',
+
             toolCalling: model.capabilities?.toolCalling || false,
             vision: model.capabilities?.vision || false,
           };
@@ -846,8 +846,7 @@
         document.querySelectorAll('.bench-table th').forEach(t => t.classList.remove('sorted-asc', 'sorted-desc'));
         th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
 
-        let data = [...BENCHMARK_DATA];
-        applyFilterToData(data);
+        let data = applyFilterToData([...BENCHMARK_DATA]);
 
         data.sort((a, b) => {
           let va = a[col], vb = b[col];
@@ -860,17 +859,6 @@
         renderTable(data);
       });
     });
-
-    function applyFilterToData(data) {
-      switch (currentFilter) {
-        case 'all': break;
-        case 'top': return data.filter(m => m.score >= 80);
-        case 'fast': return data.filter(m => m.speed != null && m.speed < 1);
-        case 'tools': return data.filter(m => m.toolCalling);
-        case 'vision': return data.filter(m => m.vision);
-        case 'coding100': return data.filter(m => m.codingPct >= 100);
-      }
-    }
 
     // ── Init ──
     document.addEventListener('DOMContentLoaded', async () => {
