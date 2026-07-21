@@ -9,6 +9,7 @@ let conversations = [];
 let webSearchEnabled = false;
 let deepThinkEnabled = false;
 let attachedFiles = [];
+let _lastAttachedImage = null;
 
 // ── Streaming text accumulator ──
 // Accumulates tokens in a string and sets textContent directly (avoids O(n²) +=).
@@ -196,6 +197,7 @@ window.sendToAgent = async function () {
     context.imageData = images[0].data;
     context.imageDescription = images[0].name;
     pendingAttachedImage = images[0].data;
+    _lastAttachedImage = images[0].data;
   }
   if (docs.length > 0) {
     context.hasDocuments = true;
@@ -367,7 +369,7 @@ window.sendToAgent = async function () {
               addMessage("agent", fullResponse, modelName || "Dubu AI", {
                 typewriter: !fallbackUsed,
                 typewriterSpeed: 18,
-                attachedImage: pendingAttachedImage,
+                attachedImage: pendingAttachedImage || _lastAttachedImage,
               });
               agentHistory.push({ role: "assistant", content: fullResponse });
 
@@ -549,6 +551,7 @@ window.clearAgent = function () {
   showWelcomeMessage();
   agentHistory = [];
   attachedFiles = [];
+  _lastAttachedImage = null;
   renderAttachments();
   document.getElementById("agentSendBtn").disabled = false;
   document.getElementById("tsDot").className = "ts-dot";
@@ -858,12 +861,14 @@ window.retryLastRequest = function () {
 // ── Internal retry send (bypasses sendToAgent's input and conversation logic) ──
 function retrySend(userMessage, thinkingDiv) {
   const container = document.getElementById("agentMessages");
+  var retryImage = _lastAttachedImage;
   const context = {
-    hasImage: false,
+    hasImage: !!retryImage,
     hasDocuments: false,
     webSearch: webSearchEnabled,
     deepThink: deepThinkEnabled,
   };
+  if (retryImage) context.imageData = retryImage;
 
   let modelName = null;
   let fallbackUsed = false;
@@ -944,7 +949,9 @@ function retrySend(userMessage, thinkingDiv) {
             }).then(() => { loadConversationList(); autoGenerateTitle(); }).catch(() => {});
           } else {
             thinkingDiv.remove();
-            addMessage("agent", fullResponse, modelName || "Dubu AI");
+            addMessage("agent", fullResponse, modelName || "Dubu AI", {
+              attachedImage: retryImage,
+            });
             agentHistory.push({ role: "assistant", content: fullResponse });
             AgentAPI.conversationAddMessage(currentConversationId, {
               role: "assistant", content: fullResponse,
