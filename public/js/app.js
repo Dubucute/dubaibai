@@ -198,6 +198,8 @@ window.sendToAgent = async function () {
     context.imageDescription = images[0].name;
     pendingAttachedImage = images[0].data;
     _lastAttachedImage = images[0].data;
+  } else {
+    _lastAttachedImage = null;
   }
   if (docs.length > 0) {
     context.hasDocuments = true;
