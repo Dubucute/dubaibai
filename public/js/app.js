@@ -198,8 +198,6 @@ window.sendToAgent = async function () {
     context.imageDescription = images[0].name;
     pendingAttachedImage = images[0].data;
     _lastAttachedImage = images[0].data;
-  } else {
-    _lastAttachedImage = null;
   }
   if (docs.length > 0) {
     context.hasDocuments = true;
@@ -371,7 +369,7 @@ window.sendToAgent = async function () {
               addMessage("agent", fullResponse, modelName || "Dubu AI", {
                 typewriter: !fallbackUsed,
                 typewriterSpeed: 18,
-                attachedImage: pendingAttachedImage || _lastAttachedImage,
+                attachedImage: pendingAttachedImage,
               });
               agentHistory.push({ role: "assistant", content: fullResponse });
 
@@ -1051,7 +1049,10 @@ window.regenerateResponse = function (btn) {
   // Truncate agentHistory to BEFORE the user message (sendToAgent will add it fresh)
   agentHistory = agentHistory.slice(0, lastUserIdx);
 
-  // Re-send the user message
+  // Re-send the user message — restore stored image to attachedFiles so sendToAgent picks it up
+  if (_lastAttachedImage) {
+    attachedFiles.push({ type: "image", data: _lastAttachedImage, name: "attached-image" });
+  }
   const input = document.getElementById("agentInput");
   input.value = lastUserMsg;
   sendToAgent();
